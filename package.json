@@ -1,0 +1,9 @@
+{
+  "name": "neuro-rush",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local development server for Neuro Rush",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

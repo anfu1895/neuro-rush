@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>NEURO RUSH ⚡</title>
+<style>
+  :root{
+    --bg:#12102b;
+    --bg2:#1c1745;
+    --panel:#241d5c;
+    --cyan:#2ee6ff;
+    --magenta:#ff3ec8;
+    --gold:#ffd23e;
+    --lime:#8dff4a;
+    --red:#ff4a5e;
+    --text:#f2efff;
+    --dim:#9b93d9;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:radial-gradient(ellipse at 50% -10%, var(--bg2) 0%, var(--bg) 60%);
+    color:var(--text);
+    overflow:hidden;
+    user-select:none;
+    touch-action:manipulation;
+    display:flex;align-items:center;justify-content:center;
+  }
+  #app{width:100%;max-width:460px;height:100%;max-height:860px;display:flex;flex-direction:column;padding:14px;position:relative;}
+
+  /* ---------- HUD ---------- */
+  #hud{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;}
+  .hud-box{background:var(--panel);border-radius:14px;padding:8px 14px;text-align:center;min-width:78px;box-shadow:0 4px 0 rgba(0,0,0,.35);}
+  .hud-label{font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
+  .hud-value{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
+  #score-val{color:var(--cyan);}
+  #level-val{color:var(--gold);}
+  #lives-box .hud-value{font-size:18px;letter-spacing:2px;}
+
+  /* ---------- Combo bar ---------- */
+  #combo-wrap{margin-bottom:10px;}
+  #combo-bar{height:16px;background:var(--panel);border-radius:99px;overflow:hidden;position:relative;box-shadow:inset 0 2px 6px rgba(0,0,0,.5);}
+  #combo-fill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--cyan),var(--magenta),var(--gold));transition:width .15s ease-out;}
+  #combo-text{text-align:center;font-size:12px;font-weight:700;letter-spacing:1px;margin-top:4px;color:var(--dim);}
+  #combo-text.hot{color:var(--gold);text-shadow:0 0 10px var(--gold);}
+
+  /* ---------- Grid ---------- */
+  #grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:10px;}
+  .cell{
+    background:rgba(255,255,255,.045);
+    border-radius:18px;
+    position:relative;
+    cursor:pointer;
+    transition:transform .08s;
+  }
+  .cell:active{transform:scale(.95);}
+  .orb{
+    position:absolute;inset:12%;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(22px,7vw,34px);
+    animation:pop .18s ease-out;
+  }
+  @keyframes pop{from{transform:scale(0);}to{transform:scale(1);}}
+  .orb.target{background:radial-gradient(circle at 35% 30%, #baf4ff, var(--cyan) 55%, #0e7fa0);box-shadow:0 0 22px var(--cyan),0 0 44px rgba(46,230,255,.35);}
+  .orb.gold{background:radial-gradient(circle at 35% 30%, #fff3c4, var(--gold) 55%, #b8860b);box-shadow:0 0 26px var(--gold),0 0 52px rgba(255,210,62,.4);}
+  .orb.trap{background:radial-gradient(circle at 35% 30%, #ffb3bd, var(--red) 55%, #8f1020);box-shadow:0 0 18px var(--red);}
+  .orb.shrink{animation:shrink linear forwards;}
+  @keyframes shrink{from{transform:scale(1);opacity:1;}to{transform:scale(.35);opacity:.55;}}
+
+  .frenzy .orb.target{background:radial-gradient(circle at 35% 30%, #ffd9f4, var(--magenta) 55%, #8a0f68);box-shadow:0 0 26px var(--magenta),0 0 52px rgba(255,62,200,.45);}
+  body.frenzy-bg{animation:framePulse .5s infinite alternate;}
+  @keyframes framePulse{from{background:radial-gradient(ellipse at 50% -10%, #2a1c66 0%, var(--bg) 60%);}to{background:radial-gradient(ellipse at 50% -10%, #45156b 0%, #1a0f38 60%);}}
+
+  /* ---------- Floating points ---------- */
+  .float-pts{position:absolute;font-weight:900;font-size:20px;pointer-events:none;animation:floatUp .7s ease-out forwards;z-index:30;text-shadow:0 2px 8px rgba(0,0,0,.6);}
+  @keyframes floatUp{from{transform:translateY(0);opacity:1;}to{transform:translateY(-46px);opacity:0;}}
+
+  /* ---------- Particles ---------- */
+  .particle{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:25;animation:burst .55s ease-out forwards;}
+  @keyframes burst{from{transform:translate(0,0) scale(1);opacity:1;}to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0;}}
+
+  /* ---------- Overlays ---------- */
+  .overlay{
+    position:absolute;inset:0;z-index:50;
+    background:rgba(14,11,38,.92);backdrop-filter:blur(6px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;border-radius:20px;
+  }
+  .hidden{display:none !important;}
+  h1{font-size:clamp(38px,10vw,56px);font-weight:900;letter-spacing:1px;line-height:1.05;
+     background:linear-gradient(90deg,var(--cyan),var(--magenta),var(--gold));
+     -webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:6px;}
+  .tagline{color:var(--dim);margin-bottom:22px;font-size:15px;}
+  .rules{display:flex;flex-direction:column;gap:10px;margin-bottom:26px;font-size:15px;}
+  .rule{display:flex;align-items:center;gap:12px;background:var(--panel);padding:10px 16px;border-radius:14px;text-align:left;}
+  .rule .ic{font-size:24px;}
+  .btn{
+    font-size:20px;font-weight:800;letter-spacing:1px;
+    padding:16px 44px;border:none;border-radius:999px;cursor:pointer;
+    color:#0c0a24;background:linear-gradient(90deg,var(--cyan),var(--lime));
+    box-shadow:0 6px 0 #0a5d70,0 10px 24px rgba(46,230,255,.35);
+    transition:transform .08s;
+  }
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #0a5d70;}
+  .btn.secondary{background:var(--panel);color:var(--text);box-shadow:0 6px 0 #14103a;margin-top:12px;font-size:15px;padding:12px 28px;}
+  #sound-toggle{position:absolute;top:14px;right:14px;z-index:60;background:var(--panel);border:none;color:var(--text);font-size:20px;width:44px;height:44px;border-radius:50%;cursor:pointer;}
+
+  /* ---------- Level-up flash ---------- */
+  #announce{position:absolute;top:38%;left:0;right:0;text-align:center;z-index:40;pointer-events:none;font-size:clamp(28px,8vw,44px);font-weight:900;opacity:0;}
+  #announce.show{animation:announce 1s ease-out;}
+  @keyframes announce{0%{opacity:0;transform:scale(.6);}20%{opacity:1;transform:scale(1.15);}45%{transform:scale(1);}80%{opacity:1;}100%{opacity:0;transform:scale(1.05);}}
+
+  /* ---------- Game over stats ---------- */
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 26px;width:100%;max-width:320px;}
+  .stat{background:var(--panel);border-radius:14px;padding:12px;}
+  .stat .n{font-size:26px;font-weight:900;}
+  .stat .l{font-size:11px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;}
+  #best-badge{color:var(--gold);font-weight:800;margin-top:6px;min-height:22px;}
+
+  body.shake #app{animation:shake .3s;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+
+  @media (prefers-reduced-motion: reduce){
+    .orb,.float-pts,.particle,#announce.show,body.frenzy-bg,body.shake #app{animation:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <button id="sound-toggle" title="Sonido">🔊</button>
+
+  <div id="hud">
+    <div class="hud-box"><div class="hud-label">Puntos</div><div class="hud-value" id="score-val">0</div></div>
+    <div class="hud-box"><div class="hud-label">Nivel</div><div class="hud-value" id="level-val">1</div></div>
+    <div class="hud-box" id="lives-box"><div class="hud-label">Vidas</div><div class="hud-value" id="lives-val">❤️❤️❤️</div></div>
+  </div>
+
+  <div id="combo-wrap">
+    <div id="combo-bar"><div id="combo-fill"></div></div>
+    <div id="combo-text">COMBO x1</div>
+  </div>
+
+  <div id="grid"></div>
+  <div id="announce"></div>
+
+  <!-- Pantalla de inicio -->
+  <div class="overlay" id="start-screen">
+    <h1>NEURO RUSH</h1>
+    <div class="tagline">Reflejos + autocontrol. Rondas cortas, recompensa inmediata.</div>
+    <div class="rules">
+      <div class="rule"><span class="ic">🔵</span><span><b>Toca los orbes azules</b> antes de que se encojan.</span></div>
+      <div class="rule"><span class="ic">⭐</span><span><b>Las estrellas doradas</b> dan bonus y llenan tu combo.</span></div>
+      <div class="rule"><span class="ic">💀</span><span><b>NO toques los rojos.</b> Ese es el reto de autocontrol.</span></div>
+      <div class="rule"><span class="ic">🔥</span><span>Llena la barra y entra en <b>MODO FRENESÍ</b> (x2 en todo).</span></div>
+    </div>
+    <button class="btn" id="start-btn">▶ JUGAR</button>
+  </div>
+
+  <!-- Game over -->
+  <div class="overlay hidden" id="over-screen">
+    <h1 style="font-size:clamp(30px,8vw,44px);">FIN DE RONDA</h1>
+    <div id="best-badge"></div>
+    <div class="stats">
+      <div class="stat"><div class="n" id="st-score">0</div><div class="l">Puntos</div></div>
+      <div class="stat"><div class="n" id="st-level">1</div><div class="l">Nivel</div></div>
+      <div class="stat"><div class="n" id="st-combo">x1</div><div class="l">Mejor combo</div></div>
+      <div class="stat"><div class="n" id="st-acc">0%</div><div class="l">Precisión</div></div>
+    </div>
+    <button class="btn" id="retry-btn">⚡ OTRA VEZ</button>
+    <button class="btn secondary" id="menu-btn">Menú</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const grid = document.getElementById('grid');
+  const scoreEl = document.getElementById('score-val');
+  const levelEl = document.getElementById('level-val');
+  const livesEl = document.getElementById('lives-val');
+  const comboFill = document.getElementById('combo-fill');
+  const comboText = document.getElementById('combo-text');
+  const announceEl = document.getElementById('announce');
+  const startScreen = document.getElementById('start-screen');
+  const overScreen = document.getElementById('over-screen');
+  const soundBtn = document.getElementById('sound-toggle');
+
+  const CELLS = 16;
+  const cells = [];
+  for(let i=0;i<CELLS;i++){
+    const c = document.createElement('div');
+    c.className = 'cell';
+    c.dataset.i = i;
+    grid.appendChild(c);
+    cells.push(c);
+  }
+
+  // ---------- Estado ----------
+  let running=false, score=0, level=1, lives=3, combo=1, comboBest=1, comboProgress=0;
+  let hits=0, misses=0, frenzy=false, frenzyTimer=null;
+  let spawnTimer=null, orbs=new Map(); // cellIndex -> {type, timeout, el}
+  let sessionBest=0; // memoria de la sesión (los artefactos no usan almacenamiento del navegador)
+  let soundOn=true;
+
+  // ---------- Audio (Web Audio, sin archivos) ----------
+  let actx=null;
+  function beep(freq, dur=0.09, type='sine', vol=0.18){
+    if(!soundOn) return;
+    try{
+      if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+      const o=actx.createOscillator(), g=actx.createGain();
+      o.type=type; o.frequency.value=freq;
+      g.gain.setValueAtTime(vol, actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+dur);
+      o.connect(g); g.connect(actx.destination);
+      o.start(); o.stop(actx.currentTime+dur);
+    }catch(e){}
+  }
+  function hitSound(){ beep(420 + Math.min(combo,12)*60, .08, 'triangle'); }
+  function goldSound(){ beep(880,.1,'sine',.22); setTimeout(()=>beep(1320,.12,'sine',.22),80); }
+  function badSound(){ beep(140,.25,'sawtooth',.25); }
+  function levelSound(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.12,'square',.14), i*90)); }
+
+  soundBtn.addEventListener('click', ()=>{
+    soundOn=!soundOn;
+    soundBtn.textContent = soundOn ? '🔊' : '🔇';
+  });
+
+  // ---------- Dificultad ----------
+  function cfg(){
+    const l = level;
+    return {
+      spawnMs: Math.max(950 - l*70, 380),           // cada cuánto aparece algo
+      lifeMs:  Math.max(1700 - l*110, 750),         // cuánto vive un orbe
+      trapChance: Math.min(0.08 + l*0.035, 0.32),   // prob. de trampa
+      goldChance: 0.10,
+      maxSimul: Math.min(1 + Math.floor(l/2), 4)
+    };
+  }
+
+  // ---------- Render HUD ----------
+  function renderHUD(){
+    scoreEl.textContent = score;
+    levelEl.textContent = level;
+    livesEl.textContent = '❤️'.repeat(lives) + '🖤'.repeat(3-lives);
+    comboFill.style.width = Math.min(comboProgress,100)+'%';
+    comboText.textContent = frenzy ? '🔥 FRENESÍ x'+combo+' 🔥' : 'COMBO x'+combo;
+    comboText.classList.toggle('hot', combo>=5 || frenzy);
+  }
+
+  // ---------- Efectos ----------
+  function floatPts(cell, text, color){
+    const r=cell.getBoundingClientRect(), a=document.getElementById('app').getBoundingClientRect();
+    const el=document.createElement('div');
+    el.className='float-pts';
+    el.textContent=text;
+    el.style.color=color;
+    el.style.left=(r.left-a.left + r.width/2 - 20)+'px';
+    el.style.top=(r.top-a.top + r.height/3)+'px';
+    document.getElementById('app').appendChild(el);
+    setTimeout(()=>el.remove(),750);
+  }
+  function burst(cell, color, n=10){
+    const r=cell.getBoundingClientRect(), a=document.getElementById('app').getBoundingClientRect();
+    for(let i=0;i<n;i++){
+      const p=document.createElement('div');
+      p.className='particle';
+      p.style.background=color;
+      p.style.left=(r.left-a.left + r.width/2)+'px';
+      p.style.top=(r.top-a.top + r.height/2)+'px';
+      const ang=Math.random()*Math.PI*2, d=30+Math.random()*50;
+      p.style.setProperty('--dx', Math.cos(ang)*d+'px');
+      p.style.setProperty('--dy', Math.sin(ang)*d+'px');
+      document.getElementById('app').appendChild(p);
+      setTimeout(()=>p.remove(),600);
+    }
+  }
+  function announce(text, color){
+    announceEl.textContent=text;
+    announceEl.style.color=color;
+    announceEl.style.textShadow='0 0 24px '+color;
+    announceEl.classList.remove('show');
+    void announceEl.offsetWidth;
+    announceEl.classList.add('show');
+  }
+  function shake(){
+    document.body.classList.add('shake');
+    setTimeout(()=>document.body.classList.remove('shake'),320);
+  }
+
+  // ---------- Orbes ----------
+  function freeCells(){
+    return cells.map((c,i)=>i).filter(i=>!orbs.has(i));
+  }
+  function spawn(){
+    if(!running) return;
+    const c = cfg();
+    if(orbs.size < c.maxSimul){
+      const free = freeCells();
+      if(free.length){
+        const idx = free[Math.floor(Math.random()*free.length)];
+        const r = Math.random();
+        let type = 'target';
+        if(r < c.trapChance) type='trap';
+        else if(r < c.trapChance + c.goldChance) type='gold';
+
+        const el=document.createElement('div');
+        el.className='orb '+type+' shrink';
+        el.style.animationDuration='0.18s, '+c.lifeMs+'ms';
+        el.style.animationName='pop, shrink';
+        el.textContent = type==='trap' ? '💀' : (type==='gold' ? '⭐' : '');
+        cells[idx].appendChild(el);
+
+        const timeout = setTimeout(()=>expire(idx), c.lifeMs);
+        orbs.set(idx, {type, timeout, el});
+      }
+    }
+    spawnTimer = setTimeout(spawn, c.spawnMs * (frenzy?0.6:1));
+  }
+  function removeOrb(idx){
+    const o=orbs.get(idx);
+    if(!o) return null;
+    clearTimeout(o.timeout);
+    o.el.remove();
+    orbs.delete(idx);
+    return o;
+  }
+  function expire(idx){
+    const o=removeOrb(idx);
+    if(!o || !running) return;
+    if(o.type==='target'){ // dejar escapar un objetivo rompe el combo
+      misses++;
+      combo=1; comboProgress=Math.max(comboProgress-25,0);
+      floatPts(cells[idx],'¡se fue!','var(--dim)');
+      renderHUD();
+    }
+    // trampas y estrellas que expiran no penalizan
+  }
+
+  // ---------- Interacción ----------
+  grid.addEventListener('pointerdown', (e)=>{
+    if(!running) return;
+    const cell = e.target.closest('.cell');
+    if(!cell) return;
+    const idx = +cell.dataset.i;
+    const o = orbs.get(idx);
+    if(!o) return;
+    removeOrb(idx);
+
+    if(o.type==='trap'){
+      badSound(); shake();
+      lives--; combo=1; comboProgress=0;
+      misses++;
+      burst(cell,'var(--red)',8);
+      floatPts(cell,'-1 ❤️','var(--red)');
+      announce('¡CONTROL!','var(--red)');
+      renderHUD();
+      if(lives<=0) return gameOver();
+      return;
+    }
+
+    hits++;
+    const mult = frenzy?2:1;
+    let pts;
+    if(o.type==='gold'){
+      pts = 50*combo*mult;
+      goldSound();
+      burst(cell,'var(--gold)',14);
+      comboProgress = Math.min(comboProgress+30,100);
+    }else{
+      pts = 10*combo*mult;
+      hitSound();
+      burst(cell, frenzy?'var(--magenta)':'var(--cyan)',10);
+      comboProgress = Math.min(comboProgress+12,100);
+    }
+    score += pts;
+    combo++;
+    comboBest=Math.max(comboBest,combo);
+    floatPts(cell,'+'+pts, o.type==='gold'?'var(--gold)':'var(--cyan)');
+
+    // Frenesí
+    if(comboProgress>=100 && !frenzy) startFrenzy();
+
+    // Subida de nivel cada 400 pts aprox
+    const newLevel = Math.floor(score/400)+1;
+    if(newLevel>level){
+      level=newLevel;
+      levelSound();
+      announce('¡NIVEL '+level+'! 🚀','var(--gold)');
+    }
+    renderHUD();
+  });
+
+  function startFrenzy(){
+    frenzy=true;
+    grid.classList.add('frenzy');
+    document.body.classList.add('frenzy-bg');
+    announce('🔥 ¡FRENESÍ! 🔥','var(--magenta)');
+    levelSound();
+    frenzyTimer=setTimeout(endFrenzy, 6000);
+    renderHUD();
+  }
+  function endFrenzy(){
+    frenzy=false; comboProgress=0;
+    grid.classList.remove('frenzy');
+    document.body.classList.remove('frenzy-bg');
+    renderHUD();
+  }
+
+  // ---------- Ciclo de juego ----------
+  function reset(){
+    score=0; level=1; lives=3; combo=1; comboBest=1; comboProgress=0;
+    hits=0; misses=0;
+    endFrenzy();
+    clearTimeout(spawnTimer); clearTimeout(frenzyTimer);
+    orbs.forEach((o,i)=>removeOrb(i));
+    renderHUD();
+  }
+  function start(){
+    reset();
+    running=true;
+    startScreen.classList.add('hidden');
+    overScreen.classList.add('hidden');
+    announce('¡A JUGAR! ⚡','var(--cyan)');
+    spawn();
+  }
+  function gameOver(){
+    running=false;
+    clearTimeout(spawnTimer); clearTimeout(frenzyTimer);
+    endFrenzy();
+    orbs.forEach((o,i)=>removeOrb(i));
+    const total=hits+misses;
+    const acc= total? Math.round(hits/total*100) : 0;
+    document.getElementById('st-score').textContent=score;
+    document.getElementById('st-level').textContent=level;
+    document.getElementById('st-combo').textContent='x'+comboBest;
+    document.getElementById('st-acc').textContent=acc+'%';
+    const badge=document.getElementById('best-badge');
+    if(score>sessionBest){
+      sessionBest=score;
+      badge.textContent='🏆 ¡NUEVO RÉCORD DE LA SESIÓN!';
+    }else{
+      badge.textContent='Récord de la sesión: '+sessionBest;
+    }
+    overScreen.classList.remove('hidden');
+  }
+
+  document.getElementById('start-btn').addEventListener('click', start);
+  document.getElementById('retry-btn').addEventListener('click', start);
+  document.getElementById('menu-btn').addEventListener('click', ()=>{
+    overScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+  });
+
+  renderHUD();
+})();
+</script>
+</body>
+</html>
