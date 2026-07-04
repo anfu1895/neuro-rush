@@ -1,4 +1,12 @@
 <!DOCTYPE html>
+<!--
+  ============================================================
+  NEURO RUSH ⚡
+  Copyright © 2026 Angel Fuentes. Todos los derechos reservados.
+  Este software y su diseño están protegidos por derechos de autor.
+  Consulta el archivo LICENSE para conocer los términos de uso.
+  ============================================================
+-->
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -159,8 +167,33 @@
   .m-bronze{color:#e0955a;text-shadow:0 0 14px rgba(224,149,90,.7);}
   .m-silver{color:#d9dff0;text-shadow:0 0 14px rgba(217,223,240,.7);}
   .m-gold{color:var(--gold);text-shadow:0 0 16px rgba(255,210,62,.8);}
+  .m-platinum{color:#c8f5e4;text-shadow:0 0 16px rgba(200,245,228,.85);}
   .m-diamond{color:#7df4ff;text-shadow:0 0 18px rgba(125,244,255,.9);}
-  .btn.share-btn{background:linear-gradient(90deg,var(--magenta),#9b5cff);box-shadow:0 5px 0 #6e0d55,0 10px 24px rgba(255,62,200,.35);color:#fff;max-width:280px;margin-bottom:12px;}
+  .btn.share-btn{background:linear-gradient(90deg,var(--magenta),#9b5cff);box-shadow:0 5px 0 #6e0d55,0 10px 24px rgba(255,62,200,.35);color:#fff;max-width:280px;margin-bottom:10px;}
+
+  /* ---------- Botones de redes ---------- */
+  #share-row{display:flex;gap:10px;justify-content:center;margin-bottom:14px;}
+  .net-btn{border:none;cursor:pointer;width:52px;height:52px;border-radius:50%;font-size:24px;display:flex;align-items:center;justify-content:center;color:#fff;transition:transform .08s;box-shadow:0 4px 0 rgba(0,0,0,.35);}
+  .net-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.35);}
+  .net-btn.wa{background:#25d366;}
+  .net-btn.tg{background:#2aabee;}
+  .net-btn.ig{background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7);}
+  .share-hint{font-size:11px;color:var(--dim);margin-bottom:12px;min-height:14px;}
+
+  /* ---------- Crédito ---------- */
+  .credit{font-size:12px;color:var(--dim);margin-top:6px;}
+  .credit b{color:var(--text);}
+  .copyright{font-size:10px;color:var(--dim);opacity:.8;margin-top:2px;margin-bottom:8px;}
+
+  /* ---------- Modo ritmo ---------- */
+  .mode-card.rhythm h2{color:var(--magenta);}
+  .rhythm-btns{display:flex;gap:8px;}
+  .rhythm-btns .btn{font-size:14px;padding:12px 10px;}
+  .btn.mic-btn{background:linear-gradient(90deg,var(--magenta),#9b5cff);box-shadow:0 5px 0 #6e0d55;color:#fff;}
+  .btn.file-btn{background:var(--panel);color:var(--text);box-shadow:0 5px 0 #14103a;border:1px solid rgba(255,255,255,.15);}
+  #grid.beat{animation:beatPulse .18s ease-out;}
+  @keyframes beatPulse{0%{transform:scale(1);}40%{transform:scale(1.022);}100%{transform:scale(1);}}
+  #rhythm-status{font-size:11px;color:var(--magenta);text-align:center;min-height:14px;margin-top:2px;}
 
   body.shake #app{animation:shake .3s;}
   @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
@@ -212,6 +245,20 @@
       </div>
       <button class="btn gold-btn" id="play-power">⚡ JUGAR POWER-UPS</button>
     </div>
+
+    <div class="mode-card rhythm">
+      <h2>🎵 MODO RITMO</h2>
+      <p>Las bolas salen <b>al ritmo de tu música</b>. Pon tu playlist de Spotify a sonar en tu bocina y el juego detecta los beats con el micrófono, o carga una canción (MP3) y suena dentro del juego. ¡Cada golpe de la canción lanza una bola!</p>
+      <div class="rhythm-btns">
+        <button class="btn mic-btn" id="play-rhythm-mic">🎤 ESCUCHAR MÚSICA</button>
+        <button class="btn file-btn" id="play-rhythm-file">📁 CARGAR CANCIÓN</button>
+      </div>
+      <input type="file" id="song-input" accept="audio/*" style="display:none;">
+      <div id="rhythm-status"></div>
+    </div>
+
+    <div class="credit">Creado por <b>Angel Fuentes</b></div>
+    <div class="copyright">© 2026 Angel Fuentes. Todos los derechos reservados.</div>
   </div>
 
   <!-- Game over -->
@@ -231,8 +278,16 @@
       <div class="stat"><div class="n" id="st-acc">0%</div><div class="l">Precisión</div></div>
     </div>
     <button class="btn share-btn" id="share-btn">📤 COMPARTIR RESULTADO</button>
+    <div id="share-row">
+      <button class="net-btn wa" id="share-wa" title="WhatsApp">🟢</button>
+      <button class="net-btn tg" id="share-tg" title="Telegram">✈️</button>
+      <button class="net-btn ig" id="share-ig" title="Instagram">📸</button>
+    </div>
+    <div class="share-hint" id="share-hint"></div>
     <button class="btn" id="retry-btn" style="max-width:280px;">⚡ OTRA VEZ</button>
     <button class="btn secondary" id="menu-btn">Menú</button>
+    <div class="credit">Creado por <b>Angel Fuentes</b></div>
+    <div class="copyright">© 2026 Angel Fuentes. Todos los derechos reservados.</div>
   </div>
 </div>
 
@@ -268,24 +323,33 @@
   let frozen=false, freezeTimer=null;
   let shieldUntil=0, shieldTicker=null;
   let spawnTimer=null, orbs=new Map(); // cellIndex -> {type, timeout, el, hp}
-  let sessionBest={classic:0, power:0}; // memoria solo de la sesión
+  let sessionBest={classic:0, power:0, rhythm:0}; // memoria solo de la sesión
   let soundOn=true;
   let lastResult=null; // para el botón de compartir
 
   // ---------- Medallas ----------
-  // Bronce y Plata: alcanzables. Oro y Diamante: para presumir de verdad.
+  // Bronce y Plata: alcanzables. Oro, Platino y Diamante: solo para leyendas.
   const MEDALS = {
     classic: [
-      {name:'BRONCE',   emoji:'🥉', cls:'m-bronze',  min:800},
-      {name:'PLATA',    emoji:'🥈', cls:'m-silver',  min:2500},
-      {name:'ORO',      emoji:'🥇', cls:'m-gold',    min:9000},
-      {name:'DIAMANTE', emoji:'💎', cls:'m-diamond', min:25000}
+      {name:'BRONCE',   emoji:'🥉', cls:'m-bronze',   min:800},
+      {name:'PLATA',    emoji:'🥈', cls:'m-silver',   min:2500},
+      {name:'ORO',      emoji:'🥇', cls:'m-gold',     min:15000},
+      {name:'PLATINO',  emoji:'🎖️', cls:'m-platinum', min:35000},
+      {name:'DIAMANTE', emoji:'💎', cls:'m-diamond',  min:60000}
     ],
     power: [
-      {name:'BRONCE',   emoji:'🥉', cls:'m-bronze',  min:1200},
-      {name:'PLATA',    emoji:'🥈', cls:'m-silver',  min:4000},
-      {name:'ORO',      emoji:'🥇', cls:'m-gold',    min:14000},
-      {name:'DIAMANTE', emoji:'💎', cls:'m-diamond', min:38000}
+      {name:'BRONCE',   emoji:'🥉', cls:'m-bronze',   min:1200},
+      {name:'PLATA',    emoji:'🥈', cls:'m-silver',   min:4000},
+      {name:'ORO',      emoji:'🥇', cls:'m-gold',     min:22000},
+      {name:'PLATINO',  emoji:'🎖️', cls:'m-platinum', min:50000},
+      {name:'DIAMANTE', emoji:'💎', cls:'m-diamond',  min:90000}
+    ],
+    rhythm: [
+      {name:'BRONCE',   emoji:'🥉', cls:'m-bronze',   min:1000},
+      {name:'PLATA',    emoji:'🥈', cls:'m-silver',   min:3500},
+      {name:'ORO',      emoji:'🥇', cls:'m-gold',     min:18000},
+      {name:'PLATINO',  emoji:'🎖️', cls:'m-platinum', min:40000},
+      {name:'DIAMANTE', emoji:'💎', cls:'m-diamond',  min:70000}
     ]
   };
   function medalFor(sc, m){
@@ -536,6 +600,97 @@
     renderHUD();
   }
 
+  // ---------- Modo Ritmo (detección de beats) ----------
+  // Escucha la música (micrófono → tu Spotify sonando en la bocina)
+  // o reproduce un archivo cargado, y lanza bolas en cada beat.
+  const rhythmStatus=document.getElementById('rhythm-status');
+  const songInput=document.getElementById('song-input');
+  let rz={analyser:null, data:null, raf:null, hist:[], lastBeat:0, audioEl:null, stream:null, srcNode:null};
+
+  function ensureCtx(){
+    if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended') actx.resume();
+    return actx;
+  }
+  function setupAnalyser(){
+    const ctx=ensureCtx();
+    rz.analyser=ctx.createAnalyser();
+    rz.analyser.fftSize=1024;
+    rz.analyser.smoothingTimeConstant=0.4;
+    rz.data=new Uint8Array(rz.analyser.frequencyBinCount);
+    rz.hist=[]; rz.lastBeat=0;
+  }
+  async function startRhythmMic(){
+    rhythmStatus.textContent='Pidiendo permiso del micrófono…';
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
+      setupAnalyser();
+      rz.stream=stream;
+      rz.srcNode=ensureCtx().createMediaStreamSource(stream);
+      rz.srcNode.connect(rz.analyser); // no va a la salida: sin eco
+      rhythmStatus.textContent='';
+      start('rhythm');
+    }catch(e){
+      rhythmStatus.textContent='⚠️ Sin acceso al micrófono. Revisa los permisos del navegador.';
+    }
+  }
+  function startRhythmFile(file){
+    setupAnalyser();
+    const url=URL.createObjectURL(file);
+    const audio=new Audio(url);
+    audio.crossOrigin='anonymous';
+    rz.audioEl=audio;
+    rz.srcNode=ensureCtx().createMediaElementSource(audio);
+    rz.srcNode.connect(rz.analyser);
+    rz.analyser.connect(ensureCtx().destination); // sí se escucha
+    audio.addEventListener('ended', ()=>{ if(running && mode==='rhythm') gameOver(); });
+    audio.play().then(()=>{
+      rhythmStatus.textContent='';
+      start('rhythm');
+    }).catch(()=>{
+      rhythmStatus.textContent='⚠️ No se pudo reproducir esa canción.';
+    });
+  }
+  function stopRhythm(){
+    if(rz.raf) cancelAnimationFrame(rz.raf);
+    rz.raf=null;
+    if(rz.audioEl){ rz.audioEl.pause(); rz.audioEl.src=''; rz.audioEl=null; }
+    if(rz.stream){ rz.stream.getTracks().forEach(t=>t.stop()); rz.stream=null; }
+    if(rz.srcNode){ try{rz.srcNode.disconnect();}catch(e){} rz.srcNode=null; }
+    rz.analyser=null;
+  }
+  function rhythmLoop(){
+    if(!running || mode!=='rhythm' || !rz.analyser) return;
+    rz.analyser.getByteFrequencyData(rz.data);
+    // Energía de graves (bombo / bajo)
+    let bass=0;
+    for(let i=1;i<=12;i++) bass+=rz.data[i];
+    bass/=12;
+    rz.hist.push(bass);
+    if(rz.hist.length>50) rz.hist.shift();
+    const avg=rz.hist.reduce((a,b)=>a+b,0)/rz.hist.length;
+    const now=performance.now();
+    if(rz.hist.length>20 && bass>30 && bass>avg*1.35 && now-rz.lastBeat>250){
+      rz.lastBeat=now;
+      onBeat();
+    }
+    rz.raf=requestAnimationFrame(rhythmLoop);
+  }
+  function onBeat(){
+    grid.classList.remove('beat');
+    void grid.offsetWidth;
+    grid.classList.add('beat');
+    const free=freeCells();
+    if(!free.length) return;
+    const idx=free[Math.floor(Math.random()*free.length)];
+    const r=Math.random();
+    let type='target';
+    const trapC=Math.min(0.10 + level*0.02, 0.25);
+    if(r<trapC) type='trap';
+    else if(r<trapC+0.12) type='gold';
+    spawnAt(idx, type, {lifeMs: Math.max(1600 - level*80, 800)});
+  }
+
   // ---------- Interacción ----------
   grid.addEventListener('pointerdown', (e)=>{
     if(!running) return;
@@ -646,11 +801,17 @@
     running=true;
     startScreen.classList.add('hidden');
     overScreen.classList.add('hidden');
-    announce(mode==='power' ? '⚡ ¡POWER-UPS! ⚡' : '¡A JUGAR! ⚡', mode==='power'?'var(--gold)':'var(--cyan)');
-    spawn();
+    if(mode==='rhythm'){
+      announce('🎵 ¡SIENTE EL RITMO! 🎵','var(--magenta)');
+      rz.raf=requestAnimationFrame(rhythmLoop);
+    }else{
+      announce(mode==='power' ? '⚡ ¡POWER-UPS! ⚡' : '¡A JUGAR! ⚡', mode==='power'?'var(--gold)':'var(--cyan)');
+      spawn();
+    }
   }
   function gameOver(){
     running=false;
+    stopRhythm();
     clearTimeout(spawnTimer); clearTimeout(frenzyTimer); clearTimeout(freezeTimer);
     clearInterval(shieldTicker); shieldUntil=0;
     frozen=false; document.body.classList.remove('frozen-bg'); grid.classList.remove('frozen');
@@ -662,7 +823,7 @@
     document.getElementById('st-level').textContent=level;
     document.getElementById('st-combo').textContent='x'+comboBest;
     document.getElementById('st-acc').textContent=acc+'%';
-    document.getElementById('mode-badge').textContent = mode==='power' ? 'MODO POWER-UPS ⚡' : 'MODO CLÁSICO 🎯';
+    document.getElementById('mode-badge').textContent = mode==='power' ? 'MODO POWER-UPS ⚡' : (mode==='rhythm' ? 'MODO RITMO 🎵' : 'MODO CLÁSICO 🎯');
     const badge=document.getElementById('best-badge');
     if(score>sessionBest[mode]){
       sessionBest[mode]=score;
@@ -683,6 +844,7 @@
       mName.textContent='MEDALLA DE '+medal.name;
       mName.classList.add(medal.cls);
       if(medal.name==='DIAMANTE') announce('💎 ¡DIAMANTE! 💎','#7df4ff');
+      else if(medal.name==='PLATINO') announce('🎖️ ¡PLATINO! 🎖️','#c8f5e4');
       else if(medal.name==='ORO') announce('🥇 ¡ORO! 🥇','var(--gold)');
       levelSound();
     }else{
@@ -700,14 +862,17 @@
 
   // ---------- Compartir ----------
   const shareBtn=document.getElementById('share-btn');
+  const shareHint=document.getElementById('share-hint');
+  function modeName(m){
+    return m==='power' ? 'Power-Ups ⚡' : (m==='rhythm' ? 'Ritmo 🎵' : 'Clásico 🎯');
+  }
   function buildShareText(){
     if(!lastResult) return '';
     const r=lastResult;
-    const modeName = r.mode==='power' ? 'Power-Ups ⚡' : 'Clásico 🎯';
     const medalLine = r.medal ? r.medal.emoji+' Medalla de '+r.medal.name : '🎮 Sin medalla (todavía)';
     return '🧠 NEURO RUSH ⚡\n'
       + medalLine + '\n'
-      + 'Modo: '+modeName+'\n'
+      + 'Modo: '+modeName(r.mode)+'\n'
       + '⭐ '+r.score.toLocaleString('es-MX')+' pts · Nivel '+r.level+' · Combo x'+r.comboBest+' · Precisión '+r.acc+'%\n'
       + '¿Puedes superarme? 😏';
   }
@@ -716,6 +881,18 @@
     shareBtn.textContent=text;
     setTimeout(()=>{ shareBtn.textContent=original; }, 1800);
   }
+  async function copyText(text){
+    try{ await navigator.clipboard.writeText(text); return true; }
+    catch(e){
+      const ta=document.createElement('textarea');
+      ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      let ok=false;
+      try{ ok=document.execCommand('copy'); }catch(e2){}
+      ta.remove();
+      return ok;
+    }
+  }
   shareBtn.addEventListener('click', async ()=>{
     const text=buildShareText();
     if(!text) return;
@@ -723,22 +900,52 @@
       try{ await navigator.share({title:'NEURO RUSH ⚡', text}); return; }
       catch(e){ if(e && e.name==='AbortError') return; }
     }
-    try{
-      await navigator.clipboard.writeText(text);
-      flashShareBtn('✅ ¡COPIADO! PÉGALO DONDE QUIERAS');
-    }catch(e){
-      const ta=document.createElement('textarea');
-      ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
-      document.body.appendChild(ta); ta.select();
-      try{ document.execCommand('copy'); flashShareBtn('✅ ¡COPIADO!'); }
-      catch(e2){ flashShareBtn('⚠️ No se pudo copiar'); }
-      ta.remove();
-    }
+    if(await copyText(text)) flashShareBtn('✅ ¡COPIADO! PÉGALO DONDE QUIERAS');
+    else flashShareBtn('⚠️ No se pudo copiar');
+  });
+  document.getElementById('share-wa').addEventListener('click', ()=>{
+    const text=buildShareText();
+    if(!text) return;
+    window.open('https://wa.me/?text='+encodeURIComponent(text), '_blank');
+  });
+  document.getElementById('share-tg').addEventListener('click', ()=>{
+    const text=buildShareText();
+    if(!text) return;
+    window.open('https://t.me/share/url?url=%20&text='+encodeURIComponent(text), '_blank');
+  });
+  document.getElementById('share-ig').addEventListener('click', async ()=>{
+    const text=buildShareText();
+    if(!text) return;
+    // Instagram no permite prellenar texto desde un enlace:
+    // copiamos el resultado y abrimos Instagram para que lo pegues en tu historia o DM.
+    const ok=await copyText(text);
+    shareHint.textContent = ok ? '✅ Resultado copiado: pégalo en tu historia o mensaje de Instagram' : '⚠️ Copia manualmente tu resultado';
+    setTimeout(()=>{ shareHint.textContent=''; }, 4000);
+    window.open('https://www.instagram.com/', '_blank');
   });
 
+  let lastRhythmSource=null; // 'mic' o File
   document.getElementById('play-classic').addEventListener('click', ()=>start('classic'));
   document.getElementById('play-power').addEventListener('click', ()=>start('power'));
-  document.getElementById('retry-btn').addEventListener('click', ()=>start());
+  document.getElementById('play-rhythm-mic').addEventListener('click', ()=>{ lastRhythmSource='mic'; startRhythmMic(); });
+  document.getElementById('play-rhythm-file').addEventListener('click', ()=>songInput.click());
+  songInput.addEventListener('change', ()=>{
+    if(songInput.files && songInput.files[0]){
+      lastRhythmSource=songInput.files[0];
+      startRhythmFile(songInput.files[0]);
+      songInput.value='';
+    }
+  });
+  document.getElementById('retry-btn').addEventListener('click', ()=>{
+    if(mode==='rhythm'){
+      overScreen.classList.add('hidden');
+      if(lastRhythmSource==='mic') startRhythmMic();
+      else if(lastRhythmSource) startRhythmFile(lastRhythmSource);
+      else { startScreen.classList.remove('hidden'); }
+      return;
+    }
+    start();
+  });
   document.getElementById('menu-btn').addEventListener('click', ()=>{
     overScreen.classList.add('hidden');
     startScreen.classList.remove('hidden');
