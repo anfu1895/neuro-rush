@@ -14,6 +14,9 @@
     --gold:#ffd23e;
     --lime:#8dff4a;
     --red:#ff4a5e;
+    --ice:#a5e8ff;
+    --fire:#ff7a2e;
+    --white:#ffffff;
     --text:#f2efff;
     --dim:#9b93d9;
   }
@@ -28,7 +31,7 @@
     touch-action:manipulation;
     display:flex;align-items:center;justify-content:center;
   }
-  #app{width:100%;max-width:460px;height:100%;max-height:860px;display:flex;flex-direction:column;padding:14px;position:relative;}
+  #app{width:100%;max-width:460px;height:100%;max-height:880px;display:flex;flex-direction:column;padding:14px;position:relative;}
 
   /* ---------- HUD ---------- */
   #hud{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;}
@@ -47,15 +50,18 @@
   #combo-text.hot{color:var(--gold);text-shadow:0 0 10px var(--gold);}
 
   /* ---------- Grid ---------- */
-  #grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:10px;}
+  #grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:10px;border-radius:20px;transition:box-shadow .2s;}
   .cell{
     background:rgba(255,255,255,.045);
     border-radius:18px;
     position:relative;
     cursor:pointer;
-    transition:transform .08s;
+    transition:transform .08s, background .3s;
   }
   .cell:active{transform:scale(.95);}
+  #grid.frozen .cell{background:rgba(140,215,255,.14);}
+  #grid.shielded{box-shadow:0 0 0 3px var(--white), 0 0 28px rgba(255,255,255,.55);}
+
   .orb{
     position:absolute;inset:12%;
     border-radius:50%;
@@ -67,12 +73,20 @@
   .orb.target{background:radial-gradient(circle at 35% 30%, #baf4ff, var(--cyan) 55%, #0e7fa0);box-shadow:0 0 22px var(--cyan),0 0 44px rgba(46,230,255,.35);}
   .orb.gold{background:radial-gradient(circle at 35% 30%, #fff3c4, var(--gold) 55%, #b8860b);box-shadow:0 0 26px var(--gold),0 0 52px rgba(255,210,62,.4);}
   .orb.trap{background:radial-gradient(circle at 35% 30%, #ffb3bd, var(--red) 55%, #8f1020);box-shadow:0 0 18px var(--red);}
+  .orb.ice{background:radial-gradient(circle at 35% 30%, #eaffff, var(--ice) 55%, #1b6fa8);box-shadow:0 0 24px var(--ice),0 0 48px rgba(165,232,255,.45);}
+  .orb.fire{background:radial-gradient(circle at 35% 30%, #ffe0b3, var(--fire) 55%, #a12800);box-shadow:0 0 24px var(--fire),0 0 48px rgba(255,122,46,.5);}
+  .orb.white{background:radial-gradient(circle at 35% 30%, #ffffff, #f0f0ff 55%, #9aa0d8);box-shadow:0 0 24px var(--white),0 0 48px rgba(255,255,255,.6);}
   .orb.shrink{animation:shrink linear forwards;}
   @keyframes shrink{from{transform:scale(1);opacity:1;}to{transform:scale(.35);opacity:.55;}}
+
+  .orb.iced{outline:3px solid rgba(220,245,255,.9);filter:brightness(1.12);animation:pop .18s ease-out;}
+  .orb.iced::after{content:'❄';position:absolute;top:-6px;right:-4px;font-size:14px;text-shadow:0 0 6px var(--ice);}
+  .orb.cracked{transform:scale(.86);filter:brightness(1.3) saturate(.6);outline-style:dashed;}
 
   .frenzy .orb.target{background:radial-gradient(circle at 35% 30%, #ffd9f4, var(--magenta) 55%, #8a0f68);box-shadow:0 0 26px var(--magenta),0 0 52px rgba(255,62,200,.45);}
   body.frenzy-bg{animation:framePulse .5s infinite alternate;}
   @keyframes framePulse{from{background:radial-gradient(ellipse at 50% -10%, #2a1c66 0%, var(--bg) 60%);}to{background:radial-gradient(ellipse at 50% -10%, #45156b 0%, #1a0f38 60%);}}
+  body.frozen-bg{background:radial-gradient(ellipse at 50% -10%, #16405e 0%, #0d1b33 60%);}
 
   /* ---------- Floating points ---------- */
   .float-pts{position:absolute;font-weight:900;font-size:20px;pointer-events:none;animation:floatUp .7s ease-out forwards;z-index:30;text-shadow:0 2px 8px rgba(0,0,0,.6);}
@@ -85,40 +99,68 @@
   /* ---------- Overlays ---------- */
   .overlay{
     position:absolute;inset:0;z-index:50;
-    background:rgba(14,11,38,.92);backdrop-filter:blur(6px);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;padding:24px;border-radius:20px;
+    background:rgba(14,11,38,.94);backdrop-filter:blur(6px);
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    text-align:center;padding:22px 20px;border-radius:20px;overflow-y:auto;
   }
+  .overlay.center{justify-content:center;}
   .hidden{display:none !important;}
-  h1{font-size:clamp(38px,10vw,56px);font-weight:900;letter-spacing:1px;line-height:1.05;
+  h1{font-size:clamp(34px,9vw,52px);font-weight:900;letter-spacing:1px;line-height:1.05;
      background:linear-gradient(90deg,var(--cyan),var(--magenta),var(--gold));
-     -webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:6px;}
-  .tagline{color:var(--dim);margin-bottom:22px;font-size:15px;}
-  .rules{display:flex;flex-direction:column;gap:10px;margin-bottom:26px;font-size:15px;}
-  .rule{display:flex;align-items:center;gap:12px;background:var(--panel);padding:10px 16px;border-radius:14px;text-align:left;}
-  .rule .ic{font-size:24px;}
-  .btn{
-    font-size:20px;font-weight:800;letter-spacing:1px;
-    padding:16px 44px;border:none;border-radius:999px;cursor:pointer;
-    color:#0c0a24;background:linear-gradient(90deg,var(--cyan),var(--lime));
-    box-shadow:0 6px 0 #0a5d70,0 10px 24px rgba(46,230,255,.35);
-    transition:transform .08s;
+     -webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:4px;}
+  .tagline{color:var(--dim);margin-bottom:16px;font-size:14px;}
+
+  .mode-card{
+    width:100%;max-width:360px;text-align:left;
+    background:var(--panel);border-radius:18px;padding:16px;margin-bottom:14px;
+    border:2px solid transparent;
   }
-  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #0a5d70;}
-  .btn.secondary{background:var(--panel);color:var(--text);box-shadow:0 6px 0 #14103a;margin-top:12px;font-size:15px;padding:12px 28px;}
+  .mode-card h2{font-size:20px;font-weight:900;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+  .mode-card.classic h2{color:var(--cyan);}
+  .mode-card.power h2{color:var(--gold);}
+  .mode-card p{font-size:13px;color:var(--dim);margin-bottom:10px;line-height:1.4;}
+  .pu-list{display:flex;flex-direction:column;gap:7px;margin-bottom:12px;}
+  .pu{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.35;background:rgba(0,0,0,.22);border-radius:10px;padding:7px 10px;}
+  .pu .ic{font-size:18px;line-height:1;}
+  .pu b{color:var(--text);}
+  .btn{
+    font-size:18px;font-weight:800;letter-spacing:1px;
+    padding:13px 34px;border:none;border-radius:999px;cursor:pointer;
+    color:#0c0a24;background:linear-gradient(90deg,var(--cyan),var(--lime));
+    box-shadow:0 5px 0 #0a5d70,0 10px 24px rgba(46,230,255,.35);
+    transition:transform .08s;display:block;width:100%;
+  }
+  .btn.gold-btn{background:linear-gradient(90deg,var(--gold),var(--fire));box-shadow:0 5px 0 #8a5a00,0 10px 24px rgba(255,210,62,.35);}
+  .btn:active{transform:translateY(4px);box-shadow:0 1px 0 #0a5d70;}
+  .btn.secondary{background:var(--panel);color:var(--text);box-shadow:0 5px 0 #14103a;margin-top:12px;font-size:15px;padding:12px 28px;width:auto;}
   #sound-toggle{position:absolute;top:14px;right:14px;z-index:60;background:var(--panel);border:none;color:var(--text);font-size:20px;width:44px;height:44px;border-radius:50%;cursor:pointer;}
 
+  .rules-mini{display:flex;gap:14px;justify-content:center;margin-bottom:16px;font-size:12px;color:var(--dim);flex-wrap:wrap;}
+
   /* ---------- Level-up flash ---------- */
-  #announce{position:absolute;top:38%;left:0;right:0;text-align:center;z-index:40;pointer-events:none;font-size:clamp(28px,8vw,44px);font-weight:900;opacity:0;}
+  #announce{position:absolute;top:38%;left:0;right:0;text-align:center;z-index:40;pointer-events:none;font-size:clamp(26px,7.5vw,42px);font-weight:900;opacity:0;}
   #announce.show{animation:announce 1s ease-out;}
   @keyframes announce{0%{opacity:0;transform:scale(.6);}20%{opacity:1;transform:scale(1.15);}45%{transform:scale(1);}80%{opacity:1;}100%{opacity:0;transform:scale(1.05);}}
 
-  /* ---------- Game over stats ---------- */
+  /* ---------- Game over ---------- */
   .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 26px;width:100%;max-width:320px;}
   .stat{background:var(--panel);border-radius:14px;padding:12px;}
   .stat .n{font-size:26px;font-weight:900;}
   .stat .l{font-size:11px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;}
   #best-badge{color:var(--gold);font-weight:800;margin-top:6px;min-height:22px;}
+
+  /* ---------- Medallas ---------- */
+  #medal-box{margin:12px 0 0;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:30px;}
+  #medal-emoji{font-size:54px;line-height:1;animation:medalPop .6s ease-out;}
+  @keyframes medalPop{0%{transform:scale(0) rotate(-25deg);}60%{transform:scale(1.25) rotate(8deg);}100%{transform:scale(1) rotate(0);}}
+  #medal-name{font-weight:900;font-size:17px;letter-spacing:3px;}
+  #medal-next{font-size:12px;color:var(--dim);margin-top:2px;}
+  #medal-next b{color:var(--text);}
+  .m-bronze{color:#e0955a;text-shadow:0 0 14px rgba(224,149,90,.7);}
+  .m-silver{color:#d9dff0;text-shadow:0 0 14px rgba(217,223,240,.7);}
+  .m-gold{color:var(--gold);text-shadow:0 0 16px rgba(255,210,62,.8);}
+  .m-diamond{color:#7df4ff;text-shadow:0 0 18px rgba(125,244,255,.9);}
+  .btn.share-btn{background:linear-gradient(90deg,var(--magenta),#9b5cff);box-shadow:0 5px 0 #6e0d55,0 10px 24px rgba(255,62,200,.35);color:#fff;max-width:280px;margin-bottom:12px;}
 
   body.shake #app{animation:shake .3s;}
   @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
@@ -146,30 +188,50 @@
   <div id="grid"></div>
   <div id="announce"></div>
 
-  <!-- Pantalla de inicio -->
+  <!-- Pantalla de inicio / selección de modo -->
   <div class="overlay" id="start-screen">
     <h1>NEURO RUSH</h1>
-    <div class="tagline">Reflejos + autocontrol. Rondas cortas, recompensa inmediata.</div>
-    <div class="rules">
-      <div class="rule"><span class="ic">🔵</span><span><b>Toca los orbes azules</b> antes de que se encojan.</span></div>
-      <div class="rule"><span class="ic">⭐</span><span><b>Las estrellas doradas</b> dan bonus y llenan tu combo.</span></div>
-      <div class="rule"><span class="ic">💀</span><span><b>NO toques los rojos.</b> Ese es el reto de autocontrol.</span></div>
-      <div class="rule"><span class="ic">🔥</span><span>Llena la barra y entra en <b>MODO FRENESÍ</b> (x2 en todo).</span></div>
+    <div class="tagline">Reflejos + autocontrol. Elige tu modo:</div>
+    <div class="rules-mini">
+      <span>🔵 toca = puntos</span><span>⭐ bonus</span><span>💀 ¡NO tocar!</span><span>🔥 barra llena = FRENESÍ x2</span>
     </div>
-    <button class="btn" id="start-btn">▶ JUGAR</button>
+
+    <div class="mode-card classic">
+      <h2>🎯 CLÁSICO</h2>
+      <p>El original. Toca los orbes azules antes de que se encojan, atrapa estrellas doradas, evita los rojos y llena la barra para el MODO FRENESÍ. Velocidad pura.</p>
+      <button class="btn" id="play-classic">▶ JUGAR CLÁSICO</button>
+    </div>
+
+    <div class="mode-card power">
+      <h2>⚡ POWER-UPS</h2>
+      <p>Todo lo del clásico + 3 power-ups que aparecen por sorpresa:</p>
+      <div class="pu-list">
+        <div class="pu"><span class="ic">❄️</span><span><b>Bola de hielo:</b> congela el escenario 3 segundos y lo llena de bolas normales y doradas. Las normales se rompen con 1 toque y las doradas con 2. ¡Rompe todas las que puedas!</span></div>
+        <div class="pu"><span class="ic">🔥</span><span><b>Bola de fuego:</b> destruye todo el escenario y te da puntos por cada bola normal y dorada. Las bolas malas no te hacen efecto.</span></div>
+        <div class="pu"><span class="ic">⚪</span><span><b>Bola blanca:</b> escudo de 7 segundos. Nada te afecta: tocar bolas malas o dejar escapar bolas no te quita vidas ni rompe tu combo.</span></div>
+      </div>
+      <button class="btn gold-btn" id="play-power">⚡ JUGAR POWER-UPS</button>
+    </div>
   </div>
 
   <!-- Game over -->
-  <div class="overlay hidden" id="over-screen">
+  <div class="overlay center hidden" id="over-screen">
     <h1 style="font-size:clamp(30px,8vw,44px);">FIN DE RONDA</h1>
+    <div id="mode-badge" style="color:var(--dim);font-size:13px;letter-spacing:1px;"></div>
     <div id="best-badge"></div>
+    <div id="medal-box">
+      <div id="medal-emoji"></div>
+      <div id="medal-name"></div>
+      <div id="medal-next"></div>
+    </div>
     <div class="stats">
       <div class="stat"><div class="n" id="st-score">0</div><div class="l">Puntos</div></div>
       <div class="stat"><div class="n" id="st-level">1</div><div class="l">Nivel</div></div>
       <div class="stat"><div class="n" id="st-combo">x1</div><div class="l">Mejor combo</div></div>
       <div class="stat"><div class="n" id="st-acc">0%</div><div class="l">Precisión</div></div>
     </div>
-    <button class="btn" id="retry-btn">⚡ OTRA VEZ</button>
+    <button class="btn share-btn" id="share-btn">📤 COMPARTIR RESULTADO</button>
+    <button class="btn" id="retry-btn" style="max-width:280px;">⚡ OTRA VEZ</button>
     <button class="btn secondary" id="menu-btn">Menú</button>
   </div>
 </div>
@@ -177,6 +239,7 @@
 <script>
 (function(){
   "use strict";
+  const app = document.getElementById('app');
   const grid = document.getElementById('grid');
   const scoreEl = document.getElementById('score-val');
   const levelEl = document.getElementById('level-val');
@@ -199,13 +262,43 @@
   }
 
   // ---------- Estado ----------
+  let mode='classic';
   let running=false, score=0, level=1, lives=3, combo=1, comboBest=1, comboProgress=0;
   let hits=0, misses=0, frenzy=false, frenzyTimer=null;
-  let spawnTimer=null, orbs=new Map(); // cellIndex -> {type, timeout, el}
-  let sessionBest=0; // memoria de la sesión (los artefactos no usan almacenamiento del navegador)
+  let frozen=false, freezeTimer=null;
+  let shieldUntil=0, shieldTicker=null;
+  let spawnTimer=null, orbs=new Map(); // cellIndex -> {type, timeout, el, hp}
+  let sessionBest={classic:0, power:0}; // memoria solo de la sesión
   let soundOn=true;
+  let lastResult=null; // para el botón de compartir
 
-  // ---------- Audio (Web Audio, sin archivos) ----------
+  // ---------- Medallas ----------
+  // Bronce y Plata: alcanzables. Oro y Diamante: para presumir de verdad.
+  const MEDALS = {
+    classic: [
+      {name:'BRONCE',   emoji:'🥉', cls:'m-bronze',  min:800},
+      {name:'PLATA',    emoji:'🥈', cls:'m-silver',  min:2500},
+      {name:'ORO',      emoji:'🥇', cls:'m-gold',    min:9000},
+      {name:'DIAMANTE', emoji:'💎', cls:'m-diamond', min:25000}
+    ],
+    power: [
+      {name:'BRONCE',   emoji:'🥉', cls:'m-bronze',  min:1200},
+      {name:'PLATA',    emoji:'🥈', cls:'m-silver',  min:4000},
+      {name:'ORO',      emoji:'🥇', cls:'m-gold',    min:14000},
+      {name:'DIAMANTE', emoji:'💎', cls:'m-diamond', min:38000}
+    ]
+  };
+  function medalFor(sc, m){
+    let earned=null;
+    for(const md of MEDALS[m]){ if(sc>=md.min) earned=md; }
+    return earned;
+  }
+  function nextMedal(sc, m){
+    for(const md of MEDALS[m]){ if(sc<md.min) return md; }
+    return null;
+  }
+
+  // ---------- Audio ----------
   let actx=null;
   function beep(freq, dur=0.09, type='sine', vol=0.18){
     if(!soundOn) return;
@@ -223,6 +316,9 @@
   function goldSound(){ beep(880,.1,'sine',.22); setTimeout(()=>beep(1320,.12,'sine',.22),80); }
   function badSound(){ beep(140,.25,'sawtooth',.25); }
   function levelSound(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.12,'square',.14), i*90)); }
+  function iceSound(){ [1400,1100,800,600].forEach((f,i)=>setTimeout(()=>beep(f,.14,'sine',.16), i*70)); }
+  function fireSound(){ beep(90,.4,'sawtooth',.3); setTimeout(()=>beep(60,.5,'sawtooth',.25),120); }
+  function shieldSound(){ [660,880,660,880].forEach((f,i)=>setTimeout(()=>beep(f,.1,'sine',.15), i*80)); }
 
   soundBtn.addEventListener('click', ()=>{
     soundOn=!soundOn;
@@ -233,13 +329,17 @@
   function cfg(){
     const l = level;
     return {
-      spawnMs: Math.max(950 - l*70, 380),           // cada cuánto aparece algo
-      lifeMs:  Math.max(1700 - l*110, 750),         // cuánto vive un orbe
-      trapChance: Math.min(0.08 + l*0.035, 0.32),   // prob. de trampa
+      spawnMs: Math.max(950 - l*70, 380),
+      lifeMs:  Math.max(1700 - l*110, 750),
+      trapChance: Math.min(0.08 + l*0.035, 0.32),
       goldChance: 0.10,
+      iceChance: 0.035,
+      fireChance: 0.03,
+      whiteChance: 0.03,
       maxSimul: Math.min(1 + Math.floor(l/2), 4)
     };
   }
+  function shieldActive(){ return Date.now() < shieldUntil; }
 
   // ---------- Render HUD ----------
   function renderHUD(){
@@ -247,24 +347,31 @@
     levelEl.textContent = level;
     livesEl.textContent = '❤️'.repeat(lives) + '🖤'.repeat(3-lives);
     comboFill.style.width = Math.min(comboProgress,100)+'%';
-    comboText.textContent = frenzy ? '🔥 FRENESÍ x'+combo+' 🔥' : 'COMBO x'+combo;
+    let txt = frenzy ? '🔥 FRENESÍ x'+combo+' 🔥' : 'COMBO x'+combo;
+    if(shieldActive()){
+      const s = Math.ceil((shieldUntil-Date.now())/1000);
+      txt += '  ·  🛡 '+s+'s';
+    }
+    if(frozen) txt = '❄️ ¡ROMPE LAS BOLAS! ❄️  ·  '+txt;
+    comboText.textContent = txt;
     comboText.classList.toggle('hot', combo>=5 || frenzy);
+    grid.classList.toggle('shielded', shieldActive());
   }
 
   // ---------- Efectos ----------
   function floatPts(cell, text, color){
-    const r=cell.getBoundingClientRect(), a=document.getElementById('app').getBoundingClientRect();
+    const r=cell.getBoundingClientRect(), a=app.getBoundingClientRect();
     const el=document.createElement('div');
     el.className='float-pts';
     el.textContent=text;
     el.style.color=color;
     el.style.left=(r.left-a.left + r.width/2 - 20)+'px';
     el.style.top=(r.top-a.top + r.height/3)+'px';
-    document.getElementById('app').appendChild(el);
+    app.appendChild(el);
     setTimeout(()=>el.remove(),750);
   }
   function burst(cell, color, n=10){
-    const r=cell.getBoundingClientRect(), a=document.getElementById('app').getBoundingClientRect();
+    const r=cell.getBoundingClientRect(), a=app.getBoundingClientRect();
     for(let i=0;i<n;i++){
       const p=document.createElement('div');
       p.className='particle';
@@ -274,7 +381,7 @@
       const ang=Math.random()*Math.PI*2, d=30+Math.random()*50;
       p.style.setProperty('--dx', Math.cos(ang)*d+'px');
       p.style.setProperty('--dy', Math.sin(ang)*d+'px');
-      document.getElementById('app').appendChild(p);
+      app.appendChild(p);
       setTimeout(()=>p.remove(),600);
     }
   }
@@ -295,8 +402,29 @@
   function freeCells(){
     return cells.map((c,i)=>i).filter(i=>!orbs.has(i));
   }
+  function iconFor(type){
+    return {trap:'💀', gold:'⭐', ice:'❄️', fire:'🔥', white:'🛡️', target:''}[type] || '';
+  }
+  function spawnAt(idx, type, opts){
+    opts = opts || {};
+    const el=document.createElement('div');
+    el.className='orb '+type;
+    el.textContent = iconFor(type);
+    let timeout=null;
+    if(opts.iced){
+      el.classList.add('iced');
+    }else{
+      const life = opts.lifeMs || cfg().lifeMs;
+      el.classList.add('shrink');
+      el.style.animationDuration='0.18s, '+life+'ms';
+      el.style.animationName='pop, shrink';
+      timeout = setTimeout(()=>expire(idx), life);
+    }
+    cells[idx].appendChild(el);
+    orbs.set(idx, {type, timeout, el, hp: opts.hp||1, iced: !!opts.iced});
+  }
   function spawn(){
-    if(!running) return;
+    if(!running || frozen) return;
     const c = cfg();
     if(orbs.size < c.maxSimul){
       const free = freeCells();
@@ -304,18 +432,15 @@
         const idx = free[Math.floor(Math.random()*free.length)];
         const r = Math.random();
         let type = 'target';
-        if(r < c.trapChance) type='trap';
-        else if(r < c.trapChance + c.goldChance) type='gold';
-
-        const el=document.createElement('div');
-        el.className='orb '+type+' shrink';
-        el.style.animationDuration='0.18s, '+c.lifeMs+'ms';
-        el.style.animationName='pop, shrink';
-        el.textContent = type==='trap' ? '💀' : (type==='gold' ? '⭐' : '');
-        cells[idx].appendChild(el);
-
-        const timeout = setTimeout(()=>expire(idx), c.lifeMs);
-        orbs.set(idx, {type, timeout, el});
+        let acc = c.trapChance;
+        if(r < acc) type='trap';
+        else if(r < (acc += c.goldChance)) type='gold';
+        else if(mode==='power'){
+          if(r < (acc += c.iceChance)) type='ice';
+          else if(r < (acc += c.fireChance)) type='fire';
+          else if(r < (acc += c.whiteChance)) type='white';
+        }
+        spawnAt(idx, type);
       }
     }
     spawnTimer = setTimeout(spawn, c.spawnMs * (frenzy?0.6:1));
@@ -323,21 +448,92 @@
   function removeOrb(idx){
     const o=orbs.get(idx);
     if(!o) return null;
-    clearTimeout(o.timeout);
+    if(o.timeout) clearTimeout(o.timeout);
     o.el.remove();
     orbs.delete(idx);
     return o;
   }
+  function clearBoard(){
+    Array.from(orbs.keys()).forEach(i=>removeOrb(i));
+  }
   function expire(idx){
     const o=removeOrb(idx);
     if(!o || !running) return;
-    if(o.type==='target'){ // dejar escapar un objetivo rompe el combo
-      misses++;
-      combo=1; comboProgress=Math.max(comboProgress-25,0);
-      floatPts(cells[idx],'¡se fue!','var(--dim)');
+    if(o.type==='target'){
+      if(shieldActive()){
+        floatPts(cells[idx],'🛡','var(--white)');
+      }else{
+        misses++;
+        combo=1; comboProgress=Math.max(comboProgress-25,0);
+        floatPts(cells[idx],'¡se fue!','var(--dim)');
+      }
       renderHUD();
     }
-    // trampas y estrellas que expiran no penalizan
+  }
+
+  // ---------- Power-ups ----------
+  function activateIce(fromCell){
+    iceSound();
+    burst(fromCell,'var(--ice)',16);
+    announce('❄️ ¡CONGELADO! ❄️','var(--ice)');
+    frozen=true;
+    clearTimeout(spawnTimer);
+    document.body.classList.add('frozen-bg');
+    grid.classList.add('frozen');
+    // Pausar los orbes existentes (ya no expiran; se limpian al final)
+    orbs.forEach(o=>{ if(o.timeout){clearTimeout(o.timeout); o.timeout=null;} o.el.classList.remove('shrink'); o.el.classList.add('iced'); o.iced=true; });
+    // Llenar el tablero con bolas normales y doradas congeladas
+    freeCells().forEach(i=>{
+      const gold = Math.random()<0.3;
+      spawnAt(i, gold?'gold':'target', {iced:true, hp: gold?2:1});
+    });
+    // Doradas ya existentes también requieren 2 toques durante el hielo
+    orbs.forEach(o=>{ if(o.type==='gold') o.hp=Math.max(o.hp,2); });
+    renderHUD();
+    freezeTimer=setTimeout(endFreeze, 3000);
+  }
+  function endFreeze(){
+    if(!frozen) return;
+    frozen=false;
+    document.body.classList.remove('frozen-bg');
+    grid.classList.remove('frozen');
+    clearBoard(); // lo que no rompiste se derrite sin castigo
+    renderHUD();
+    if(running) spawn();
+  }
+  function activateFire(fromCell){
+    fireSound();
+    shake();
+    announce('🔥 ¡EXPLOSIÓN! 🔥','var(--fire)');
+    burst(fromCell,'var(--fire)',18);
+    let gained=0;
+    const mult = frenzy?2:1;
+    orbs.forEach((o,i)=>{
+      if(o.type==='target'){ gained += 10*combo*mult; hits++; burst(cells[i],'var(--cyan)',6); }
+      else if(o.type==='gold'){ gained += 50*combo*mult; hits++; burst(cells[i],'var(--gold)',8); }
+      else { burst(cells[i],'var(--dim)',4); } // trampas y otros: sin efecto, sin castigo
+    });
+    clearBoard();
+    if(gained>0){
+      score += gained;
+      floatPts(fromCell,'+'+gained,'var(--fire)');
+      comboProgress = Math.min(comboProgress+25,100);
+      checkLevel();
+      if(comboProgress>=100 && !frenzy) startFrenzy();
+    }
+    renderHUD();
+  }
+  function activateShield(fromCell){
+    shieldSound();
+    burst(fromCell,'var(--white)',14);
+    announce('🛡️ ¡ESCUDO! 🛡️','var(--white)');
+    shieldUntil = Date.now() + 7000;
+    clearInterval(shieldTicker);
+    shieldTicker = setInterval(()=>{
+      renderHUD();
+      if(!shieldActive()){ clearInterval(shieldTicker); renderHUD(); }
+    }, 250);
+    renderHUD();
   }
 
   // ---------- Interacción ----------
@@ -348,9 +544,21 @@
     const idx = +cell.dataset.i;
     const o = orbs.get(idx);
     if(!o) return;
-    removeOrb(idx);
+
+    // Power-ups
+    if(o.type==='ice'){ removeOrb(idx); return activateIce(cell); }
+    if(o.type==='fire'){ removeOrb(idx); return activateFire(cell); }
+    if(o.type==='white'){ removeOrb(idx); return activateShield(cell); }
 
     if(o.type==='trap'){
+      removeOrb(idx);
+      if(shieldActive()){
+        beep(500,.08,'sine',.12);
+        burst(cell,'var(--white)',8);
+        floatPts(cell,'🛡 ¡a salvo!','var(--white)');
+        renderHUD();
+        return;
+      }
       badSound(); shake();
       lives--; combo=1; comboProgress=0;
       misses++;
@@ -362,6 +570,16 @@
       return;
     }
 
+    // Doradas congeladas: 2 toques
+    if(o.iced && o.type==='gold' && o.hp>1){
+      o.hp--;
+      o.el.classList.add('cracked');
+      beep(700,.06,'triangle',.15);
+      floatPts(cell,'¡crack!','var(--gold)');
+      return;
+    }
+
+    removeOrb(idx);
     hits++;
     const mult = frenzy?2:1;
     let pts;
@@ -381,18 +599,19 @@
     comboBest=Math.max(comboBest,combo);
     floatPts(cell,'+'+pts, o.type==='gold'?'var(--gold)':'var(--cyan)');
 
-    // Frenesí
     if(comboProgress>=100 && !frenzy) startFrenzy();
+    checkLevel();
+    renderHUD();
+  });
 
-    // Subida de nivel cada 400 pts aprox
+  function checkLevel(){
     const newLevel = Math.floor(score/400)+1;
     if(newLevel>level){
       level=newLevel;
       levelSound();
       announce('¡NIVEL '+level+'! 🚀','var(--gold)');
     }
-    renderHUD();
-  });
+  }
 
   function startFrenzy(){
     frenzy=true;
@@ -414,42 +633,112 @@
   function reset(){
     score=0; level=1; lives=3; combo=1; comboBest=1; comboProgress=0;
     hits=0; misses=0;
+    shieldUntil=0; clearInterval(shieldTicker);
+    frozen=false; document.body.classList.remove('frozen-bg'); grid.classList.remove('frozen');
     endFrenzy();
-    clearTimeout(spawnTimer); clearTimeout(frenzyTimer);
-    orbs.forEach((o,i)=>removeOrb(i));
+    clearTimeout(spawnTimer); clearTimeout(frenzyTimer); clearTimeout(freezeTimer);
+    clearBoard();
     renderHUD();
   }
-  function start(){
+  function start(selectedMode){
+    if(selectedMode) mode=selectedMode;
     reset();
     running=true;
     startScreen.classList.add('hidden');
     overScreen.classList.add('hidden');
-    announce('¡A JUGAR! ⚡','var(--cyan)');
+    announce(mode==='power' ? '⚡ ¡POWER-UPS! ⚡' : '¡A JUGAR! ⚡', mode==='power'?'var(--gold)':'var(--cyan)');
     spawn();
   }
   function gameOver(){
     running=false;
-    clearTimeout(spawnTimer); clearTimeout(frenzyTimer);
+    clearTimeout(spawnTimer); clearTimeout(frenzyTimer); clearTimeout(freezeTimer);
+    clearInterval(shieldTicker); shieldUntil=0;
+    frozen=false; document.body.classList.remove('frozen-bg'); grid.classList.remove('frozen');
     endFrenzy();
-    orbs.forEach((o,i)=>removeOrb(i));
+    clearBoard();
     const total=hits+misses;
     const acc= total? Math.round(hits/total*100) : 0;
     document.getElementById('st-score').textContent=score;
     document.getElementById('st-level').textContent=level;
     document.getElementById('st-combo').textContent='x'+comboBest;
     document.getElementById('st-acc').textContent=acc+'%';
+    document.getElementById('mode-badge').textContent = mode==='power' ? 'MODO POWER-UPS ⚡' : 'MODO CLÁSICO 🎯';
     const badge=document.getElementById('best-badge');
-    if(score>sessionBest){
-      sessionBest=score;
+    if(score>sessionBest[mode]){
+      sessionBest[mode]=score;
       badge.textContent='🏆 ¡NUEVO RÉCORD DE LA SESIÓN!';
     }else{
-      badge.textContent='Récord de la sesión: '+sessionBest;
+      badge.textContent='Récord de la sesión: '+sessionBest[mode];
     }
+
+    // Medalla
+    const medal = medalFor(score, mode);
+    const next = nextMedal(score, mode);
+    const mEmoji=document.getElementById('medal-emoji');
+    const mName=document.getElementById('medal-name');
+    const mNext=document.getElementById('medal-next');
+    mName.className='';
+    if(medal){
+      mEmoji.textContent=medal.emoji;
+      mName.textContent='MEDALLA DE '+medal.name;
+      mName.classList.add(medal.cls);
+      if(medal.name==='DIAMANTE') announce('💎 ¡DIAMANTE! 💎','#7df4ff');
+      else if(medal.name==='ORO') announce('🥇 ¡ORO! 🥇','var(--gold)');
+      levelSound();
+    }else{
+      mEmoji.textContent='';
+      mName.textContent='Sin medalla… aún 😉';
+      mName.style.color='var(--dim)';
+    }
+    mNext.innerHTML = next
+      ? 'Próxima: '+next.emoji+' '+next.name+' a los <b>'+next.min.toLocaleString('es-MX')+'</b> pts (te faltan '+(next.min-score).toLocaleString('es-MX')+')'
+      : '¡Tienes la medalla máxima! 👑';
+
+    lastResult={score, level, comboBest, acc, mode, medal};
     overScreen.classList.remove('hidden');
   }
 
-  document.getElementById('start-btn').addEventListener('click', start);
-  document.getElementById('retry-btn').addEventListener('click', start);
+  // ---------- Compartir ----------
+  const shareBtn=document.getElementById('share-btn');
+  function buildShareText(){
+    if(!lastResult) return '';
+    const r=lastResult;
+    const modeName = r.mode==='power' ? 'Power-Ups ⚡' : 'Clásico 🎯';
+    const medalLine = r.medal ? r.medal.emoji+' Medalla de '+r.medal.name : '🎮 Sin medalla (todavía)';
+    return '🧠 NEURO RUSH ⚡\n'
+      + medalLine + '\n'
+      + 'Modo: '+modeName+'\n'
+      + '⭐ '+r.score.toLocaleString('es-MX')+' pts · Nivel '+r.level+' · Combo x'+r.comboBest+' · Precisión '+r.acc+'%\n'
+      + '¿Puedes superarme? 😏';
+  }
+  function flashShareBtn(text){
+    const original='📤 COMPARTIR RESULTADO';
+    shareBtn.textContent=text;
+    setTimeout(()=>{ shareBtn.textContent=original; }, 1800);
+  }
+  shareBtn.addEventListener('click', async ()=>{
+    const text=buildShareText();
+    if(!text) return;
+    if(navigator.share){
+      try{ await navigator.share({title:'NEURO RUSH ⚡', text}); return; }
+      catch(e){ if(e && e.name==='AbortError') return; }
+    }
+    try{
+      await navigator.clipboard.writeText(text);
+      flashShareBtn('✅ ¡COPIADO! PÉGALO DONDE QUIERAS');
+    }catch(e){
+      const ta=document.createElement('textarea');
+      ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); flashShareBtn('✅ ¡COPIADO!'); }
+      catch(e2){ flashShareBtn('⚠️ No se pudo copiar'); }
+      ta.remove();
+    }
+  });
+
+  document.getElementById('play-classic').addEventListener('click', ()=>start('classic'));
+  document.getElementById('play-power').addEventListener('click', ()=>start('power'));
+  document.getElementById('retry-btn').addEventListener('click', ()=>start());
   document.getElementById('menu-btn').addEventListener('click', ()=>{
     overScreen.classList.add('hidden');
     startScreen.classList.remove('hidden');
