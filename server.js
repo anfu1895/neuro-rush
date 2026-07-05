@@ -11,6 +11,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const db = require('./db');
+const duel = require('./duel');
 
 const HTTP_PORT = Number(process.env.PORT) || 3004;
 const HTTPS_PORT = Number(process.env.HTTPS_PORT) || 3443;
@@ -178,7 +179,9 @@ db.init()
     console.error(`BD       → error de conexión: ${error.message}. Récords desactivados.`);
   });
 
-http.createServer(handler).listen(HTTP_PORT, HOST, () => {
+const httpServer = http.createServer(handler);
+duel.attach(httpServer);
+httpServer.listen(HTTP_PORT, HOST, () => {
   console.log(`PC       → http://localhost:${HTTP_PORT}`);
   printPhoneUrls('http', HTTP_PORT);
 });
@@ -192,7 +195,9 @@ if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
     cert: fs.readFileSync(certPath)
   };
 
-  https.createServer(options, handler).listen(HTTPS_PORT, HOST, () => {
+  const httpsServer = https.createServer(options, handler);
+  duel.attach(httpsServer);
+  httpsServer.listen(HTTPS_PORT, HOST, () => {
     console.log(`PC HTTPS → https://localhost:${HTTPS_PORT}`);
     printPhoneUrls('https', HTTPS_PORT);
   });

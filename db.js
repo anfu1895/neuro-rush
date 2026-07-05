@@ -18,6 +18,7 @@ const env = process.env.NODE_ENV || 'development';
 let sequelize = null;
 let Player = null;
 let Score = null;
+let Match = null;
 let ready = false;
 
 function enabled() {
@@ -63,6 +64,38 @@ function defineModels() {
 
   Player.hasMany(Score, { foreignKey: 'player_id' });
   Score.belongsTo(Player, { foreignKey: 'player_id' });
+
+  Match = sequelize.define('Match', {
+    id: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true
+    },
+    player_a: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: { model: 'players', key: 'id' }
+    },
+    player_b: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: { model: 'players', key: 'id' }
+    },
+    score_a: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 0
+    },
+    score_b: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 0
+    },
+    winner: {
+      type: DataTypes.UUID,
+      allowNull: true // null on a tie
+    }
+  }, { tableName: 'matches' });
 }
 
 async function init() {
@@ -126,4 +159,14 @@ async function leaderboard(mode) {
   return rows.map(r => ({ name: r['Player.name'], best: Number(r.best) }));
 }
 
-module.exports = { enabled, init, registerPlayer, saveScore, leaderboard };
+async function saveMatch(playerA, playerB, scoreA, scoreB, winner) {
+  await Match.create({
+    player_a: playerA,
+    player_b: playerB,
+    score_a: scoreA,
+    score_b: scoreB,
+    winner: winner || null
+  });
+}
+
+module.exports = { enabled, init, registerPlayer, saveScore, leaderboard, saveMatch };

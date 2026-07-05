@@ -189,6 +189,56 @@
   .credit b{color:var(--text);}
   .copyright{font-size:10px;color:var(--dim);opacity:.8;margin-top:2px;margin-bottom:8px;}
 
+  /* ---------- Duelo online ---------- */
+  .mode-card.duel h2{color:var(--red);}
+  .mode-card.robot h2{color:var(--ice);}
+  .bot-difficulty{display:flex;gap:7px;margin-top:10px;}
+  .bot-difficulty button{flex:1;border:2px solid transparent;border-radius:10px;padding:8px 4px;background:rgba(0,0,0,.25);color:var(--dim);font-size:11px;font-weight:900;cursor:pointer;}
+  .bot-difficulty button.active{border-color:var(--cyan);background:rgba(46,230,255,.15);color:var(--text);box-shadow:0 0 12px rgba(46,230,255,.2);}
+  .bot-difficulty button[data-difficulty="easy"].active{border-color:var(--lime);}
+  .bot-difficulty button[data-difficulty="hard"].active{border-color:var(--red);}
+  #duel-bar{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+  #duel-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;}
+  #duel-me{color:var(--cyan);}
+  #duel-opp{color:var(--red);}
+  #adv-bar{height:10px;background:var(--panel);border-radius:99px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.5);}
+  #adv-fill{height:100%;width:50%;border-radius:99px;background:linear-gradient(90deg,var(--cyan),var(--lime));transition:width .3s;}
+  #sab-row{display:flex;gap:8px;align-items:center;}
+  .sab{flex:1;background:var(--panel);border:none;border-radius:12px;padding:7px 4px;font-size:18px;cursor:pointer;color:var(--text);box-shadow:0 3px 0 rgba(0,0,0,.35);position:relative;transition:transform .08s;}
+  .sab:active{transform:translateY(2px);}
+  .sab:disabled{opacity:.35;cursor:default;}
+  .sab .cost{position:absolute;top:1px;right:5px;font-size:10px;color:var(--gold);font-weight:800;}
+  .sab .qty{position:absolute;bottom:1px;right:5px;font-size:10px;color:var(--cyan);font-weight:900;}
+  #power-meter{width:62px;flex:0 0 62px;}
+  #power-label{font-size:10px;color:var(--gold);font-weight:900;text-align:center;margin-bottom:3px;}
+  #power-track{height:8px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden;}
+  #power-fill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--gold));border-radius:99px;transition:width .15s;}
+  #incoming-attack{display:flex;align-items:center;gap:12px;background:rgba(255,74,94,.14);border:2px solid var(--red);border-radius:16px;padding:10px 12px;overflow:hidden;position:relative;}
+  #incoming-attack::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);animation:attackSweep .75s linear infinite;}
+  #incoming-icon{font-size:38px;animation:incomingPulse .45s ease-in-out infinite alternate;z-index:1;}
+  #incoming-info{flex:1;z-index:1;}
+  #incoming-title{font-size:12px;font-weight:900;color:var(--red);letter-spacing:1px;}
+  #incoming-count{font-size:24px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums;}
+  #counter-power{z-index:1;min-width:88px;background:var(--panel);border:2px solid var(--gold);border-radius:12px;color:var(--text);padding:7px;font-size:19px;font-weight:900;cursor:pointer;}
+  #counter-power:disabled{opacity:.35;cursor:default;}
+  #counter-power small{display:block;font-size:9px;color:var(--gold);letter-spacing:.5px;}
+  @keyframes incomingPulse{from{transform:scale(.88) rotate(-8deg);}to{transform:scale(1.12) rotate(8deg);}}
+  @keyframes attackSweep{from{transform:translateX(-100%);}to{transform:translateX(100%);}}
+  #energy-dots{display:flex;gap:5px;align-items:center;padding:0 4px;}
+  #energy-dots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.15);}
+  #energy-dots i.on{background:var(--gold);box-shadow:0 0 8px var(--gold);}
+  #grid.sab-locked{pointer-events:none;filter:saturate(.4) brightness(.75);}
+  #grid.sab-dark{background:rgba(0,0,0,.55);}
+  #grid.sab-dark .orb{filter:brightness(.12);}
+  #grid.mirrored{transform:scaleX(-1);}
+  #room-code-input{width:150px;background:var(--panel);border:2px solid rgba(255,255,255,.18);border-radius:14px;padding:12px 16px;font-size:20px;font-weight:800;color:var(--text);text-align:center;letter-spacing:6px;text-transform:uppercase;outline:none;margin-bottom:10px;}
+  #room-code-input:focus{border-color:var(--red);}
+  #lobby-code{font-size:38px;font-weight:900;letter-spacing:10px;color:var(--gold);margin:8px 0;min-height:46px;}
+  #lobby-status{font-size:13px;color:var(--dim);min-height:18px;margin-bottom:12px;}
+  #duel-lobby .btn{max-width:280px;margin-bottom:10px;}
+  #rematch-status{font-size:12px;color:var(--dim);min-height:16px;margin:8px 0;}
+  #duel-result-title{margin-bottom:6px;}
+
   /* ---------- Récords mundiales ---------- */
   .mode-card.records h2{color:var(--lime);}
   .lb-tabs{display:flex;gap:8px;margin-bottom:10px;}
@@ -243,6 +293,28 @@
     <div id="combo-text">COMBO x1</div>
   </div>
 
+  <div id="duel-bar" class="hidden">
+    <div id="duel-top">
+      <span id="duel-me">TÚ: 0</span>
+      <span id="duel-opp">RIVAL: 0</span>
+    </div>
+    <div id="adv-bar"><div id="adv-fill"></div></div>
+    <div id="sab-row">
+      <div id="power-meter"><div id="power-label">⚡ 0</div><div id="power-track"><div id="power-fill"></div></div></div>
+      <button class="sab" data-kind="freeze" title="Se obtiene cada 5 puntos"><span class="cost">5 pts</span>🧊<span class="qty">×0</span></button>
+      <button class="sab" data-kind="bombs" title="Se obtiene cada 25 puntos"><span class="cost">25 pts</span>💥<span class="qty">×0</span></button>
+      <button class="sab" data-kind="storm" title="Se obtiene cada 15 puntos"><span class="cost">15 pts</span>🌪️<span class="qty">×0</span></button>
+    </div>
+    <div id="incoming-attack" class="hidden">
+      <div id="incoming-icon">🧊</div>
+      <div id="incoming-info">
+        <div id="incoming-title">ATAQUE RIVAL</div>
+        <div id="incoming-count">2.0s</div>
+      </div>
+      <button id="counter-power" type="button"><span>💣 ×0</span><small>ANULAR</small></button>
+    </div>
+  </div>
+
   <div id="grid"></div>
   <div id="announce"></div>
 
@@ -272,6 +344,23 @@
       <button class="btn gold-btn" id="play-power">⚡ JUGAR POWER-UPS</button>
     </div>
 
+    <div class="mode-card duel">
+      <h2>⚔️ DUELO ONLINE</h2>
+      <p>Reta a otro jugador durante 65 segundos. Cada barra llena suma 1 punto: hielo se obtiene cada 5, tormenta cada 15 y explosión cada 25. Contrarresta con 💥 &gt; 🧊, 🌪️ &gt; 💥 y 🧊 &gt; 🌪️.</p>
+      <button class="btn" id="play-duel" style="background:linear-gradient(90deg,var(--red),var(--magenta));box-shadow:0 5px 0 #7a1020,0 10px 24px rgba(255,74,94,.35);color:#fff;">⚔️ BUSCAR RIVAL</button>
+    </div>
+
+    <div class="mode-card robot">
+      <h2>🤖 VS ROBOT</h2>
+      <p>Duelo contra un robot que juega, se defiende y razona sus poderes. Elegí su dificultad; además aprende de cada partida. Aprendizaje: <b id="bot-level-label">1</b>/10</p>
+      <button class="btn" id="play-robot" style="background:linear-gradient(90deg,var(--ice),var(--cyan));box-shadow:0 5px 0 #1b6fa8,0 10px 24px rgba(165,232,255,.35);">🤖 RETAR AL ROBOT</button>
+      <div class="bot-difficulty" id="bot-difficulty" aria-label="Dificultad del robot">
+        <button type="button" data-difficulty="easy">🌱 FÁCIL</button>
+        <button type="button" data-difficulty="medium">⚙️ MEDIO</button>
+        <button type="button" data-difficulty="hard">🔥 DIFÍCIL</button>
+      </div>
+    </div>
+
     <div class="mode-card rhythm">
       <h2>🎵 MODO RITMO</h2>
       <p>Las bolas salen <b>al ritmo de tu música</b>. Pon tu playlist de Spotify a sonar en tu bocina y el juego detecta los beats con el micrófono, o carga una canción (MP3) y suena dentro del juego. ¡Cada golpe de la canción lanza una bola!</p>
@@ -293,7 +382,8 @@
       <h2>🏆 RÉCORDS MUNDIALES</h2>
       <div class="lb-tabs">
         <button class="lb-tab active" data-mode="classic">🎯 Clásico</button>
-        <button class="lb-tab" data-mode="power">⚡ Power-Ups</button>
+        <button class="lb-tab" data-mode="power">⚡ Power</button>
+        <button class="lb-tab" data-mode="robot">🤖 Robot</button>
       </div>
       <ol id="lb-list"></ol>
       <div id="lb-status"></div>
@@ -330,6 +420,31 @@
     <button class="btn secondary" id="menu-btn">Menú</button>
     <div class="credit">Creado por <b>Angel Fuentes</b></div>
     <div class="copyright">© 2026 Angel Fuentes. Todos los derechos reservados.</div>
+  </div>
+
+  <!-- Lobby del duelo online -->
+  <div class="overlay center hidden" id="duel-lobby">
+    <h1 style="font-size:clamp(28px,8vw,42px);">⚔️ DUELO</h1>
+    <div id="lobby-code"></div>
+    <div id="lobby-status"></div>
+    <button class="btn" id="duel-quick">🎲 PARTIDA RÁPIDA</button>
+    <button class="btn gold-btn" id="duel-create">🔑 CREAR SALA PRIVADA</button>
+    <input id="room-code-input" maxlength="4" autocomplete="off" spellcheck="false" placeholder="CÓDIGO">
+    <button class="btn" id="duel-join">ENTRAR A SALA</button>
+    <button class="btn secondary" id="duel-back">← Volver al menú</button>
+  </div>
+
+  <!-- Resultado del duelo -->
+  <div class="overlay center hidden" id="duel-over">
+    <h1 id="duel-result-title" style="font-size:clamp(30px,8vw,44px);">RESULTADO</h1>
+    <div id="duel-result-sub" style="color:var(--dim);font-size:13px;margin-bottom:10px;"></div>
+    <div class="stats" style="margin-top:6px;">
+      <div class="stat"><div class="n" id="d-my" style="color:var(--cyan);">0</div><div class="l">Tú</div></div>
+      <div class="stat"><div class="n" id="d-opp" style="color:var(--red);">0</div><div class="l" id="d-opp-label">Rival</div></div>
+    </div>
+    <button class="btn" id="duel-rematch" style="max-width:280px;">🔄 REVANCHA</button>
+    <div id="rematch-status"></div>
+    <button class="btn secondary" id="duel-menu">Menú</button>
   </div>
 
   <!-- Registro de nombre (primera vez) -->
@@ -465,7 +580,11 @@
   function renderHUD(){
     scoreEl.textContent = score;
     levelEl.textContent = level;
-    livesEl.textContent = '❤️'.repeat(lives) + '🖤'.repeat(3-lives);
+    // En duelo la caja de vidas muestra el tiempo restante
+    livesEl.textContent = mode==='duel'
+      ? (duelSt.timeLeft!=null ? duelSt.timeLeft+'s' : '—')
+      : '❤️'.repeat(lives) + '🖤'.repeat(3-lives);
+    if(mode==='duel') renderDuelHUD();
     comboFill.style.width = Math.min(comboProgress,100)+'%';
     let txt = frenzy ? '🔥 FRENESÍ x'+combo+' 🔥' : 'COMBO x'+combo;
     if(shieldActive()){
@@ -799,6 +918,7 @@
   // ---------- Interacción ----------
   grid.addEventListener('pointerdown', (e)=>{
     if(!running) return;
+    if(mode==='duel' && duelSt.locked) return; // congelado por sabotaje
     const cell = e.target.closest('.cell');
     if(!cell) return;
     const idx = +cell.dataset.i;
@@ -812,6 +932,16 @@
 
     if(o.type==='trap'){
       removeOrb(idx);
+      if(mode==='duel'){
+        // En duelo no hay vidas: la trampa cuesta puntos y rompe el combo
+        badSound(); shake();
+        score=Math.max(0, score-50);
+        combo=1; comboProgress=0; misses++;
+        burst(cell,'var(--red)',8);
+        floatPts(cell,'-50','var(--red)');
+        renderHUD();
+        return;
+      }
       if(shieldActive()){
         beep(500,.08,'sine',.12);
         burst(cell,'var(--white)',8);
@@ -857,6 +987,7 @@
     score += pts;
     combo++;
     comboBest=Math.max(comboBest,combo);
+    if(mode==='duel') advancePowerBar();
     floatPts(cell,'+'+pts, o.type==='gold'?'var(--gold)':'var(--cyan)');
 
     if(comboProgress>=100 && !frenzy) startFrenzy();
@@ -897,6 +1028,7 @@
     frozen=false; document.body.classList.remove('frozen-bg'); grid.classList.remove('frozen');
     endFrenzy();
     clearTimeout(spawnTimer); clearTimeout(frenzyTimer); clearTimeout(freezeTimer);
+    stopDuelUI();
     clearBoard();
     renderHUD();
   }
@@ -909,6 +1041,16 @@
     if(mode==='rhythm'){
       announce('🎵 ¡SIENTE EL RITMO! 🎵','var(--magenta)');
       rz.raf=requestAnimationFrame(rhythmLoop);
+    }else if(mode==='duel'){
+      announce('⚔️ ¡DUELO! ⚔️','var(--red)');
+      duelSt.startTime=Date.now();
+      duelSt.timeLeft=Math.ceil(duelSt.duration/1000);
+      duelSt.lastSent=-1;
+      livesLabel.textContent='Tiempo';
+      duelBar.classList.remove('hidden');
+      renderHUD();
+      duelSpawn();
+      duelSt.ticker=setInterval(duelTick,250);
     }else{
       announce(mode==='power' ? '⚡ ¡POWER-UPS! ⚡' : '¡A JUGAR! ⚡', mode==='power'?'var(--gold)':'var(--cyan)');
       spawn();
@@ -1087,6 +1229,7 @@
 
   let lbMode='classic';
   async function loadLeaderboard(){
+    if(lbMode==='robot'){ renderRobotBoard(); return; }
     lbStatus.textContent='Cargando…';
     lbList.innerHTML='';
     try{
@@ -1128,6 +1271,738 @@
     }).catch(()=>{});
   }
   loadLeaderboard();
+
+  // ---------- Duelo online 1v1 ----------
+  const duelBar=document.getElementById('duel-bar');
+  const duelLobby=document.getElementById('duel-lobby');
+  const duelOver=document.getElementById('duel-over');
+  const lobbyCode=document.getElementById('lobby-code');
+  const lobbyStatusEl=document.getElementById('lobby-status');
+  const rematchBtn=document.getElementById('duel-rematch');
+  const rematchStatusEl=document.getElementById('rematch-status');
+  const livesLabel=document.querySelector('#lives-box .hud-label');
+  const SAB_COST={freeze:5, bombs:25, storm:15};
+  const PLAYER_POWER_CHARGE_PER_HIT=0.50;
+  const SAB_META={
+    freeze:{icon:'🧊', label:'HIELO', counter:'bombs'},
+    bombs:{icon:'💥', label:'EXPLOSIÓN', counter:'storm'},
+    storm:{icon:'🌪️', label:'TORMENTA', counter:'freeze'}
+  };
+
+  const duelSt={
+    rng:null, oppName:'', oppScore:0, energy:0, powerProgress:0,
+    powers:{freeze:0,bombs:0,storm:0}, locked:false, oppLeft:false,
+    vsBot:false, duration:65000, startTime:0, timeLeft:65, lastSent:-1,
+    spawnTimer:null, ticker:null, cd:null, resultTimer:null,
+    fxFreeze:null, fxDark:null, fxMirror:null,
+    incoming:null, incomingTimer:null, incomingTicker:null
+  };
+
+  // PRNG determinista: misma semilla ⇒ misma secuencia en ambos jugadores
+  function mulberry32(a){
+    return function(){
+      a|=0; a=a+0x6D2B79F5|0;
+      let t=Math.imul(a^a>>>15, 1|a);
+      t=t+Math.imul(t^t>>>7, 61|t)^t;
+      return ((t^t>>>14)>>>0)/4294967296;
+    };
+  }
+
+  let duelWS=null, wsQueue=[];
+  function wsSend(obj){
+    if(duelWS && duelWS.readyState===1){ duelWS.send(JSON.stringify(obj)); return; }
+    wsQueue.push(obj);
+    connectWS();
+  }
+  function connectWS(){
+    if(duelWS && (duelWS.readyState===0 || duelWS.readyState===1)) return;
+    lobbyStatus('Conectando…');
+    try{
+      duelWS=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws');
+    }catch(e){
+      lobbyStatus('No se pudo conectar al servidor.');
+      return;
+    }
+    duelWS.addEventListener('open', ()=>{
+      duelWS.send(JSON.stringify({t:'hello', playerId:player.id, name:player.name}));
+      lobbyStatus('');
+      while(wsQueue.length) duelWS.send(JSON.stringify(wsQueue.shift()));
+    });
+    duelWS.addEventListener('message', ev=>{
+      let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+      duelMsg(m);
+    });
+    duelWS.addEventListener('close', ()=>{
+      duelWS=null;
+      if(running && mode==='duel'){
+        running=false;
+        stopDuelUI();
+        clearBoard();
+        showDuelResult({you:score, opp:duelSt.oppScore,
+          outcome: score>duelSt.oppScore?'win':(score<duelSt.oppScore?'lose':'tie'),
+          disconnected:true});
+      }
+    });
+    duelWS.addEventListener('error', ()=>{ lobbyStatus('Error de conexión con el servidor.'); });
+  }
+  function lobbyStatus(text){ lobbyStatusEl.textContent=text; }
+
+  function duelMsg(m){
+    switch(m.t){
+      case 'queued': lobbyStatus('Buscando rival…'); break;
+      case 'room':
+        lobbyCode.textContent=m.code;
+        lobbyStatus('Comparte este código con tu rival. Esperando…');
+        break;
+      case 'matched': beginDuel(m); break;
+      case 'opp_score': duelSt.oppScore=m.value; renderDuelHUD(); break;
+      case 'sabotaged': queueIncomingAttack(m.kind, m.from); break;
+      case 'rematch_wait':
+        if(!duelOver.classList.contains('hidden')) rematchStatusEl.textContent='⚔️ El rival quiere revancha. ¡Acepta!';
+        break;
+      case 'result': showDuelResult(m); break;
+      case 'opp_left': handleOppLeft(); break;
+      case 'error': {
+        const msgs={room_not_found:'Sala no encontrada. Revisa el código.', room_full:'Esa sala ya está llena.', not_registered:'Necesitas registrar tu nombre primero.'};
+        lobbyStatus(msgs[m.code]||'Error del servidor.');
+        break;
+      }
+    }
+  }
+
+  function beginDuel(m){
+    duelSt.vsBot=false;
+    duelSt.rng=mulberry32(m.seed);
+    duelSt.oppName=m.opponent.name;
+    duelSt.oppScore=0;
+    duelSt.energy=0;
+    duelSt.powerProgress=0;
+    duelSt.powers={freeze:0,bombs:0,storm:0};
+    duelSt.locked=false;
+    duelSt.oppLeft=false;
+    duelSt.duration=m.duration||65000;
+    rematchBtn.disabled=false;
+    rematchStatusEl.textContent='';
+    duelLobby.classList.add('hidden');
+    duelOver.classList.add('hidden');
+    startScreen.classList.add('hidden');
+    overScreen.classList.add('hidden');
+    mode='duel';
+    reset();
+    duelBar.classList.remove('hidden');
+    renderDuelHUD();
+    let n=3;
+    clearTimeout(duelSt.cd);
+    const step=()=>{
+      if(n>0){
+        announce(String(n),'var(--gold)');
+        beep(500+n*120,.1,'square',.2);
+        n--;
+        duelSt.cd=setTimeout(step,900);
+      }else{
+        start('duel');
+      }
+    };
+    step();
+  }
+
+  // Dificultad determinista por tiempo transcurrido (idéntica para ambos)
+  function duelCfg(elapsed){
+    const step=Math.floor(elapsed/10000);
+    return {
+      spawnMs: Math.max(950 - step*70, 400),
+      lifeMs:  Math.max(1700 - step*100, 800),
+      trapChance: Math.min(0.10 + step*0.03, 0.30),
+      goldChance: 0.10,
+      maxSimul: Math.min(2 + Math.floor(step/3), 4)
+    };
+  }
+  function duelSpawn(){
+    if(!running || mode!=='duel') return;
+    const elapsed=Date.now()-duelSt.startTime;
+    if(elapsed>=duelSt.duration) return;
+    const c=duelCfg(elapsed);
+    // Consumir SIEMPRE dos tiradas para mantener el stream sincronizado
+    const typeRoll=duelSt.rng(), posRoll=duelSt.rng();
+    if(orbs.size<c.maxSimul){
+      const free=freeCells();
+      if(free.length){
+        const idx=free[Math.floor(posRoll*free.length)];
+        let type='target';
+        if(typeRoll<c.trapChance) type='trap';
+        else if(typeRoll<c.trapChance+c.goldChance) type='gold';
+        spawnAt(idx, type, {lifeMs:c.lifeMs});
+      }
+    }
+    duelSt.spawnTimer=setTimeout(duelSpawn, c.spawnMs);
+  }
+  function duelTick(){
+    if(!running || mode!=='duel') return;
+    const left=Math.max(0, duelSt.duration-(Date.now()-duelSt.startTime));
+    duelSt.timeLeft=Math.ceil(left/1000);
+    renderHUD();
+    if(!duelSt.vsBot && duelWS && duelWS.readyState===1 && score!==duelSt.lastSent){
+      duelWS.send(JSON.stringify({t:'score', value:score}));
+      duelSt.lastSent=score;
+    }
+    if(left<=0) duelEnd();
+  }
+  function duelEnd(){
+    if(!running || mode!=='duel') return;
+    running=false;
+    clearTimeout(duelSt.spawnTimer);
+    clearInterval(duelSt.ticker);
+    clearBoard();
+    endFrenzy();
+    resetQuitBtn();
+    announce('⏱ ¡TIEMPO!','var(--gold)');
+    if(duelSt.vsBot){
+      const outcome = score>botRT.score ? 'win' : (score<botRT.score ? 'lose' : 'tie');
+      finishBotMatch(outcome);
+      showDuelResult({you:score, opp:botRT.score, outcome});
+      return;
+    }
+    wsSend({t:'final', score});
+    clearTimeout(duelSt.resultTimer);
+    duelSt.resultTimer=setTimeout(()=>{
+      showDuelResult({you:score, opp:duelSt.oppScore,
+        outcome: score>duelSt.oppScore?'win':(score<duelSt.oppScore?'lose':'tie'),
+        local:true});
+    },5000);
+  }
+  function showDuelResult(m){
+    clearTimeout(duelSt.resultTimer);
+    stopDuelUI();
+    running=false;
+    const title=document.getElementById('duel-result-title');
+    const sub=document.getElementById('duel-result-sub');
+    if(m.outcome==='win'){ title.textContent='🏆 ¡GANASTE!'; title.style.color='var(--gold)'; levelSound(); }
+    else if(m.outcome==='lose'){ title.textContent='😤 PERDISTE'; title.style.color='var(--red)'; }
+    else { title.textContent='🤝 EMPATE'; title.style.color='var(--dim)'; }
+    sub.textContent = m.forfeit ? 'El rival abandonó el duelo'
+      : (m.disconnected ? 'Se perdió la conexión con el servidor'
+      : (m.local ? 'Resultado local (sin confirmación del servidor)' : 'vs '+duelSt.oppName));
+    document.getElementById('d-my').textContent=m.you;
+    document.getElementById('d-opp').textContent=m.opp;
+    document.getElementById('d-opp-label').textContent=duelSt.oppName||'Rival';
+    rematchBtn.disabled=duelSt.oppLeft || m.disconnected;
+    rematchStatusEl.textContent='';
+    overScreen.classList.add('hidden');
+    duelOver.classList.remove('hidden');
+  }
+  function handleOppLeft(){
+    duelSt.oppLeft=true;
+    if(!duelOver.classList.contains('hidden')){
+      rematchStatusEl.textContent='El rival se fue del duelo.';
+      rematchBtn.disabled=true;
+    }else if(!duelLobby.classList.contains('hidden')){
+      lobbyStatus('El rival se desconectó.');
+      lobbyCode.textContent='';
+    }
+  }
+  function clearIncomingAttack(){
+    clearTimeout(duelSt.incomingTimer);
+    clearInterval(duelSt.incomingTicker);
+    duelSt.incomingTimer=null;
+    duelSt.incomingTicker=null;
+    duelSt.incoming=null;
+    document.getElementById('incoming-attack').classList.add('hidden');
+    document.getElementById('sab-row').classList.remove('hidden');
+  }
+  function queueIncomingAttack(kind, from){
+    if(!running || mode!=='duel' || !SAB_META[kind]) return;
+    if(duelSt.incoming) executeIncomingAttack();
+    const meta=SAB_META[kind];
+    const deadline=Date.now()+2000;
+    duelSt.incoming={kind, from, deadline};
+    document.getElementById('incoming-icon').textContent=meta.icon;
+    document.getElementById('incoming-title').textContent=(from||'RIVAL').toUpperCase()+' LANZA '+meta.label;
+    document.getElementById('incoming-attack').classList.remove('hidden');
+    document.getElementById('sab-row').classList.add('hidden');
+    renderIncomingAttack();
+    duelSt.incomingTicker=setInterval(renderIncomingAttack,50);
+    duelSt.incomingTimer=setTimeout(executeIncomingAttack,2000);
+    beep(180,.12,'square',.2);
+  }
+  function renderIncomingAttack(){
+    if(!duelSt.incoming) return;
+    const left=Math.max(0,duelSt.incoming.deadline-Date.now());
+    const counter=SAB_META[duelSt.incoming.kind].counter;
+    const meta=SAB_META[counter];
+    const amount=duelSt.powers[counter];
+    document.getElementById('incoming-count').textContent=(left/1000).toFixed(1)+'s';
+    const button=document.getElementById('counter-power');
+    button.dataset.kind=counter;
+    button.disabled=amount<1;
+    button.querySelector('span').textContent=meta.icon+' ×'+amount;
+    button.querySelector('small').textContent=amount ? 'ANULAR' : 'SIN ENERGÍA';
+  }
+  function counterIncomingAttack(){
+    if(!duelSt.incoming) return;
+    const counter=SAB_META[duelSt.incoming.kind].counter;
+    if(duelSt.powers[counter]<1) return;
+    const blocked=SAB_META[duelSt.incoming.kind];
+    duelSt.powers[counter]--;
+    clearIncomingAttack();
+    goldSound();
+    burst(document.querySelector('#grid .cell')||grid,'var(--gold)',14);
+    announce(SAB_META[counter].icon+' ¡ANULASTE '+blocked.label+'!','var(--gold)');
+    renderDuelHUD();
+  }
+  function executeIncomingAttack(){
+    if(!duelSt.incoming) return;
+    const attack=duelSt.incoming;
+    clearIncomingAttack();
+    applySabotage(attack.kind,attack.from);
+  }
+  document.getElementById('counter-power').addEventListener('click',counterIncomingAttack);
+
+  function applySabotage(kind, from){
+    if(!running || mode!=='duel') return;
+    shake();
+    if(kind==='freeze'){
+      announce('🧊 ¡'+from+' te congeló!','var(--ice)');
+      iceSound();
+      duelSt.locked=true;
+      grid.classList.add('sab-locked');
+      clearTimeout(duelSt.fxFreeze);
+      duelSt.fxFreeze=setTimeout(()=>{ duelSt.locked=false; grid.classList.remove('sab-locked'); },1500);
+    }else if(kind==='bombs'){
+      announce('💣 ¡'+from+' te bombardeó!','var(--red)');
+      badSound();
+      for(let k=0;k<3;k++){
+        const free=freeCells();
+        if(!free.length) break;
+        const idx=free[Math.floor(Math.random()*free.length)];
+        spawnAt(idx,'trap',{lifeMs:2600});
+      }
+    }else if(kind==='storm'){
+      announce('🌪️ ¡'+from+' desató una tormenta!','var(--magenta)');
+      beep(400,.2,'sine',.2);
+      grid.classList.add('sab-dark','mirrored');
+      clearTimeout(duelSt.fxDark);
+      clearTimeout(duelSt.fxMirror);
+      duelSt.fxDark=setTimeout(()=>grid.classList.remove('sab-dark'),2000);
+      duelSt.fxMirror=setTimeout(()=>grid.classList.remove('mirrored'),4000);
+    }
+  }
+  function advancePowerBar(){
+    duelSt.powerProgress+=PLAYER_POWER_CHARGE_PER_HIT*100;
+    while(duelSt.powerProgress>=100){
+      duelSt.powerProgress-=100;
+      gainEnergy();
+    }
+    renderDuelHUD();
+  }
+  function gainEnergy(){
+    duelSt.energy++;
+    const unlocked=[];
+    Object.keys(SAB_COST).forEach(kind=>{
+      if(duelSt.energy%SAB_COST[kind]===0){
+        duelSt.powers[kind]++;
+        unlocked.push(SAB_META[kind].icon);
+      }
+    });
+    goldSound();
+    announce(unlocked.length ? unlocked.join(' ')+' ¡PODER DESBLOQUEADO!' : '⚡ PUNTO '+duelSt.energy,'var(--gold)');
+    renderDuelHUD();
+  }
+  function renderDuelHUD(){
+    document.getElementById('duel-me').textContent='TÚ: '+score;
+    document.getElementById('duel-opp').textContent=(duelSt.oppName||'RIVAL').toUpperCase()+': '+duelSt.oppScore;
+    const total=score+duelSt.oppScore;
+    document.getElementById('adv-fill').style.width=(total? Math.round(score/total*100) : 50)+'%';
+    document.getElementById('power-label').textContent='⚡ '+duelSt.energy;
+    document.getElementById('power-fill').style.width=duelSt.powerProgress+'%';
+    document.querySelectorAll('.sab').forEach(b=>{
+      const amount=duelSt.powers[b.dataset.kind];
+      b.querySelector('.qty').textContent='×'+amount;
+      b.disabled = !running || mode!=='duel' || amount<1;
+    });
+  }
+  function stopDuelUI(){
+    clearTimeout(duelSt.spawnTimer);
+    clearInterval(duelSt.ticker);
+    clearTimeout(duelSt.cd);
+    clearTimeout(duelSt.fxFreeze);
+    clearTimeout(duelSt.fxDark);
+    clearTimeout(duelSt.fxMirror);
+    clearTimeout(botRT.timer);
+    clearTimeout(botRT.sabPending);
+    clearIncomingAttack();
+    duelSt.locked=false;
+    grid.classList.remove('sab-locked','sab-dark','mirrored');
+    duelBar.classList.add('hidden');
+    livesLabel.textContent='Vidas';
+  }
+
+  document.getElementById('play-duel').addEventListener('click', ()=>{
+    if(!player){
+      nameScreen.classList.remove('hidden');
+      nameError.textContent='Para el duelo online necesitas registrar tu nombre.';
+      return;
+    }
+    lobbyCode.textContent='';
+    lobbyStatus('');
+    duelLobby.classList.remove('hidden');
+    connectWS();
+  });
+  document.getElementById('duel-quick').addEventListener('click', ()=>{
+    lobbyCode.textContent='';
+    lobbyStatus('Buscando rival…');
+    wsSend({t:'quick'});
+  });
+  document.getElementById('duel-create').addEventListener('click', ()=>{
+    lobbyStatus('Creando sala…');
+    wsSend({t:'create'});
+  });
+  document.getElementById('duel-join').addEventListener('click', ()=>{
+    const code=document.getElementById('room-code-input').value.trim().toUpperCase();
+    if(code.length!==4){ lobbyStatus('El código tiene 4 letras.'); return; }
+    lobbyStatus('Entrando a la sala…');
+    wsSend({t:'join', code});
+  });
+  document.getElementById('duel-back').addEventListener('click', ()=>{
+    wsSend({t:'cancel'});
+    duelLobby.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+  });
+  rematchBtn.addEventListener('click', ()=>{
+    if(duelSt.vsBot){ beginBotDuel(); return; }
+    rematchStatusEl.textContent='Esperando al rival…';
+    wsSend({t:'rematch'});
+  });
+  document.getElementById('duel-menu').addEventListener('click', ()=>{
+    if(!duelSt.vsBot) wsSend({t:'cancel'});
+    duelOver.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+    loadLeaderboard();
+  });
+  document.querySelectorAll('.sab').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const kind=b.dataset.kind;
+      if(!running || mode!=='duel' || duelSt.powers[kind]<1) return;
+      duelSt.powers[kind]--;
+      if(duelSt.vsBot) applySabotageToBot(kind);
+      else wsSend({t:'sabotage', kind});
+      beep(300,.1,'square',.2);
+      announce(SAB_META[kind].icon+' ¡ENVIADO!','var(--gold)');
+      renderDuelHUD();
+    });
+  });
+
+  // ---------- VS Robot (rival local que aprende) ----------
+  const BOT_NAME='ROBOT';
+  const BOT_PROFILES=Object.freeze({
+    easy:Object.freeze({
+      label:'FÁCIL',
+      accuracyReferencePercent:180,
+      accuracy:0.60,
+      trapAvoidance:0.35,
+      aggression:0.35,
+      reasoning:0.40,
+      defense:0.30,
+      reservedAttackRisk:0.30,
+      powerChargePerHit:0.35,
+      debuffAccuracy:0.35,
+      learningOldWeight:0.70,
+      learningNewWeight:0.30,
+      reactionSpeed:0.45,
+      reactionDelayMs:267
+    }),
+    medium:Object.freeze({
+      label:'MEDIO',
+      accuracyReferencePercent:300,
+      accuracy:1.00,
+      trapAvoidance:0.50,
+      aggression:0.60,
+      reasoning:0.75,
+      defense:0.50,
+      reservedAttackRisk:0.50,
+      powerChargePerHit:0.50,
+      debuffAccuracy:0.50,
+      learningOldWeight:0.50,
+      learningNewWeight:0.50,
+      reactionSpeed:0.90,
+      reactionDelayMs:114
+    }),
+    hard:Object.freeze({
+      label:'DIFÍCIL',
+      accuracyReferencePercent:450,
+      accuracy:1.00,
+      trapAvoidance:0.85,
+      aggression:0.85,
+      reasoning:0.95,
+      defense:0.80,
+      reservedAttackRisk:0.70,
+      powerChargePerHit:0.70,
+      debuffAccuracy:0.75,
+      learningOldWeight:0.25,
+      learningNewWeight:0.75,
+      reactionSpeed:1.00,
+      reactionDelayMs:80
+    })
+  });
+  let botDifficulty='medium';
+  try{
+    const savedDifficulty=localStorage.getItem('nr-bot-difficulty');
+    if(BOT_PROFILES[savedDifficulty]) botDifficulty=savedDifficulty;
+  }catch(e){}
+  let BOT_ACTIVE=BOT_PROFILES[botDifficulty];
+  const BOT_DEFAULTS={level:1, games:0, youWins:0, botWins:0, ties:0, youBest:0, botBest:0, sabEff:{freeze:0,bombs:0,storm:0}};
+  function loadBotMem(){
+    try{
+      const raw=JSON.parse(localStorage.getItem('nr-bot')||'{}');
+      return Object.assign({}, BOT_DEFAULTS, raw, {sabEff:Object.assign({}, BOT_DEFAULTS.sabEff, (raw&&raw.sabEff)||{})});
+    }catch(e){
+      return Object.assign({}, BOT_DEFAULTS, {sabEff:Object.assign({}, BOT_DEFAULTS.sabEff)});
+    }
+  }
+  let botMem=loadBotMem();
+  function saveBotMem(){ try{ localStorage.setItem('nr-bot', JSON.stringify(botMem)); }catch(e){} }
+  function botLevelInt(){ return Math.max(1, Math.min(10, Math.floor(botMem.level))); }
+  // Perfil medio normalizado: todas las decisiones porcentuales parten de 50%.
+  function botParams(){
+    return {
+      hitRate:BOT_ACTIVE.accuracy,
+      trapAvoid:BOT_ACTIVE.trapAvoidance,
+      aggression:BOT_ACTIVE.aggression,
+      jitter:BOT_ACTIVE.reactionDelayMs
+    };
+  }
+  const botRT={score:0, combo:1, energy:0, powerProgress:0,
+    powers:{freeze:0,bombs:0,storm:0}, timer:null, sabPending:null,
+    frozenUntil:0, blackoutUntil:0, mirrorUntil:0, pendingBombs:0};
+  function updateBotLabel(){
+    const el=document.getElementById('bot-level-label');
+    if(el) el.textContent=botLevelInt();
+  }
+  updateBotLabel();
+
+  function renderBotDifficulty(){
+    document.querySelectorAll('#bot-difficulty button').forEach(button=>{
+      button.classList.toggle('active',button.dataset.difficulty===botDifficulty);
+      button.setAttribute('aria-pressed',String(button.dataset.difficulty===botDifficulty));
+    });
+  }
+  function setBotDifficulty(nextDifficulty){
+    if(!BOT_PROFILES[nextDifficulty]) return;
+    botDifficulty=nextDifficulty;
+    BOT_ACTIVE=BOT_PROFILES[botDifficulty];
+    try{ localStorage.setItem('nr-bot-difficulty',botDifficulty); }catch(e){}
+    renderBotDifficulty();
+  }
+  document.querySelectorAll('#bot-difficulty button').forEach(button=>{
+    button.addEventListener('click',()=>setBotDifficulty(button.dataset.difficulty));
+  });
+  renderBotDifficulty();
+
+  function beginBotDuel(){
+    duelSt.vsBot=true;
+    duelSt.rng=mulberry32((Math.random()*2147483647)|0);
+    duelSt.oppName=BOT_NAME+' '+BOT_ACTIVE.label+' Nv.'+botLevelInt();
+    duelSt.oppScore=0; duelSt.energy=0; duelSt.powerProgress=0;
+    duelSt.powers={freeze:0,bombs:0,storm:0}; duelSt.locked=false; duelSt.oppLeft=false;
+    duelSt.duration=65000;
+    botRT.score=0; botRT.combo=1; botRT.energy=0; botRT.powerProgress=0;
+    botRT.powers={freeze:0,bombs:0,storm:0};
+    botRT.frozenUntil=0; botRT.blackoutUntil=0; botRT.mirrorUntil=0; botRT.pendingBombs=0;
+    rematchBtn.disabled=false;
+    rematchStatusEl.textContent='';
+    duelOver.classList.add('hidden');
+    startScreen.classList.add('hidden');
+    overScreen.classList.add('hidden');
+    mode='duel';
+    reset();
+    duelBar.classList.remove('hidden');
+    renderDuelHUD();
+    let n=3;
+    clearTimeout(duelSt.cd);
+    const step=()=>{
+      if(n>0){
+        announce(String(n),'var(--gold)');
+        beep(500+n*120,.1,'square',.2);
+        n--;
+        duelSt.cd=setTimeout(step,900);
+      }else{
+        start('duel');
+        botRT.timer=setTimeout(botLoop, 800);
+      }
+    };
+    step();
+  }
+
+  // El robot "juega" su propio tablero virtual con la misma curva de dificultad
+  function botLoop(){
+    if(!running || mode!=='duel' || !duelSt.vsBot) return;
+    const now=Date.now();
+    const elapsed=now-duelSt.startTime;
+    if(elapsed>=duelSt.duration) return;
+    const c=duelCfg(elapsed);
+    const p=botParams();
+    if(now>=botRT.frozenUntil){
+      let hitRate=p.hitRate;
+      if(now<botRT.blackoutUntil) hitRate*=BOT_ACTIVE.debuffAccuracy;
+      if(now<botRT.mirrorUntil) hitRate*=BOT_ACTIVE.debuffAccuracy;
+      let isTrap=Math.random()<c.trapChance;
+      if(botRT.pendingBombs>0){ isTrap=true; botRT.pendingBombs--; }
+      if(isTrap){
+        if(Math.random()>p.trapAvoid){
+          botRT.score=Math.max(0, botRT.score-50);
+          botRT.combo=1;
+        }
+      }else if(Math.random()<hitRate){
+        const gold=Math.random()<c.goldChance;
+        botRT.score += (gold?50:10)*botRT.combo;
+        botRT.combo++;
+        botAdvancePowerBar();
+      }else{
+        botRT.combo=1;
+      }
+      duelSt.oppScore=botRT.score;
+      renderDuelHUD();
+      botMaybeSabotage();
+    }
+    botRT.timer=setTimeout(botLoop, c.spawnMs + Math.random()*p.jitter);
+  }
+
+  function botAdvancePowerBar(){
+    botRT.powerProgress+=BOT_ACTIVE.powerChargePerHit*100;
+    while(botRT.powerProgress>=100){
+      botRT.powerProgress-=100;
+      botRT.energy++;
+      Object.keys(SAB_COST).forEach(kind=>{
+        if(botRT.energy%SAB_COST[kind]===0) botRT.powers[kind]++;
+      });
+    }
+  }
+
+  // Elige el sabotaje que MÁS te ha frenado (aprendizaje por efectividad)
+  function botMaybeSabotage(){
+    const p=botParams();
+    const attackChance=p.aggression;
+    if(Math.random()>attackChance) return;
+    const riskReservedPower=Math.random()<BOT_ACTIVE.reservedAttackRisk;
+    const kinds=Object.keys(SAB_COST).filter(kind=>{
+      if(botRT.powers[kind]<1) return false;
+      return botRT.powers[kind]>botDefenseReserve(kind) || riskReservedPower;
+    });
+    if(!kinds.length) return;
+    const kind=botChoosePower(kinds);
+    botRT.powers[kind]--;
+    // Efectividad = puntos que dejaste de anotar en los 4s siguientes
+    const baseline=score;
+    const elapsed=Date.now()-duelSt.startTime;
+    const expected=(elapsed>2000 ? score/elapsed : 0.05)*4000;
+    clearTimeout(botRT.sabPending);
+    botRT.sabPending=setTimeout(()=>{
+      const damage=Math.max(0, expected-(score-baseline));
+      botMem.sabEff[kind]=BOT_ACTIVE.learningOldWeight*botMem.sabEff[kind]+BOT_ACTIVE.learningNewWeight*damage;
+    },4200);
+    queueIncomingAttack(kind, duelSt.oppName);
+  }
+
+  function botChoosePower(kinds){
+    // Una pequeña exploración evita que el aprendizaje se estanque para siempre.
+    if(kinds.length>1 && Math.random()>BOT_ACTIVE.reasoning){
+      return kinds[Math.floor(Math.random()*kinds.length)];
+    }
+
+    const behind=botRT.score<score;
+    const finalStretch=duelSt.timeLeft<=25;
+    const pressure=Math.min(5,Math.max(0,combo-1)/4);
+    const utility={};
+
+    kinds.forEach(kind=>{
+      const counter=SAB_META[kind].counter;
+      const learned=Math.min(5,(botMem.sabEff[kind]||0)/80);
+      const canBeCountered=duelSt.powers[counter]>0;
+      let value=learned-(canBeCountered?7:0);
+
+      if(kind==='freeze') value+=pressure+(frenzy?4:0);
+      if(kind==='bombs') value+=(behind?4:1)+(orbs.size>=2?2:0);
+      if(kind==='storm') value+=(finalStretch?3:0)+pressure*.7+(behind?2:0);
+
+      utility[kind]=value;
+    });
+
+    return kinds.reduce((best,kind)=>utility[kind]>utility[best]?kind:best);
+  }
+
+  function botDefenseReserve(counterKind){
+    if(duelSt.timeLeft<=25) return 0;
+    const threatKind=Object.keys(SAB_META).find(kind=>SAB_META[kind].counter===counterKind);
+    return threatKind && duelSt.powers[threatKind]>0 ? 1 : 0;
+  }
+
+  function botShouldCounter(kind,counter){
+    if(botRT.powers[counter]<1) return false;
+    if(Math.random()>BOT_ACTIVE.defense) return false;
+    if(duelSt.timeLeft<=25) return true;
+    if(botRT.score<=score) return true;
+    if(botRT.powers[counter]>1) return true;
+    if(kind==='bombs' || kind==='storm') return true;
+    if(kind==='freeze' && (combo>=5 || frenzy)) return true;
+    return botRT.score-score<500;
+  }
+
+  // Tus sabotajes degradan el rendimiento del robot
+  function applySabotageToBot(kind){
+    const counter=SAB_META[kind].counter;
+    if(botShouldCounter(kind,counter)){
+      botRT.powers[counter]--;
+      announce(SAB_META[counter].icon+' ¡EL ROBOT ANULÓ TU '+SAB_META[kind].label+'!','var(--red)');
+      badSound();
+      return;
+    }
+    const now=Date.now();
+    if(kind==='freeze') botRT.frozenUntil=now+1500;
+    else if(kind==='bombs') botRT.pendingBombs+=3;
+    else if(kind==='storm'){
+      botRT.blackoutUntil=now+2000;
+      botRT.mirrorUntil=now+4000;
+    }
+  }
+
+  function finishBotMatch(outcome){
+    botMem.games++;
+    if(outcome==='win'){
+      botMem.youWins++;
+      botMem.level=Math.min(10, botMem.level+1);      // perdió: aprende fuerte
+    }else if(outcome==='lose'){
+      botMem.botWins++;
+      botMem.level=Math.min(10, botMem.level+0.25);   // ganó: aprende poco
+    }else{
+      botMem.ties++;
+    }
+    botMem.youBest=Math.max(botMem.youBest, score);
+    botMem.botBest=Math.max(botMem.botBest, botRT.score);
+    saveBotMem();
+    updateBotLabel();
+  }
+
+  function renderRobotBoard(){
+    lbList.innerHTML='';
+    const youName=player ? player.name : 'TÚ';
+    const rows=[
+      {name:youName, best:botMem.youBest, me:true},
+      {name:BOT_NAME+' '+BOT_ACTIVE.label+' Nv.'+botLevelInt(), best:botMem.botBest, me:false}
+    ].sort((a,b)=>b.best-a.best);
+    rows.forEach((row,i)=>{
+      const li=document.createElement('li');
+      if(row.me) li.classList.add('me');
+      const rk=document.createElement('span'); rk.className='rk'; rk.textContent=(i+1)+'.';
+      const nm=document.createElement('span'); nm.className='nm'; nm.textContent=row.name;
+      const pt=document.createElement('span'); pt.className='pt'; pt.textContent=Number(row.best).toLocaleString('es-MX');
+      li.append(rk,nm,pt);
+      lbList.appendChild(li);
+    });
+    lbStatus.textContent = botMem.games
+      ? 'Victorias: TÚ '+botMem.youWins+' — '+botMem.botWins+' ROBOT'+(botMem.ties ? ' · Empates: '+botMem.ties : '')
+      : 'Aún no has retado al robot. ¡Anímate!';
+  }
+
+  document.getElementById('play-robot').addEventListener('click', beginBotDuel);
 
   let lastRhythmSource=null; // 'mic' o File
   document.getElementById('play-classic').addEventListener('click', ()=>start('classic'));
@@ -1174,15 +2049,21 @@
     quitBtn.textContent='↩';
   }
   function quitToMenu(){
+    const wasDuel = (mode==='duel');
     running=false;
     stopRhythm();
     clearTimeout(spawnTimer); clearTimeout(frenzyTimer); clearTimeout(freezeTimer);
     clearInterval(shieldTicker); shieldUntil=0;
     frozen=false; document.body.classList.remove('frozen-bg'); grid.classList.remove('frozen');
     endFrenzy();
+    stopDuelUI();
+    clearTimeout(duelSt.resultTimer);
+    if(wasDuel && !duelSt.vsBot) wsSend({t:'cancel'}); // el rival gana por abandono
     clearBoard();
     resetQuitBtn();
     overScreen.classList.add('hidden');
+    duelLobby.classList.add('hidden');
+    duelOver.classList.add('hidden');
     startScreen.classList.remove('hidden');
     loadLeaderboard();
   }
