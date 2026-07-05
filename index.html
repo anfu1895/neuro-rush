@@ -43,6 +43,8 @@
 
   /* ---------- HUD ---------- */
   #hud{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;}
+  #quit-btn{background:var(--panel);border:none;color:var(--text);font-size:18px;font-weight:800;height:44px;min-width:44px;padding:0 10px;border-radius:14px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.35);transition:background .15s;}
+  #quit-btn.confirm{background:var(--red);color:#fff;font-size:13px;letter-spacing:1px;}
   .hud-box{background:var(--panel);border-radius:14px;padding:8px 14px;text-align:center;min-width:78px;box-shadow:0 4px 0 rgba(0,0,0,.35);}
   .hud-label{font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
   .hud-value{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
@@ -82,7 +84,9 @@
   .orb.gold{background:radial-gradient(circle at 35% 30%, #fff3c4, var(--gold) 55%, #b8860b);box-shadow:0 0 26px var(--gold),0 0 52px rgba(255,210,62,.4);}
   .orb.trap{background:radial-gradient(circle at 35% 30%, #ffb3bd, var(--red) 55%, #8f1020);box-shadow:0 0 18px var(--red);}
   .orb.ice{background:radial-gradient(circle at 35% 30%, #eaffff, var(--ice) 55%, #1b6fa8);box-shadow:0 0 24px var(--ice),0 0 48px rgba(165,232,255,.45);}
-  .orb.fire{background:radial-gradient(circle at 35% 30%, #ffe0b3, var(--fire) 55%, #a12800);box-shadow:0 0 24px var(--fire),0 0 48px rgba(255,122,46,.5);}
+  .orb.fire{background:radial-gradient(circle at 35% 30%, #3d3d46, #17171c 55%, #000000);box-shadow:0 0 24px rgba(255,43,26,.55),0 0 48px rgba(255,43,26,.3);}
+  .orb.fire .orb-ic{font-size:.6em;filter:saturate(1.9) hue-rotate(-18deg) drop-shadow(0 0 6px #ff2b1a);animation:flameFlicker .45s infinite alternate;}
+  @keyframes flameFlicker{from{transform:scale(1);filter:saturate(1.9) hue-rotate(-18deg) drop-shadow(0 0 5px #ff2b1a) brightness(1);}to{transform:scale(1.18);filter:saturate(2.2) hue-rotate(-24deg) drop-shadow(0 0 10px #ff2b1a) brightness(1.25);}}
   .orb.white{background:radial-gradient(circle at 35% 30%, #ffffff, #f0f0ff 55%, #9aa0d8);box-shadow:0 0 24px var(--white),0 0 48px rgba(255,255,255,.6);}
   .orb.shrink{animation:shrink linear forwards;}
   @keyframes shrink{from{transform:scale(1);opacity:1;}to{transform:scale(.35);opacity:.55;}}
@@ -208,6 +212,7 @@
   <button id="sound-toggle" title="Sonido">🔊</button>
 
   <div id="hud">
+    <button id="quit-btn" title="Volver al menú">↩</button>
     <div class="hud-box"><div class="hud-label">Puntos</div><div class="hud-value" id="score-val">0</div></div>
     <div class="hud-box"><div class="hud-label">Nivel</div><div class="hud-value" id="level-val">1</div></div>
     <div class="hud-box" id="lives-box"><div class="hud-label">Vidas</div><div class="hud-value" id="lives-val">❤️❤️❤️</div></div>
@@ -254,6 +259,12 @@
         <button class="btn file-btn" id="play-rhythm-file">📁 CARGAR CANCIÓN</button>
       </div>
       <input type="file" id="song-input" accept="audio/*" style="display:none;">
+      <div style="margin-top:12px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--dim);">
+        <span>Sensibilidad</span>
+        <input type="range" id="sens-slider" min="0.4" max="2.6" step="0.1" value="1.3" style="flex:1;accent-color:var(--magenta);">
+        <span id="sens-label">Media</span>
+      </div>
+      <div style="font-size:11px;color:var(--dim);opacity:.8;margin-top:4px;">Si salen pocas bolas, baja la sensibilidad. Si salen de más, súbela.</div>
       <div id="rhythm-status"></div>
     </div>
 
@@ -381,7 +392,11 @@
   function badSound(){ beep(140,.25,'sawtooth',.25); }
   function levelSound(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.12,'square',.14), i*90)); }
   function iceSound(){ [1400,1100,800,600].forEach((f,i)=>setTimeout(()=>beep(f,.14,'sine',.16), i*70)); }
-  function fireSound(){ beep(90,.4,'sawtooth',.3); setTimeout(()=>beep(60,.5,'sawtooth',.25),120); }
+  function fireSound(){
+    beep(90,.35,'sawtooth',.3);
+    setTimeout(()=>beep(55,.4,'sawtooth',.22),90);
+    [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.09,'triangle',.16), 200+i*70));
+  }
   function shieldSound(){ [660,880,660,880].forEach((f,i)=>setTimeout(()=>beep(f,.1,'sine',.15), i*80)); }
 
   soundBtn.addEventListener('click', ()=>{
@@ -473,7 +488,13 @@
     opts = opts || {};
     const el=document.createElement('div');
     el.className='orb '+type;
-    el.textContent = iconFor(type);
+    const ic=iconFor(type);
+    if(ic){
+      const span=document.createElement('span');
+      span.className='orb-ic';
+      span.textContent=ic;
+      el.appendChild(span);
+    }
     let timeout=null;
     if(opts.iced){
       el.classList.add('iced');
@@ -605,7 +626,8 @@
   // o reproduce un archivo cargado, y lanza bolas en cada beat.
   const rhythmStatus=document.getElementById('rhythm-status');
   const songInput=document.getElementById('song-input');
-  let rz={analyser:null, data:null, raf:null, hist:[], lastBeat:0, audioEl:null, stream:null, srcNode:null};
+  let rz={analyser:null, data:null, raf:null, hist:[], lastBeat:0, audioEl:null, stream:null, srcNode:null, gainNode:null, isMic:false};
+  let rzSensitivity=1.3; // menor = más beats detectados; mayor = solo golpes fuertes
 
   function ensureCtx(){
     if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
@@ -615,27 +637,57 @@
   function setupAnalyser(){
     const ctx=ensureCtx();
     rz.analyser=ctx.createAnalyser();
-    rz.analyser.fftSize=1024;
-    rz.analyser.smoothingTimeConstant=0.4;
+    rz.analyser.fftSize=2048;               // más resolución en graves
+    rz.analyser.smoothingTimeConstant=0.55; // suaviza el ruido del micro
+    rz.analyser.minDecibels=-90;            // capta sonidos más débiles
+    rz.analyser.maxDecibels=-10;
     rz.data=new Uint8Array(rz.analyser.frequencyBinCount);
     rz.hist=[]; rz.lastBeat=0;
   }
   async function startRhythmMic(){
-    rhythmStatus.textContent='Pidiendo permiso del micrófono…';
+    // Detectar problemas antes de pedir el micrófono
+    const inIframe = (window.self !== window.top);
+    const secure = window.isSecureContext || location.protocol==='file:';
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      rhythmStatus.innerHTML='⚠️ Este navegador no permite micrófono aquí. <b>Descarga el archivo y ábrelo directo</b>, o usa 📁 Cargar canción.';
+      return;
+    }
+    if(inIframe){
+      rhythmStatus.innerHTML='⚠️ Estás jugando dentro de la vista previa. El micrófono se bloquea aquí. <b>Descarga el archivo y ábrelo con doble clic</b>, o usa 📁 Cargar canción.';
+      return;
+    }
+    if(!secure){
+      rhythmStatus.innerHTML='⚠️ El micrófono necesita una página segura (https:// o el archivo abierto directo). Usa 📁 Cargar canción.';
+      return;
+    }
+    rhythmStatus.textContent='🎤 Pidiendo permiso… acepta la ventana del navegador.';
     try{
       const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
       setupAnalyser();
       rz.stream=stream;
+      rz.isMic=true;
       rz.srcNode=ensureCtx().createMediaStreamSource(stream);
-      rz.srcNode.connect(rz.analyser); // no va a la salida: sin eco
+      // Amplificar la señal del micro antes de analizarla (la música de fondo suele llegar baja)
+      rz.gainNode=ensureCtx().createGain();
+      rz.gainNode.gain.value=3.5;
+      rz.srcNode.connect(rz.gainNode);
+      rz.gainNode.connect(rz.analyser); // no va a la salida: sin eco
       rhythmStatus.textContent='';
       start('rhythm');
     }catch(e){
-      rhythmStatus.textContent='⚠️ Sin acceso al micrófono. Revisa los permisos del navegador.';
+      const name = e && e.name ? e.name : '';
+      if(name==='NotAllowedError' || name==='SecurityError'){
+        rhythmStatus.innerHTML='⚠️ Bloqueaste el micrófono. Toca el 🔒 en la barra de direcciones → Micrófono → Permitir, y vuelve a intentar. O usa 📁 Cargar canción.';
+      }else if(name==='NotFoundError' || name==='DevicesNotFoundError'){
+        rhythmStatus.innerHTML='⚠️ No se encontró micrófono en este dispositivo. Usa 📁 Cargar canción.';
+      }else{
+        rhythmStatus.innerHTML='⚠️ No se pudo abrir el micrófono ('+(name||'error')+'). Usa 📁 Cargar canción.';
+      }
     }
   }
   function startRhythmFile(file){
     setupAnalyser();
+    rz.isMic=false;
     const url=URL.createObjectURL(file);
     const audio=new Audio(url);
     audio.crossOrigin='anonymous';
@@ -656,23 +708,35 @@
     rz.raf=null;
     if(rz.audioEl){ rz.audioEl.pause(); rz.audioEl.src=''; rz.audioEl=null; }
     if(rz.stream){ rz.stream.getTracks().forEach(t=>t.stop()); rz.stream=null; }
+    if(rz.gainNode){ try{rz.gainNode.disconnect();}catch(e){} rz.gainNode=null; }
     if(rz.srcNode){ try{rz.srcNode.disconnect();}catch(e){} rz.srcNode=null; }
     rz.analyser=null;
   }
   function rhythmLoop(){
     if(!running || mode!=='rhythm' || !rz.analyser) return;
     rz.analyser.getByteFrequencyData(rz.data);
-    // Energía de graves (bombo / bajo)
+    // Energía de graves (bombo / bajo): con fftSize 2048, los primeros ~20 bins son los graves
     let bass=0;
-    for(let i=1;i<=12;i++) bass+=rz.data[i];
-    bass/=12;
+    for(let i=1;i<=20;i++) bass+=rz.data[i];
+    bass/=20;
+
     rz.hist.push(bass);
-    if(rz.hist.length>50) rz.hist.shift();
-    const avg=rz.hist.reduce((a,b)=>a+b,0)/rz.hist.length;
+    if(rz.hist.length>43) rz.hist.shift(); // ~0.7s de historia a 60fps
+
     const now=performance.now();
-    if(rz.hist.length>20 && bass>30 && bass>avg*1.35 && now-rz.lastBeat>250){
-      rz.lastBeat=now;
-      onBeat();
+    if(rz.hist.length>=20){
+      // Umbral adaptativo: promedio local + un margen basado en la variación de la música
+      const avg=rz.hist.reduce((a,b)=>a+b,0)/rz.hist.length;
+      let varSum=0;
+      for(const v of rz.hist) varSum+=(v-avg)*(v-avg);
+      const std=Math.sqrt(varSum/rz.hist.length);
+      // sensibilidad ajustable: menor = detecta más beats
+      const threshold=avg + std*rzSensitivity + 2;
+      const minGap=1000/(180/60);           // no más de ~180 bpm
+      if(bass>threshold && bass>12 && now-rz.lastBeat>Math.max(minGap,220)){
+        rz.lastBeat=now;
+        onBeat();
+      }
     }
     rz.raf=requestAnimationFrame(rhythmLoop);
   }
@@ -811,6 +875,7 @@
   }
   function gameOver(){
     running=false;
+    resetQuitBtn();
     stopRhythm();
     clearTimeout(spawnTimer); clearTimeout(frenzyTimer); clearTimeout(freezeTimer);
     clearInterval(shieldTicker); shieldUntil=0;
@@ -926,6 +991,14 @@
 
   let lastRhythmSource=null; // 'mic' o File
   document.getElementById('play-classic').addEventListener('click', ()=>start('classic'));
+  const sensSlider=document.getElementById('sens-slider');
+  const sensLabel=document.getElementById('sens-label');
+  if(sensSlider){
+    sensSlider.addEventListener('input', ()=>{
+      rzSensitivity=parseFloat(sensSlider.value);
+      sensLabel.textContent = rzSensitivity<0.9 ? 'Alta' : (rzSensitivity>1.8 ? 'Baja' : 'Media');
+    });
+  }
   document.getElementById('play-power').addEventListener('click', ()=>start('power'));
   document.getElementById('play-rhythm-mic').addEventListener('click', ()=>{ lastRhythmSource='mic'; startRhythmMic(); });
   document.getElementById('play-rhythm-file').addEventListener('click', ()=>songInput.click());
@@ -949,6 +1022,37 @@
   document.getElementById('menu-btn').addEventListener('click', ()=>{
     overScreen.classList.add('hidden');
     startScreen.classList.remove('hidden');
+  });
+
+  // ---------- In-game back-to-menu (two-tap confirm) ----------
+  const quitBtn=document.getElementById('quit-btn');
+  let quitArm=null;
+  function resetQuitBtn(){
+    if(quitArm){ clearTimeout(quitArm); quitArm=null; }
+    quitBtn.classList.remove('confirm');
+    quitBtn.textContent='↩';
+  }
+  function quitToMenu(){
+    running=false;
+    stopRhythm();
+    clearTimeout(spawnTimer); clearTimeout(frenzyTimer); clearTimeout(freezeTimer);
+    clearInterval(shieldTicker); shieldUntil=0;
+    frozen=false; document.body.classList.remove('frozen-bg'); grid.classList.remove('frozen');
+    endFrenzy();
+    clearBoard();
+    resetQuitBtn();
+    overScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+  }
+  quitBtn.addEventListener('click', ()=>{
+    if(!running) return;
+    if(quitArm){
+      quitToMenu();
+    }else{
+      quitBtn.classList.add('confirm');
+      quitBtn.textContent='¿Salir?';
+      quitArm=setTimeout(resetQuitBtn, 2000);
+    }
   });
 
   renderHUD();
