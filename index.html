@@ -197,6 +197,26 @@
   .bot-difficulty button.active{border-color:var(--cyan);background:rgba(46,230,255,.15);color:var(--text);box-shadow:0 0 12px rgba(46,230,255,.2);}
   .bot-difficulty button[data-difficulty="easy"].active{border-color:var(--lime);}
   .bot-difficulty button[data-difficulty="hard"].active{border-color:var(--red);}
+  #bot-rules-screen{z-index:68;padding:18px 0;background:radial-gradient(circle at 50% 15%,rgba(24,57,112,.96),rgba(8,10,30,.98) 62%);}
+  #bot-rules-screen h2{font-size:24px;color:var(--text);margin-bottom:4px;}
+  #bot-rules-screen .rules-subtitle{font-size:12px;color:var(--dim);margin-bottom:16px;}
+  #bot-rules-viewport{width:100%;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x;}
+  #bot-rules-viewport::-webkit-scrollbar{display:none;}
+  #bot-rules-track{display:flex;gap:12px;padding:8px 11% 14px;}
+  .bot-rule-card{flex:0 0 78%;min-height:260px;scroll-snap-align:center;border:1px solid rgba(46,230,255,.85);border-radius:20px;padding:24px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(145deg,rgba(27,42,91,.96),rgba(12,22,61,.98));box-shadow:0 0 22px rgba(46,230,255,.18),inset 0 0 30px rgba(255,62,200,.08);transform:scale(.92);opacity:.58;transition:transform .2s,opacity .2s,box-shadow .2s;}
+  .bot-rule-card.active{transform:scale(1);opacity:1;box-shadow:0 0 28px rgba(46,230,255,.42),0 12px 30px rgba(0,0,0,.35);}
+  .bot-rule-icon{font-size:54px;margin-bottom:14px;filter:drop-shadow(0 0 12px rgba(46,230,255,.45));}
+  .bot-rule-card h3{font-size:20px;color:var(--cyan);margin-bottom:10px;}
+  .bot-rule-card p{font-size:14px;line-height:1.55;color:var(--text);}
+  .bot-rule-card .rule-cycle{font-size:24px;font-weight:900;color:var(--gold);margin-top:12px;letter-spacing:3px;}
+  #bot-rules-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px;}
+  .carousel-arrow{width:38px;height:38px;border-radius:50%;border:1px solid var(--cyan);background:rgba(46,230,255,.1);color:var(--cyan);font-size:20px;cursor:pointer;}
+  .carousel-arrow:disabled{opacity:.25;cursor:default;}
+  #bot-rules-dots{display:flex;gap:8px;}
+  #bot-rules-dots button{width:9px;height:9px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:width .2s,background .2s;}
+  #bot-rules-dots button.active{width:25px;border-radius:99px;background:var(--cyan);box-shadow:0 0 9px var(--cyan);}
+  #bot-rules-actions{display:flex;flex-direction:column;align-items:center;width:100%;padding:0 18px;}
+  #bot-rules-continue{max-width:280px;}
   #duel-bar{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
   #duel-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;}
   #duel-me{color:var(--cyan);}
@@ -445,6 +465,24 @@
     <button class="btn" id="duel-rematch" style="max-width:280px;">🔄 REVANCHA</button>
     <div id="rematch-status"></div>
     <button class="btn secondary" id="duel-menu">Menú</button>
+  </div>
+
+  <!-- Reglas previas al duelo contra el robot -->
+  <div class="overlay hidden" id="bot-rules-screen">
+    <h2 id="game-rules-title">🤖 ANTES DEL DUELO</h2>
+    <div class="rules-subtitle" id="game-rules-subtitle">Desliza para conocer las reglas</div>
+    <div id="bot-rules-viewport">
+      <div id="bot-rules-track"></div>
+    </div>
+    <div id="bot-rules-nav">
+      <button class="carousel-arrow" id="bot-rules-prev" type="button" aria-label="Regla anterior">←</button>
+      <div id="bot-rules-dots" aria-label="Páginas de reglas"></div>
+      <button class="carousel-arrow" id="bot-rules-next" type="button" aria-label="Regla siguiente">→</button>
+    </div>
+    <div id="bot-rules-actions">
+      <button class="btn" id="bot-rules-continue">CONTINUAR</button>
+      <button class="btn secondary" id="bot-rules-back">VOLVER</button>
+    </div>
   </div>
 
   <!-- Registro de nombre (primera vez) -->
@@ -1636,8 +1674,9 @@
     livesLabel.textContent='Vidas';
   }
 
-  document.getElementById('play-duel').addEventListener('click', ()=>{
+  function openDuelLobby(){
     if(!player){
+      startScreen.classList.remove('hidden');
       nameScreen.classList.remove('hidden');
       nameError.textContent='Para el duelo online necesitas registrar tu nombre.';
       return;
@@ -1646,7 +1685,8 @@
     lobbyStatus('');
     duelLobby.classList.remove('hidden');
     connectWS();
-  });
+  }
+  document.getElementById('play-duel').addEventListener('click',()=>showModeRules('duel',openDuelLobby));
   document.getElementById('duel-quick').addEventListener('click', ()=>{
     lobbyCode.textContent='';
     lobbyStatus('Buscando rival…');
@@ -2002,10 +2042,129 @@
       : 'Aún no has retado al robot. ¡Anímate!';
   }
 
-  document.getElementById('play-robot').addEventListener('click', beginBotDuel);
+  const botRulesScreen=document.getElementById('bot-rules-screen');
+  const botRulesViewport=document.getElementById('bot-rules-viewport');
+  const botRulesTrack=document.getElementById('bot-rules-track');
+  const botRulesDots=document.getElementById('bot-rules-dots');
+  const botRulesPrev=document.getElementById('bot-rules-prev');
+  const botRulesNext=document.getElementById('bot-rules-next');
+  let botRuleCards=[];
+  let botRuleIndex=0, botRuleScrollFrame=null;
+
+  function buildBotRuleCards(rules){
+    botRulesTrack.innerHTML='';
+    botRulesDots.innerHTML='';
+    botRuleCards=rules.map((rule,index)=>{
+      const card=document.createElement('article');
+      card.className='bot-rule-card';
+      card.innerHTML='<div class="bot-rule-icon">'+rule.icon+'</div><h3>'+rule.title+'</h3><p>'+rule.text+'</p>'+(rule.cycle?'<div class="rule-cycle">'+rule.cycle+'</div>':'');
+      botRulesTrack.appendChild(card);
+      const dot=document.createElement('button');
+      dot.type='button';
+      dot.setAttribute('aria-label','Ver regla '+(index+1));
+      dot.addEventListener('click',()=>goToBotRule(index));
+      botRulesDots.appendChild(dot);
+      return card;
+    });
+    botRuleIndex=0;
+    renderBotRuleState();
+  }
+
+  function renderBotRuleState(){
+    if(!botRuleCards.length) return;
+    botRuleCards.forEach((card,index)=>card.classList.toggle('active',index===botRuleIndex));
+    [...botRulesDots.children].forEach((dot,index)=>dot.classList.toggle('active',index===botRuleIndex));
+    botRulesPrev.disabled=botRuleIndex===0;
+    botRulesNext.disabled=botRuleIndex===botRuleCards.length-1;
+  }
+  function goToBotRule(index,behavior='smooth'){
+    if(!botRuleCards.length) return;
+    botRuleIndex=Math.max(0,Math.min(botRuleCards.length-1,index));
+    const card=botRuleCards[botRuleIndex];
+    const left=card.offsetLeft-(botRulesViewport.clientWidth-card.clientWidth)/2;
+    botRulesViewport.scrollTo({left,behavior});
+    renderBotRuleState();
+  }
+  function syncBotRuleFromScroll(){
+    if(!botRuleCards.length) return;
+    const center=botRulesViewport.scrollLeft+botRulesViewport.clientWidth/2;
+    botRuleIndex=botRuleCards.reduce((best,card,index)=>{
+      const cardCenter=card.offsetLeft+card.clientWidth/2;
+      const bestCard=botRuleCards[best];
+      const bestCenter=bestCard.offsetLeft+bestCard.clientWidth/2;
+      return Math.abs(cardCenter-center)<Math.abs(bestCenter-center)?index:best;
+    },0);
+    renderBotRuleState();
+  }
+  botRulesViewport.addEventListener('scroll',()=>{
+    cancelAnimationFrame(botRuleScrollFrame);
+    botRuleScrollFrame=requestAnimationFrame(syncBotRuleFromScroll);
+  },{passive:true});
+  botRulesPrev.addEventListener('click',()=>goToBotRule(botRuleIndex-1));
+  botRulesNext.addEventListener('click',()=>goToBotRule(botRuleIndex+1));
+
+  const MODE_RULES={
+    classic:{title:'🎯 MODO CLÁSICO',cards:[
+      {icon:'🔵',title:'TOCA LOS AZULES',text:'Atrapa los objetivos antes de que desaparezcan para sumar puntos y mantener tu combo.'},
+      {icon:'⭐',title:'BUSCA EL BONUS',text:'Las estrellas doradas dan más puntos y aceleran tu camino al frenesí.'},
+      {icon:'💀',title:'TEN AUTOCONTROL',text:'Evita las trampas rojas. Tocarlas cuesta una vida y rompe tu combo.'}
+    ]},
+    power:{title:'⚡ POWER-UPS',cards:[
+      {icon:'🎯',title:'REGLAS CLÁSICAS',text:'Toca objetivos, aprovecha estrellas y evita todas las trampas rojas.'},
+      {icon:'❄️',title:'PODERES SORPRESA',text:'Aparecerán mejoras especiales. Tócalas rápido para activar sus ventajas.'},
+      {icon:'🔥',title:'CREA COMBOS',text:'Encadena aciertos para multiplicar puntos y entrar en modo frenesí.'}
+    ]},
+    duel:{title:'⚔️ DUELO ONLINE',cards:[
+      {icon:'⏱️',title:'65 SEGUNDOS',text:'Ambos jugadores compiten al mismo tiempo. Gana quien termine con más puntos.'},
+      {icon:'⚡',title:'GENERA PODERES',text:'Los aciertos cargan tu barra. Usa tus cargas para atacar o resérvalas para defenderte.'},
+      {icon:'🧊',title:'PODER DE HIELO',text:'Congela temporalmente al rival. La explosión anula el hielo; el hielo anula la tormenta.',cycle:'💥 vence a 🧊'},
+      {icon:'💥',title:'PODER DE EXPLOSIÓN',text:'Lanza explosiones que dificultan el tablero rival. La tormenta anula la explosión; la explosión anula el hielo.',cycle:'🌪️ vence a 💥'},
+      {icon:'🌪️',title:'PODER DE TORMENTA',text:'Oscurece y altera el tablero rival. El hielo anula la tormenta; la tormenta anula la explosión.',cycle:'🧊 vence a 🌪️'},
+      {icon:'🛡️',title:'DEFIÉNDETE A TIEMPO',text:'Al recibir un poder tendrás 2 segundos. Abajo aparecerá únicamente el poder capaz de anularlo, si tienes cargas disponibles.',cycle:'💥 > 🧊 > 🌪️ > 💥'}
+    ]},
+    robot:{title:'🤖 VS ROBOT',cards:[
+      {icon:'🎯',title:'65 SEGUNDOS',text:'Toca los objetivos antes que el robot. Gana quien consiga más puntos cuando termine el reloj.'},
+      {icon:'⚡',title:'CREA TUS PODERES',text:'Cada acierto carga tu barra. Acumula cargas para atacar o guárdalas para defenderte.'},
+      {icon:'🧊',title:'PODER DE HIELO',text:'Congela temporalmente al robot. La explosión anula el hielo; el hielo anula la tormenta.',cycle:'💥 vence a 🧊'},
+      {icon:'💥',title:'PODER DE EXPLOSIÓN',text:'Lanza explosiones que dificultan el tablero del robot. La tormenta anula la explosión; la explosión anula el hielo.',cycle:'🌪️ vence a 💥'},
+      {icon:'🌪️',title:'PODER DE TORMENTA',text:'Oscurece y altera el tablero del robot. El hielo anula la tormenta; la tormenta anula la explosión.',cycle:'🧊 vence a 🌪️'},
+      {icon:'🛡️',title:'DEFIÉNDETE A TIEMPO',text:'Cuando el robot ataque tendrás 2 segundos. Abajo aparecerá únicamente el poder capaz de anularlo, si tienes cargas disponibles.',cycle:'💥 > 🧊 > 🌪️ > 💥'}
+    ]},
+    rhythm:{title:'🎵 MODO RITMO',cards:[
+      {icon:'🎤',title:'ELIGE EL AUDIO',text:'Usa el micrófono para escuchar el ambiente o carga una canción desde tu dispositivo.'},
+      {icon:'🥁',title:'SIGUE EL RITMO',text:'Los objetivos aparecen siguiendo los graves y golpes detectados en la música.'},
+      {icon:'🎚️',title:'AJUSTA SENSIBILIDAD',text:'Si aparecen demasiados o muy pocos objetivos, vuelve al menú y ajusta la sensibilidad.'}
+    ]}
+  };
+  let pendingRulesAction=null;
+
+  function showModeRules(modeKey,onContinue){
+    const rules=MODE_RULES[modeKey];
+    if(!rules) return;
+    document.getElementById('game-rules-title').textContent=rules.title;
+    buildBotRuleCards(rules.cards);
+    pendingRulesAction=onContinue;
+    startScreen.classList.add('hidden');
+    botRulesScreen.classList.remove('hidden');
+    requestAnimationFrame(()=>goToBotRule(0,'auto'));
+  }
+  document.getElementById('bot-rules-back').addEventListener('click',()=>{
+    botRulesScreen.classList.add('hidden');
+    pendingRulesAction=null;
+    startScreen.classList.remove('hidden');
+  });
+  document.getElementById('bot-rules-continue').addEventListener('click',()=>{
+    botRulesScreen.classList.add('hidden');
+    const action=pendingRulesAction;
+    pendingRulesAction=null;
+    if(action) action();
+  });
+  renderBotRuleState();
+
+  document.getElementById('play-robot').addEventListener('click',()=>showModeRules('robot',beginBotDuel));
 
   let lastRhythmSource=null; // 'mic' o File
-  document.getElementById('play-classic').addEventListener('click', ()=>start('classic'));
+  document.getElementById('play-classic').addEventListener('click',()=>showModeRules('classic',()=>start('classic')));
   const sensSlider=document.getElementById('sens-slider');
   const sensLabel=document.getElementById('sens-label');
   if(sensSlider){
@@ -2014,9 +2173,9 @@
       sensLabel.textContent = rzSensitivity<0.9 ? 'Alta' : (rzSensitivity>1.8 ? 'Baja' : 'Media');
     });
   }
-  document.getElementById('play-power').addEventListener('click', ()=>start('power'));
-  document.getElementById('play-rhythm-mic').addEventListener('click', ()=>{ lastRhythmSource='mic'; startRhythmMic(); });
-  document.getElementById('play-rhythm-file').addEventListener('click', ()=>songInput.click());
+  document.getElementById('play-power').addEventListener('click',()=>showModeRules('power',()=>start('power')));
+  document.getElementById('play-rhythm-mic').addEventListener('click',()=>showModeRules('rhythm',()=>{ startScreen.classList.remove('hidden'); lastRhythmSource='mic'; startRhythmMic(); }));
+  document.getElementById('play-rhythm-file').addEventListener('click',()=>showModeRules('rhythm',()=>{ startScreen.classList.remove('hidden'); songInput.click(); }));
   songInput.addEventListener('change', ()=>{
     if(songInput.files && songInput.files[0]){
       lastRhythmSource=songInput.files[0];
