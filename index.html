@@ -189,6 +189,26 @@
   .credit b{color:var(--text);}
   .copyright{font-size:10px;color:var(--dim);opacity:.8;margin-top:2px;margin-bottom:8px;}
 
+  /* ---------- Récords mundiales ---------- */
+  .mode-card.records h2{color:var(--lime);}
+  .lb-tabs{display:flex;gap:8px;margin-bottom:10px;}
+  .lb-tab{flex:1;background:rgba(0,0,0,.25);border:none;color:var(--dim);font-weight:800;padding:8px;border-radius:10px;cursor:pointer;font-size:13px;letter-spacing:.5px;}
+  .lb-tab.active{background:rgba(46,230,255,.16);color:var(--cyan);}
+  #lb-list{list-style:none;display:flex;flex-direction:column;gap:5px;}
+  #lb-list li{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.22);border-radius:10px;padding:7px 10px;font-size:13px;}
+  #lb-list li.me{outline:2px solid var(--gold);}
+  #lb-list .rk{color:var(--dim);min-width:22px;}
+  #lb-list .nm{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}
+  #lb-list .pt{color:var(--cyan);font-weight:800;font-variant-numeric:tabular-nums;}
+  #lb-status{font-size:11px;color:var(--dim);min-height:14px;margin-top:6px;}
+  #player-chip{font-size:12px;color:var(--gold);font-weight:700;margin-bottom:10px;min-height:16px;}
+
+  /* ---------- Registro de nombre ---------- */
+  #name-screen{z-index:70;justify-content:center;}
+  #name-input{width:100%;max-width:280px;background:var(--panel);border:2px solid rgba(255,255,255,.18);border-radius:14px;padding:12px 16px;font-size:18px;font-weight:700;color:var(--text);text-align:center;letter-spacing:1px;margin-bottom:8px;outline:none;}
+  #name-input:focus{border-color:var(--cyan);}
+  #name-error{color:var(--red);font-size:12px;min-height:16px;margin-bottom:10px;}
+
   /* ---------- Modo ritmo ---------- */
   .mode-card.rhythm h2{color:var(--magenta);}
   .rhythm-btns{display:flex;gap:8px;}
@@ -230,6 +250,7 @@
   <div class="overlay" id="start-screen">
     <h1>NEURO RUSH</h1>
     <div class="tagline">Reflejos + autocontrol. Elige tu modo:</div>
+    <div id="player-chip"></div>
     <div class="rules-mini">
       <span>🔵 toca = puntos</span><span>⭐ bonus</span><span>💀 ¡NO tocar!</span><span>🔥 barra llena = FRENESÍ x2</span>
     </div>
@@ -268,6 +289,16 @@
       <div id="rhythm-status"></div>
     </div>
 
+    <div class="mode-card records">
+      <h2>🏆 RÉCORDS MUNDIALES</h2>
+      <div class="lb-tabs">
+        <button class="lb-tab active" data-mode="classic">🎯 Clásico</button>
+        <button class="lb-tab" data-mode="power">⚡ Power-Ups</button>
+      </div>
+      <ol id="lb-list"></ol>
+      <div id="lb-status"></div>
+    </div>
+
     <div class="credit">Creado por <b>Angel Fuentes</b></div>
     <div class="copyright">© 2026 Angel Fuentes. Todos los derechos reservados.</div>
   </div>
@@ -299,6 +330,16 @@
     <button class="btn secondary" id="menu-btn">Menú</button>
     <div class="credit">Creado por <b>Angel Fuentes</b></div>
     <div class="copyright">© 2026 Angel Fuentes. Todos los derechos reservados.</div>
+  </div>
+
+  <!-- Registro de nombre (primera vez) -->
+  <div class="overlay hidden" id="name-screen">
+    <h1 style="font-size:clamp(26px,7vw,38px);">ELIGE TU NOMBRE</h1>
+    <div class="tagline">Será tu identidad en los récords mundiales.<br>De 3 a 16 caracteres: letras, números, guion o guion bajo.</div>
+    <input id="name-input" maxlength="16" autocomplete="off" spellcheck="false" placeholder="TU-NOMBRE">
+    <div id="name-error"></div>
+    <button class="btn" id="name-save" style="max-width:280px;">✔ GUARDAR NOMBRE</button>
+    <button class="btn secondary" id="name-skip">Jugar sin registro</button>
   </div>
 </div>
 
@@ -922,6 +963,7 @@
       : '¡Tienes la medalla máxima! 👑';
 
     lastResult={score, level, comboBest, acc, mode, medal};
+    submitScore();
     overScreen.classList.remove('hidden');
   }
 
@@ -989,6 +1031,104 @@
     window.open('https://www.instagram.com/', '_blank');
   });
 
+  // ---------- Identidad y récords globales ----------
+  const nameScreen=document.getElementById('name-screen');
+  const nameInput=document.getElementById('name-input');
+  const nameError=document.getElementById('name-error');
+  const playerChip=document.getElementById('player-chip');
+  const lbList=document.getElementById('lb-list');
+  const lbStatus=document.getElementById('lb-status');
+  const NAME_RE=/^[\p{L}\p{N}_\-]{3,16}$/u;
+  let player=null;
+  try{ player=JSON.parse(localStorage.getItem('nr-player')||'null'); }catch(e){}
+
+  function renderChip(){
+    playerChip.textContent = player ? '👤 '+player.name : '';
+  }
+  function saveIdentity(p){
+    player=p;
+    try{ localStorage.setItem('nr-player', JSON.stringify(p)); }catch(e){}
+    renderChip();
+  }
+  async function registerName(){
+    const name=nameInput.value.trim();
+    if(!NAME_RE.test(name)){
+      nameError.textContent='Nombre inválido: de 3 a 16 letras, números, - o _';
+      return;
+    }
+    nameError.textContent='';
+    try{
+      const resp=await fetch('/api/register',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name})
+      });
+      const data=await resp.json().catch(()=>({}));
+      if(resp.status===201){
+        saveIdentity(data);
+        nameScreen.classList.add('hidden');
+        loadLeaderboard();
+      }else if(resp.status===409){
+        nameError.textContent='Ese nombre ya está en uso. Prueba otro.';
+      }else if(resp.status===503){
+        nameError.textContent='El servidor no tiene base de datos configurada. Puedes jugar sin registro.';
+      }else{
+        nameError.textContent='No se pudo registrar. Intenta de nuevo.';
+      }
+    }catch(e){
+      nameError.textContent='Sin conexión con el servidor. Puedes jugar sin registro.';
+    }
+  }
+  document.getElementById('name-save').addEventListener('click', registerName);
+  nameInput.addEventListener('keydown', e=>{ if(e.key==='Enter') registerName(); });
+  document.getElementById('name-skip').addEventListener('click', ()=>nameScreen.classList.add('hidden'));
+  if(!player) nameScreen.classList.remove('hidden');
+  renderChip();
+
+  let lbMode='classic';
+  async function loadLeaderboard(){
+    lbStatus.textContent='Cargando…';
+    lbList.innerHTML='';
+    try{
+      const resp=await fetch('/api/leaderboard?mode='+lbMode);
+      if(!resp.ok) throw new Error('http '+resp.status);
+      const data=await resp.json();
+      if(!data.top || !data.top.length){
+        lbStatus.textContent='Aún no hay récords. ¡Sé el primero!';
+        return;
+      }
+      lbStatus.textContent='';
+      data.top.forEach((row,i)=>{
+        const li=document.createElement('li');
+        if(player && row.name===player.name) li.classList.add('me');
+        const rk=document.createElement('span'); rk.className='rk'; rk.textContent=(i+1)+'.';
+        const nm=document.createElement('span'); nm.className='nm'; nm.textContent=row.name;
+        const pt=document.createElement('span'); pt.className='pt'; pt.textContent=Number(row.best).toLocaleString('es-MX');
+        li.append(rk,nm,pt);
+        lbList.appendChild(li);
+      });
+    }catch(e){
+      lbStatus.textContent='Récords no disponibles (sin conexión).';
+    }
+  }
+  document.querySelectorAll('.lb-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.lb-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      lbMode=btn.dataset.mode;
+      loadLeaderboard();
+    });
+  });
+  function submitScore(){
+    if(!player || !(mode==='classic'||mode==='power') || score<=0) return;
+    fetch('/api/score',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({playerId:player.id, mode, score})
+    }).catch(()=>{});
+  }
+  loadLeaderboard();
+
   let lastRhythmSource=null; // 'mic' o File
   document.getElementById('play-classic').addEventListener('click', ()=>start('classic'));
   const sensSlider=document.getElementById('sens-slider');
@@ -1022,6 +1162,7 @@
   document.getElementById('menu-btn').addEventListener('click', ()=>{
     overScreen.classList.add('hidden');
     startScreen.classList.remove('hidden');
+    loadLeaderboard();
   });
 
   // ---------- In-game back-to-menu (two-tap confirm) ----------
@@ -1043,6 +1184,7 @@
     resetQuitBtn();
     overScreen.classList.add('hidden');
     startScreen.classList.remove('hidden');
+    loadLeaderboard();
   }
   quitBtn.addEventListener('click', ()=>{
     if(!running) return;
