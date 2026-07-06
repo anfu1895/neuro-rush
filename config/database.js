@@ -9,8 +9,7 @@
   pass/name) — no connection URL, so special characters in the
   password need no URL-encoding.
 
-  Providers like TiDB Cloud and Aiven REQUIRE SSL: set *_DB_SSL=true.
-  A plain local MySQL usually needs *_DB_SSL=false.
+  Production uses Railway's native MySQL variable names.
 */
 
 require('dotenv').config();
@@ -40,16 +39,13 @@ module.exports = {
 
   production: {
     ...common,
-    database: process.env.PROD_DB_NAME || null,
-    username: process.env.PROD_DB_USER || null,
-    password: process.env.PROD_DB_PASS || '',
-    host: process.env.PROD_DB_HOST || null,
-    port: Number(process.env.PROD_DB_PORT) || 3306,
+    database: process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || null,
+    username: process.env.MYSQLUSER || null,
+    password: process.env.MYSQLPASSWORD || '',
+    host: process.env.MYSQLHOST || null,
+    port: Number(process.env.MYSQLPORT) || 3306,
     logging: false, // silent in prod
-    // SSL on by default in prod; set PROD_DB_SSL=false only to opt out.
-    dialectOptions: process.env.PROD_DB_SSL === 'false'
-      ? {}
-      : { ssl: { rejectUnauthorized: true } },
+    dialectOptions: {},
     pool: { max: 10, min: 0, idle: 10000, acquire: 30000 }
   }
 };
