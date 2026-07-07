@@ -18,6 +18,8 @@ const HTTPS_PORT = Number(process.env.HTTPS_PORT) || 3443;
 const HOST = '0.0.0.0';
 const ROOT = __dirname;
 
+console.log(`Música   → Jamendo ${process.env.JAMENDO_CLIENT_ID ? 'activado' : 'sin JAMENDO_CLIENT_ID'}`);
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -36,6 +38,8 @@ const NAME_RE = /^[\p{L}\p{N}_\-]{3,16}$/u;
 const MODES = new Set(['classic', 'power']);
 const MAX_SCORE = 200000; // tope de cordura contra puntajes absurdos
 const MAX_BODY = 10 * 1024;
+const GETSONGBPM_API_KEY = process.env.GETSONGBPM_API_KEY || '';
+const JAMENDO_CLIENT_ID = process.env.JAMENDO_CLIENT_ID || '';
 
 function sendJson(response, status, payload) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -62,6 +66,14 @@ function readJsonBody(request) {
 
 async function handleApi(request, response) {
   const [pathname, query] = request.url.split('?');
+
+  if (request.method === 'GET' && pathname === '/api/rhythm-audio') {
+    return handleRhythmAudio(query, response);
+  }
+
+  if (request.method === 'GET' && pathname === '/api/rhythm-songs') {
+    return handleRhythmSongs(query, response);
+  }
 
   if (!db.enabled()) {
     sendJson(response, 503, { error: 'db_disabled' });
@@ -103,6 +115,174 @@ async function handleApi(request, response) {
     }
     console.error('Error de API:', error);
     return sendJson(response, 500, { error: 'server_error' });
+  }
+}
+
+function isAllowedRhythmAudioUrl(rawUrl) {
+  try {
+    const parsed = new URL(rawUrl);
+    return parsed.protocol === 'https:' && (
+      parsed.hostname === 'usercontent.jamendo.com' ||
+      parsed.hostname.endsWith('.jamendo.com')
+    );
+  } catch {
+    return false;
+  }
+}
+
+function proxyAudio(rawUrl, response, redirectsLeft = 3) {
+  if (!isAllowedRhythmAudioUrl(rawUrl)) {
+    response.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+    response.end(JSON.stringify({ error: 'invalid_audio_url' }));
+    return;
+  }
+
+  const req = https.get(rawUrl, upstream => {
+    const redirect = upstream.statusCode >= 300 && upstream.statusCode < 400 && upstream.headers.location;
+    if (redirect && redirectsLeft > 0) {
+      upstream.resume();
+      const nextUrl = new URL(upstream.headers.location, rawUrl).toString();
+      proxyAudio(nextUrl, response, redirectsLeft - 1);
+      return;
+    }
+
+    if ((upstream.statusCode || 0) >= 400) {
+      upstream.resume();
+      response.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({ error: 'audio_unavailable' }));
+      return;
+    }
+
+    response.writeHead(200, {
+      'Content-Type': upstream.headers['content-type'] || 'audio/mpeg',
+      'Cache-Control': 'public, max-age=86400',
+      'Access-Control-Allow-Origin': '*'
+    });
+    upstream.pipe(response);
+  });
+
+  req.setTimeout(15000, () => req.destroy(new Error('timeout')));
+  req.on('error', () => {
+    if (!response.headersSent) {
+      response.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+    }
+    response.end(JSON.stringify({ error: 'audio_proxy_error' }));
+  });
+}
+
+function handleRhythmAudio(query, response) {
+  const params = new URLSearchParams(query || '');
+  const audioUrl = String(params.get('url') || '');
+  proxyAudio(audioUrl, response);
+}
+
+function requestJson(url, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { headers }, res => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try {
+          resolve({ status: res.statusCode || 0, data: JSON.parse(data || '{}') });
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+    req.setTimeout(8000, () => req.destroy(new Error('timeout')));
+    req.on('error', reject);
+  });
+}
+
+async function handleRhythmSongs(query, response) {
+  const params = new URLSearchParams(query || '');
+  const lookup = String(params.get('q') || '').trim().slice(0, 80);
+  if (lookup.length < 2) return sendJson(response, 200, { songs: [] });
+
+  if (JAMENDO_CLIENT_ID) {
+    try {
+      const baseJamendoUrl = [
+        'https://api.jamendo.com/v3.0/tracks/',
+        `?client_id=${encodeURIComponent(JAMENDO_CLIENT_ID)}`,
+        '&format=json&limit=12&audioformat=mp31&include=musicinfo',
+        '&type=single%20albumtrack&order=relevance'
+      ].join('');
+
+      const jamendoQueries = [
+        `${baseJamendoUrl}&search=${encodeURIComponent(lookup)}`,
+        `${baseJamendoUrl}&namesearch=${encodeURIComponent(lookup)}`,
+        `${baseJamendoUrl}&artist_name=${encodeURIComponent(lookup)}`
+      ];
+
+      const foundSongs = new Map();
+      let hasSuccessfulSearch = false;
+
+      for (const apiUrl of jamendoQueries) {
+        const result = await requestJson(apiUrl);
+        if (result.status < 200 || result.status >= 300 || result.data.headers?.status === 'failed') {
+          continue;
+        }
+
+        hasSuccessfulSearch = true;
+        for (const song of (result.data.results || [])) {
+          if (!song || !song.name || !song.audio) continue;
+          foundSongs.set(String(song.audio), song);
+        }
+      }
+
+      if (!hasSuccessfulSearch) {
+        return sendJson(response, 502, { error: 'jamendo_error' });
+      }
+
+      const songs = [...foundSongs.values()]
+        .map(song => {
+          const rawAudio = String(song.audio);
+          return {
+            title: String(song.name),
+            artist: String(song.artist_name || 'Unknown artist'),
+            bpm: null,
+            audio: `/api/rhythm-audio?url=${encodeURIComponent(rawAudio)}`,
+            sourceAudio: rawAudio,
+            image: String(song.album_image || song.image || ''),
+            source: String(song.shareurl || 'https://www.jamendo.com/'),
+            provider: 'Jamendo'
+          };
+        });
+
+      return sendJson(response, 200, { songs, provider: 'jamendo' });
+    } catch (error) {
+      console.error('Jamendo API error:', error.message);
+      return sendJson(response, 502, { error: 'jamendo_unavailable' });
+    }
+  }
+
+  if (!GETSONGBPM_API_KEY) {
+    return sendJson(response, 503, { error: 'missing_music_api_key' });
+  }
+
+  try {
+    const apiUrl = `https://api.getsong.co/search/?type=song&limit=12&lookup=${encodeURIComponent(lookup)}`;
+    const result = await requestJson(apiUrl, { 'X-API-KEY': GETSONGBPM_API_KEY });
+    if (result.status < 200 || result.status >= 300) {
+      return sendJson(response, 502, { error: 'getsongbpm_error' });
+    }
+
+    const songs = (result.data.search || [])
+      .filter(song => song && song.title && song.tempo)
+      .map(song => ({
+        title: String(song.title),
+        artist: String((song.artist && song.artist.name) || 'Unknown artist'),
+        bpm: Math.round(Number(song.tempo)),
+        audio: '',
+        source: String(song.uri || 'https://getsongbpm.com/'),
+        provider: 'GetSongBPM'
+      }))
+      .filter(song => Number.isFinite(song.bpm) && song.bpm > 0);
+
+    return sendJson(response, 200, { songs });
+  } catch (error) {
+    console.error('GetSongBPM API error:', error.message);
+    return sendJson(response, 502, { error: 'getsongbpm_unavailable' });
   }
 }
 
