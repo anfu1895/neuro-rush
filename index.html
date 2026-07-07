@@ -217,6 +217,7 @@
   #bot-rules-dots button.active{width:25px;border-radius:99px;background:var(--cyan);box-shadow:0 0 9px var(--cyan);}
   #bot-rules-actions{display:flex;flex-direction:column;align-items:center;width:100%;padding:0 18px;}
   #bot-rules-continue{max-width:280px;}
+  #bot-rules-continue:disabled{opacity:.42;cursor:not-allowed;transform:none;box-shadow:0 3px 0 #0a5d70;}
   #duel-bar{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
   #duel-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;}
   #duel-me{color:var(--cyan);}
@@ -233,12 +234,16 @@
   #power-label{font-size:10px;color:var(--gold);font-weight:900;text-align:center;margin-bottom:3px;}
   #power-track{height:8px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden;}
   #power-fill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--gold));border-radius:99px;transition:width .15s;}
-  #incoming-attack{display:flex;align-items:center;gap:12px;background:rgba(255,74,94,.14);border:2px solid var(--red);border-radius:16px;padding:10px 12px;overflow:hidden;position:relative;}
+  #incoming-attack{position:fixed;left:50%;top:50%;z-index:75;display:flex;align-items:center;gap:14px;width:min(390px,calc(100vw - 28px));padding:18px;background:rgba(18,12,42,.97);border:2px solid var(--red);border-radius:18px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 18px 60px rgba(0,0,0,.65),0 0 32px rgba(255,74,94,.38);transform:translate(-50%,-50%);}
+  #incoming-attack.can-counter{border-color:var(--gold);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 18px 60px rgba(0,0,0,.65),0 0 36px rgba(255,210,62,.5);}
   #incoming-attack::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);animation:attackSweep .75s linear infinite;}
   #incoming-icon{font-size:38px;animation:incomingPulse .45s ease-in-out infinite alternate;z-index:1;}
   #incoming-info{flex:1;z-index:1;}
-  #incoming-title{font-size:12px;font-weight:900;color:var(--red);letter-spacing:1px;}
+  #incoming-title{font-size:13px;font-weight:900;color:var(--red);letter-spacing:1px;}
+  #incoming-attack.can-counter #incoming-title{color:var(--gold);}
   #incoming-count{font-size:24px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums;}
+  #incoming-counter-hint{margin-top:2px;font-size:10px;font-weight:900;color:var(--dim);letter-spacing:.6px;}
+  #incoming-attack.can-counter #incoming-counter-hint{color:var(--gold);}
   #counter-power{z-index:1;min-width:88px;background:var(--panel);border:2px solid var(--gold);border-radius:12px;color:var(--text);padding:7px;font-size:19px;font-weight:900;cursor:pointer;}
   #counter-power:disabled{opacity:.35;cursor:default;}
   #counter-power small{display:block;font-size:9px;color:var(--gold);letter-spacing:.5px;}
@@ -288,6 +293,22 @@
   #grid.beat{animation:beatPulse .18s ease-out;}
   @keyframes beatPulse{0%{transform:scale(1);}40%{transform:scale(1.022);}100%{transform:scale(1);}}
   #rhythm-status{font-size:11px;color:var(--magenta);text-align:center;min-height:14px;margin-top:2px;}
+  #rhythm-loading{position:absolute;inset:0;z-index:95;background:rgba(8,6,24,.82);backdrop-filter:blur(5px);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20px;text-align:center;padding:24px;}
+  .rhythm-spinner{width:58px;height:58px;border-radius:50%;border:5px solid rgba(255,255,255,.16);border-top-color:var(--magenta);border-right-color:var(--cyan);animation:rhythmSpin .8s linear infinite;box-shadow:0 0 24px rgba(255,62,200,.35);margin-bottom:14px;}
+  @keyframes rhythmSpin{to{transform:rotate(360deg);}}
+  #rhythm-loading-title{font-size:18px;font-weight:900;color:var(--text);margin-bottom:5px;}
+  #rhythm-loading-text{font-size:12px;color:var(--dim);max-width:300px;line-height:1.4;}
+  .rhythm-presets{margin-top:12px;text-align:left;}
+  .rhythm-presets-title{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--dim);font-weight:800;margin-bottom:8px;align-items:center;}
+  .rhythm-presets-title a{color:var(--cyan);text-decoration:none;font-size:11px;}
+  .rhythm-search{width:100%;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);border-radius:12px;color:var(--text);font-weight:700;padding:10px 12px;outline:none;margin-bottom:8px;}
+  .rhythm-search:focus{border-color:var(--magenta);box-shadow:0 0 0 3px rgba(255,46,213,.12);}
+  .rhythm-song-list{display:grid;gap:7px;}
+  .rhythm-song{width:100%;display:flex;align-items:center;gap:8px;text-align:left;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.06);color:var(--text);padding:8px 10px;cursor:pointer;}
+  .rhythm-song:hover{border-color:var(--magenta);background:rgba(255,46,213,.12);}
+  .rhythm-song b{display:block;font-size:12px;line-height:1.15;}
+  .rhythm-song small{display:block;color:var(--dim);font-size:10px;margin-top:2px;}
+  .rhythm-song .bpm{margin-left:auto;color:var(--gold);font-weight:900;font-variant-numeric:tabular-nums;font-size:12px;}
 
   body.shake #app{animation:shake .3s;}
   @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
@@ -322,7 +343,7 @@
     <div id="sab-row">
       <div id="power-meter"><div id="power-label">⚡ 0</div><div id="power-track"><div id="power-fill"></div></div></div>
       <button class="sab" data-kind="freeze" title="Se obtiene cada 5 puntos"><span class="cost">5 pts</span>🧊<span class="qty">×0</span></button>
-      <button class="sab" data-kind="bombs" title="Se obtiene cada 25 puntos"><span class="cost">25 pts</span>💥<span class="qty">×0</span></button>
+      <button class="sab" data-kind="bombs" title="Se obtiene cada 20 puntos"><span class="cost">20 pts</span>💥<span class="qty">×0</span></button>
       <button class="sab" data-kind="storm" title="Se obtiene cada 15 puntos"><span class="cost">15 pts</span>🌪️<span class="qty">×0</span></button>
     </div>
     <div id="incoming-attack" class="hidden">
@@ -330,6 +351,7 @@
       <div id="incoming-info">
         <div id="incoming-title">ATAQUE RIVAL</div>
         <div id="incoming-count">2.0s</div>
+        <div id="incoming-counter-hint">REVISA TU DEFENSA</div>
       </div>
       <button id="counter-power" type="button"><span>💣 ×0</span><small>ANULAR</small></button>
     </div>
@@ -337,6 +359,11 @@
 
   <div id="grid"></div>
   <div id="announce"></div>
+  <div id="rhythm-loading" class="hidden" aria-live="polite" aria-busy="true">
+    <div class="rhythm-spinner"></div>
+    <div id="rhythm-loading-title">Cargando canción</div>
+    <div id="rhythm-loading-text">Preparando audio y fragmentos sincronizados…</div>
+  </div>
 
   <!-- Pantalla de inicio / selección de modo -->
   <div class="overlay" id="start-screen">
@@ -381,12 +408,20 @@
       </div>
     </div>
 
-    <div class="mode-card rhythm">
+    <div class="mode-card rhythm hidden">
       <h2>🎵 MODO RITMO</h2>
-      <p>Las bolas salen <b>al ritmo de tu música</b>. Pon tu playlist de Spotify a sonar en tu bocina y el juego detecta los beats con el micrófono, o carga una canción (MP3) y suena dentro del juego. ¡Cada golpe de la canción lanza una bola!</p>
+      <p>Las bolas salen <b>al ritmo de tu música</b>. Busca canciones online, usa el micrófono o carga un MP3. Cada círculo acertado toca un fragmento sincronizado de la canción.</p>
       <div class="rhythm-btns">
         <button class="btn mic-btn" id="play-rhythm-mic">🎤 ESCUCHAR MÚSICA</button>
         <button class="btn file-btn" id="play-rhythm-file">📁 CARGAR CANCIÓN</button>
+      </div>
+      <div class="rhythm-presets">
+        <div class="rhythm-presets-title">
+          <span>Buscar canción online</span>
+          <a href="https://www.jamendo.com/" target="_blank" rel="noopener">Jamendo</a>
+        </div>
+        <input class="rhythm-search" id="rhythm-song-search" type="search" placeholder="Buscar canción, artista o autor..." autocomplete="off">
+        <div class="rhythm-song-list" id="rhythm-song-list"></div>
       </div>
       <input type="file" id="song-input" accept="audio/*" style="display:none;">
       <div style="margin-top:12px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--dim);">
@@ -584,6 +619,21 @@
   function hitSound(){ beep(420 + Math.min(combo,12)*60, .08, 'triangle'); }
   function goldSound(){ beep(880,.1,'sine',.22); setTimeout(()=>beep(1320,.12,'sine',.22),80); }
   function badSound(){ beep(140,.25,'sawtooth',.25); }
+  function rhythmTapSound(type='target', rhythmTime=0){
+    if(mode!=='rhythm') return false;
+    if(playRhythmSampleAt(rhythmTime, type)) return true;
+    if(rz && rz.preset){
+      const base=Math.max(110, Math.min(440, rz.preset.bpm*2));
+      const steps=type==='gold' ? [0,4,7,12] : (type==='trap' ? [0,-5] : [0,7]);
+      steps.forEach((step,i)=>{
+        const freq=base*Math.pow(2, step/12);
+        setTimeout(()=>beep(freq, .055, type==='trap' ? 'sine' : 'triangle', type==='trap' ? .05 : .07), i*45);
+      });
+    }else{
+      beep(type==='gold' ? 660 : (type==='trap' ? 180 : 440), .055, 'sine', .04);
+    }
+    return true;
+  }
   function levelSound(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.12,'square',.14), i*90)); }
   function iceSound(){ [1400,1100,800,600].forEach((f,i)=>setTimeout(()=>beep(f,.14,'sine',.16), i*70)); }
   function fireSound(){
@@ -704,7 +754,7 @@
       timeout = setTimeout(()=>expire(idx), life);
     }
     cells[idx].appendChild(el);
-    orbs.set(idx, {type, timeout, el, hp: opts.hp||1, iced: !!opts.iced});
+    orbs.set(idx, {type, timeout, el, hp: opts.hp||1, iced: !!opts.iced, rhythmTime: opts.rhythmTime || 0});
   }
   function spawn(){
     if(!running || frozen) return;
@@ -824,8 +874,142 @@
   // o reproduce un archivo cargado, y lanza bolas en cada beat.
   const rhythmStatus=document.getElementById('rhythm-status');
   const songInput=document.getElementById('song-input');
-  let rz={analyser:null, data:null, raf:null, hist:[], lastBeat:0, audioEl:null, stream:null, srcNode:null, gainNode:null, isMic:false};
+  const rhythmSongList=document.getElementById('rhythm-song-list');
+  const rhythmSongSearch=document.getElementById('rhythm-song-search');
+  const rhythmLoading=document.getElementById('rhythm-loading');
+  const rhythmLoadingTitle=document.getElementById('rhythm-loading-title');
+  const rhythmLoadingText=document.getElementById('rhythm-loading-text');
+  const RHYTHM_PRESET_SONGS=[
+    {title:'Hotel California',artist:'Eagles',bpm:75,source:'https://getsongbpm.com/'},
+    {title:'Zombie',artist:'The Cranberries',bpm:84,source:'https://getsongbpm.com/'},
+    {title:'Nothing Else Matters',artist:'Metallica',bpm:46,source:'https://getsongbpm.com/'},
+    {title:'Master of Puppets',artist:'Metallica',bpm:220,source:'https://getsongbpm.com/'},
+    {title:'Californication',artist:'Red Hot Chili Peppers',bpm:96,source:'https://getsongbpm.com/'},
+    {title:'Riptide',artist:'Vance Joy',bpm:102,source:'https://getsongbpm.com/'},
+    {title:'Bohemian Rhapsody',artist:'Queen',bpm:72,source:'https://getsongbpm.com/'},
+    {title:'Come Together',artist:'The Beatles',bpm:83,source:'https://getsongbpm.com/'}
+  ];
+  let rz={analyser:null, data:null, raf:null, hist:[], lastBeat:0, prevEnergy:0, audioEl:null, stream:null, srcNode:null, gainNode:null, silentGain:null, beatTimer:null, preset:null, sampleBuffer:null, sampleReady:false, sampleSourceUrl:'', sampleAudioUrl:'', samplePlayers:[], sampleCursor:0, isMic:false};
   let rzSensitivity=1.3; // menor = más beats detectados; mayor = solo golpes fuertes
+  let rhythmRemoteSongs=[];
+  let rhythmRenderedSongs=[];
+  let rhythmSearchTimer=null;
+  let rhythmSearchMessage='';
+
+  function showRhythmLoading(title='Cargando canción', text='Preparando audio y fragmentos sincronizados…'){
+    if(!rhythmLoading) return;
+    if(rhythmLoadingTitle) rhythmLoadingTitle.textContent=title;
+    if(rhythmLoadingText) rhythmLoadingText.textContent=text;
+    rhythmLoading.classList.remove('hidden');
+  }
+
+  function hideRhythmLoading(){
+    if(rhythmLoading) rhythmLoading.classList.add('hidden');
+  }
+
+  function renderRhythmPresets(query=''){
+    if(!rhythmSongList) return;
+    const needle=query.trim().toLowerCase();
+    const sourceSongs=needle ? rhythmRemoteSongs : [];
+    const songs=sourceSongs
+      .map((song,idx)=>({...song,idx}))
+      .filter(song=>{
+        if(!needle) return true;
+        return `${song.title} ${song.artist} ${song.bpm}`.toLowerCase().includes(needle);
+      });
+    rhythmRenderedSongs=songs;
+    rhythmSongList.innerHTML=songs.length ? songs.map((song,renderIdx)=>`
+      <button class="rhythm-song" type="button" data-song="${renderIdx}">
+        <span>🎵</span>
+        <span><b>${song.title}</b><small>${song.artist}${song.provider ? ' · '+song.provider : ''}</small></span>
+        <span class="bpm">${song.audio ? 'PLAY' : song.bpm+' BPM'}</span>
+      </button>
+    `).join('') : `<div style="font-size:11px;color:var(--dim);text-align:center;padding:8px;">${rhythmSearchMessage || (needle ? 'Busca una canción de Jamendo. Si no aparece PLAY, no hay audio para tocar.' : 'Escribe para buscar canciones PLAY de Jamendo.')}</div>`;
+  }
+  async function searchRhythmSongs(query){
+    const needle=query.trim();
+    if(needle.length<2){
+      rhythmRemoteSongs=[];
+      rhythmSearchMessage='';
+      renderRhythmPresets(needle);
+      return;
+    }
+    rhythmSearchMessage='Buscando en Jamendo...';
+    renderRhythmPresets(needle);
+    try{
+      const res=await fetch('/api/rhythm-songs?q='+encodeURIComponent(needle));
+      if(!res.ok){
+        rhythmRemoteSongs=[];
+        rhythmSearchMessage='Jamendo no respondió. Revisa JAMENDO_CLIENT_ID y reinicia el server.';
+        renderRhythmPresets(needle);
+        return;
+      }
+      const data=await res.json();
+      rhythmRemoteSongs=Array.isArray(data.songs) ? data.songs : [];
+      rhythmSearchMessage=rhythmRemoteSongs.length ? '' : 'Jamendo no encontró canciones PLAY para esa búsqueda.';
+      renderRhythmPresets(needle);
+    }catch(e){
+      rhythmRemoteSongs=[];
+      rhythmSearchMessage='Error conectando con Jamendo desde el servidor.';
+      renderRhythmPresets(needle);
+    }
+  }
+  function startRhythmPreset(song){
+    if(!song) return;
+    stopRhythm();
+    rz.preset=song;
+    rz.preset.startedAt=performance.now();
+    lastRhythmSource={type:'preset',song};
+    rhythmStatus.textContent=`🎵 ${song.title} — ${song.bpm} BPM. Tempo basado en GetSongBPM; no reproduce audio.`;
+    start('rhythm');
+  }
+  async function startRhythmStream(song){
+    if(!song || !song.audio) return startRhythmPreset(song);
+    stopRhythm();
+    showRhythmLoading('Cargando canción', `Descargando y preparando fragmentos de ${song.title}...`);
+    setupAnalyser();
+    rz.isMic=false;
+    const audio=new Audio(song.audio);
+    audio.crossOrigin='anonymous';
+    rz.audioEl=audio;
+    rz.sampleAudioUrl=song.audio;
+    prepareRhythmSamplePlayers(song.audio);
+    lastRhythmSource={type:'stream',song};
+    try{
+      rz.srcNode=ensureCtx().createMediaElementSource(audio);
+      connectRhythmElementForAnalysis(rz.srcNode);
+    }catch(e){
+      hideRhythmLoading();
+      rhythmStatus.textContent='⚠️ No se pudo preparar el audio de esta canción.';
+      return;
+    }
+    audio.addEventListener('ended', ()=>{ if(running && mode==='rhythm') gameOver(); });
+    rhythmStatus.textContent=`🎧 Preparando fragmentos de ${song.title}...`;
+    const samplesReady=await loadRhythmSampleFromUrl(song.audio, song.title);
+    if(!samplesReady){
+      hideRhythmLoading();
+      rhythmStatus.textContent='⚠️ No pude preparar fragmentos reales de esta canción. Prueba con otra o carga un MP3.';
+      return;
+    }
+    await ensureCtx().resume().catch(()=>{});
+    rhythmStatus.textContent=`🎵 Reproduciendo ${song.title} — ${song.artist || 'Jamendo'}`;
+    audio.play().then(()=>{
+      unlockRhythmSamplePlayers();
+      hideRhythmLoading();
+      rhythmStatus.textContent='';
+      start('rhythm');
+    }).catch(()=>{
+      hideRhythmLoading();
+      rhythmStatus.textContent='⚠️ No se pudo reproducir esa canción online. Prueba otra o usa 📁 Cargar canción.';
+    });
+  }
+  function startPresetBeats(){
+    if(!rz.preset) return;
+    const beatMs=Math.max(1000/(Math.min(rz.preset.bpm,220)/60),220);
+    if(rz.beatTimer) clearInterval(rz.beatTimer);
+    rz.beatTimer=setInterval(onBeat, beatMs);
+    onBeat();
+  }
 
   function ensureCtx(){
     if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
@@ -833,6 +1017,16 @@
     return actx;
   }
   function setupAnalyser(){
+    if(rz.beatTimer) clearInterval(rz.beatTimer);
+    rz.beatTimer=null;
+    rz.preset=null;
+    rz.sampleBuffer=null;
+    rz.sampleReady=false;
+    rz.sampleSourceUrl='';
+    rz.sampleAudioUrl='';
+    rz.samplePlayers.forEach(player=>{ try{ player.pause(); player.src=''; }catch(e){} });
+    rz.samplePlayers=[];
+    rz.sampleCursor=0;
     const ctx=ensureCtx();
     rz.analyser=ctx.createAnalyser();
     rz.analyser.fftSize=2048;               // más resolución en graves
@@ -840,7 +1034,173 @@
     rz.analyser.minDecibels=-90;            // capta sonidos más débiles
     rz.analyser.maxDecibels=-10;
     rz.data=new Uint8Array(rz.analyser.frequencyBinCount);
-    rz.hist=[]; rz.lastBeat=0;
+    rz.hist=[]; rz.lastBeat=0; rz.prevEnergy=0;
+  }
+  async function loadRhythmSampleFromArrayBuffer(arrayBuffer, label){
+    try{
+      const decoded=await ensureCtx().decodeAudioData(arrayBuffer.slice(0));
+      rz.sampleBuffer=decoded;
+      rz.sampleReady=true;
+      rhythmStatus.textContent=label ? `🎧 Samples listos: ${label}` : '';
+      setTimeout(()=>{ if(rhythmStatus.textContent.startsWith('🎧 Samples listos')) rhythmStatus.textContent=''; }, 1200);
+      return true;
+    }catch(e){
+      rz.sampleBuffer=null;
+      rz.sampleReady=false;
+      return false;
+    }
+  }
+  async function loadRhythmSampleFromUrl(url, label){
+    if(!url) return false;
+    if(rz.sampleSourceUrl===url && rz.sampleReady) return true;
+    rz.sampleSourceUrl=url;
+    rz.sampleReady=false;
+    try{
+      const res=await fetch(url);
+      if(!res.ok) throw new Error('audio_fetch_failed');
+      const buffer=await res.arrayBuffer();
+      return await loadRhythmSampleFromArrayBuffer(buffer, label);
+    }catch(e){
+      rz.sampleBuffer=null;
+      rz.sampleReady=false;
+      rhythmStatus.textContent='⚠️ Esta canción se analiza, pero el navegador no dejó preparar samples. Prueba otra o carga MP3.';
+      return false;
+    }
+  }
+  function connectRhythmElementForAnalysis(node){
+    const ctx=ensureCtx();
+    node.connect(rz.analyser);
+    rz.silentGain=ctx.createGain();
+    rz.silentGain.gain.value=0.35;
+    rz.analyser.connect(rz.silentGain);
+    rz.silentGain.connect(ctx.destination);
+  }
+  function currentRhythmTime(){
+    if(rz.audioEl) return rz.audioEl.currentTime || 0;
+    if(rz.preset){
+      const bpm=Math.min(rz.preset.bpm || 120, 220);
+      return ((performance.now() - (rz.preset.startedAt || performance.now())) / 1000) % Math.max(8, 60 / (bpm / 60));
+    }
+    return 0;
+  }
+  function prepareRhythmSamplePlayers(url){
+    if(!url) return;
+    rz.sampleAudioUrl=url;
+    rz.samplePlayers.forEach(player=>{ try{ player.pause(); player.src=''; }catch(e){} });
+    rz.samplePlayers=[];
+    rz.sampleCursor=0;
+    for(let i=0;i<8;i++){
+      const player=new Audio(url);
+      player.crossOrigin='anonymous';
+      player.preload='auto';
+      player.volume=1;
+      player.load();
+      rz.samplePlayers.push(player);
+    }
+  }
+  function unlockRhythmSamplePlayers(){
+    rz.samplePlayers.forEach(player=>{
+      try{
+        const previousVolume=player.volume;
+        player.volume=0;
+        player.play()
+          .then(()=>{
+            player.pause();
+            player.currentTime=0;
+            player.volume=previousVolume || 1;
+          })
+          .catch(()=>{ player.volume=previousVolume || 1; });
+      }catch(e){}
+    });
+  }
+  function playRhythmElementSampleAt(offset, type='target'){
+    if(!rz.sampleReady){
+      rhythmStatus.textContent='⚠️ No hay fragmento real listo. Elige una canción PLAY de Jamendo y espera “Samples listos”.';
+      return false;
+    }
+    if(!rz.sampleAudioUrl) return false;
+    try{
+      const dur=type==='gold' ? 0.5 : (type==='trap' ? 0.22 : 0.34);
+      if(!rz.samplePlayers.length) prepareRhythmSamplePlayers(rz.sampleAudioUrl);
+      const player=rz.samplePlayers[rz.sampleCursor % rz.samplePlayers.length];
+      rz.sampleCursor++;
+      if(!player) return false;
+      player.pause();
+      player.volume=type==='trap' ? 0.55 : 0.95;
+      const maxStart=Number.isFinite(player.duration) && player.duration>0 ? Math.max(0, player.duration-dur-0.02) : Number(offset)||0;
+      player.currentTime=Math.max(0, Math.min(Number(offset)||0, maxStart));
+      player.play()
+        .then(()=>{
+          rhythmStatus.textContent='🎧 Fragmento de canción';
+          setTimeout(()=>{ if(rhythmStatus.textContent==='🎧 Fragmento de canción') rhythmStatus.textContent=''; }, 350);
+          setTimeout(()=>{ try{ player.pause(); }catch(e){} }, dur*1000);
+        })
+        .catch(()=>{ rhythmStatus.textContent='⚠️ El navegador bloqueó el fragmento de audio. Toca de nuevo o prueba con MP3 local.'; });
+      return true;
+    }catch(e){
+      return false;
+    }
+  }
+  function playDecodedRhythmSampleAt(offset, type='target'){
+    if(!rz.sampleReady || !rz.sampleBuffer) return false;
+    try{
+      const ctx=ensureCtx();
+      const dur=type==='gold' ? 0.5 : (type==='trap' ? 0.22 : 0.36);
+      const safeOffset=Math.max(0, Math.min(Number(offset) || 0, Math.max(0, rz.sampleBuffer.duration - dur - 0.02)));
+      const play=()=>{
+        const source=ctx.createBufferSource();
+        const gain=ctx.createGain();
+        gain.gain.setValueAtTime(type==='trap' ? 0.6 : 1.35, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        source.buffer=rz.sampleBuffer;
+        source.connect(gain);
+        gain.connect(ctx.destination);
+        source.start(ctx.currentTime, safeOffset, dur);
+        rhythmStatus.textContent='🎧 Fragmento de canción';
+        setTimeout(()=>{ if(rhythmStatus.textContent==='🎧 Fragmento de canción') rhythmStatus.textContent=''; }, 350);
+      };
+      if(ctx.state==='suspended'){
+        rhythmStatus.textContent='⚠️ Audio suspendido por el navegador. Toca otra vez.';
+        ctx.resume().catch(()=>{});
+        return false;
+      }
+      play();
+      return true;
+    }catch(e){
+      rhythmStatus.textContent='⚠️ No pude reproducir el fragmento decodificado.';
+      return false;
+    }
+  }
+  function playRhythmSampleAt(offset, type='target'){
+    if(mode!=='rhythm') return false;
+    return playDecodedRhythmSampleAt(offset, type) || playRhythmElementSampleAt(offset, type);
+    if(rz.sampleReady && rz.sampleBuffer){
+      try{
+        const ctx=ensureCtx();
+        const source=ctx.createBufferSource();
+        const gain=ctx.createGain();
+        const dur=type==='gold' ? 0.42 : (type==='trap' ? 0.18 : 0.28);
+        const safeOffset=Math.max(0, Math.min(Number(offset) || 0, Math.max(0, rz.sampleBuffer.duration - dur - 0.02)));
+        gain.gain.setValueAtTime(type==='trap' ? 0.45 : 1.0, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        source.buffer=rz.sampleBuffer;
+        source.connect(gain);
+        gain.connect(ctx.destination);
+        source.start(ctx.currentTime, safeOffset, dur);
+        rhythmStatus.textContent='🎧 Fragmento de canción';
+        setTimeout(()=>{ if(rhythmStatus.textContent==='🎧 Fragmento de canción') rhythmStatus.textContent=''; }, 350);
+        return true;
+      }catch(e){}
+    }
+    return playRhythmElementSampleAt(offset, type);
+  }
+  function playStrictRhythmSongFragment(offset, type='target'){
+    if(mode!=='rhythm') return false;
+    if(!rz.sampleReady || !rz.sampleBuffer){
+      rhythmStatus.textContent='⚠️ La canción de Jamendo no está lista para fragmentos. Espera o elige una opción PLAY.';
+      return false;
+    }
+    return playDecodedRhythmSampleAt(offset, type);
   }
   async function startRhythmMic(){
     // Detectar problemas antes de pedir el micrófono
@@ -883,55 +1243,90 @@
       }
     }
   }
-  function startRhythmFile(file){
+  async function startRhythmFile(file){
     setupAnalyser();
     rz.isMic=false;
     const url=URL.createObjectURL(file);
+    showRhythmLoading('Cargando canción', `Preparando fragmentos de ${file.name}...`);
     const audio=new Audio(url);
     audio.crossOrigin='anonymous';
     rz.audioEl=audio;
-    rz.srcNode=ensureCtx().createMediaElementSource(audio);
-    rz.srcNode.connect(rz.analyser);
-    rz.analyser.connect(ensureCtx().destination); // sí se escucha
+    rz.sampleAudioUrl=url;
+    prepareRhythmSamplePlayers(url);
+    rhythmStatus.textContent=`🎧 Preparando fragmentos de ${file.name}...`;
+    const sampleBuffer=await file.arrayBuffer().catch(()=>null);
+    const samplesReady=sampleBuffer ? await loadRhythmSampleFromArrayBuffer(sampleBuffer, file.name) : false;
+    if(!samplesReady){
+      hideRhythmLoading();
+      rhythmStatus.textContent='⚠️ No pude preparar fragmentos reales de este MP3. Prueba otro archivo.';
+      return;
+    }
+    await ensureCtx().resume().catch(()=>{});
+    try{
+      rz.srcNode=ensureCtx().createMediaElementSource(audio);
+      connectRhythmElementForAnalysis(rz.srcNode);
+    }catch(e){
+      hideRhythmLoading();
+      rhythmStatus.textContent='⚠️ No se pudo preparar el audio de esta canción.';
+      return;
+    }
     audio.addEventListener('ended', ()=>{ if(running && mode==='rhythm') gameOver(); });
     audio.play().then(()=>{
+      unlockRhythmSamplePlayers();
+      hideRhythmLoading();
       rhythmStatus.textContent='';
       start('rhythm');
     }).catch(()=>{
+      hideRhythmLoading();
       rhythmStatus.textContent='⚠️ No se pudo reproducir esa canción.';
     });
   }
   function stopRhythm(){
+    hideRhythmLoading();
     if(rz.raf) cancelAnimationFrame(rz.raf);
     rz.raf=null;
+    if(rz.beatTimer) clearInterval(rz.beatTimer);
+    rz.beatTimer=null;
+    rz.preset=null;
     if(rz.audioEl){ rz.audioEl.pause(); rz.audioEl.src=''; rz.audioEl=null; }
+    rz.samplePlayers.forEach(player=>{ try{ player.pause(); player.src=''; }catch(e){} });
+    rz.samplePlayers=[];
     if(rz.stream){ rz.stream.getTracks().forEach(t=>t.stop()); rz.stream=null; }
     if(rz.gainNode){ try{rz.gainNode.disconnect();}catch(e){} rz.gainNode=null; }
+    if(rz.silentGain){ try{rz.silentGain.disconnect();}catch(e){} rz.silentGain=null; }
     if(rz.srcNode){ try{rz.srcNode.disconnect();}catch(e){} rz.srcNode=null; }
     rz.analyser=null;
+    rz.sampleBuffer=null;
+    rz.sampleReady=false;
+    rz.sampleSourceUrl='';
+    rz.sampleAudioUrl='';
   }
   function rhythmLoop(){
     if(!running || mode!=='rhythm' || !rz.analyser) return;
     rz.analyser.getByteFrequencyData(rz.data);
-    // Energía de graves (bombo / bajo): con fftSize 2048, los primeros ~20 bins son los graves
-    let bass=0;
-    for(let i=1;i<=20;i++) bass+=rz.data[i];
-    bass/=20;
+    // Energía musical: graves + medios bajos. Funciona mejor que solo mirar bombo puro.
+    let bass=0, lowMid=0;
+    for(let i=1;i<=24;i++) bass+=rz.data[i];
+    for(let i=25;i<=80;i++) lowMid+=rz.data[i];
+    bass/=24;
+    lowMid/=56;
+    const energy=bass*0.72 + lowMid*0.28;
+    const flux=Math.max(0, energy-rz.prevEnergy);
+    rz.prevEnergy=energy*0.82 + rz.prevEnergy*0.18;
 
-    rz.hist.push(bass);
+    rz.hist.push(flux);
     if(rz.hist.length>43) rz.hist.shift(); // ~0.7s de historia a 60fps
 
     const now=performance.now();
     if(rz.hist.length>=20){
-      // Umbral adaptativo: promedio local + un margen basado en la variación de la música
+      // Umbral adaptativo: detecta subidas de energía, no volumen constante.
       const avg=rz.hist.reduce((a,b)=>a+b,0)/rz.hist.length;
       let varSum=0;
       for(const v of rz.hist) varSum+=(v-avg)*(v-avg);
       const std=Math.sqrt(varSum/rz.hist.length);
-      // sensibilidad ajustable: menor = detecta más beats
-      const threshold=avg + std*rzSensitivity + 2;
-      const minGap=1000/(180/60);           // no más de ~180 bpm
-      if(bass>threshold && bass>12 && now-rz.lastBeat>Math.max(minGap,220)){
+      const threshold=avg + std*Math.max(0.55, rzSensitivity*0.7) + 1.2;
+      const minGap=1000/(190/60);           // no más de ~190 bpm
+      if(flux>threshold && energy>8 && now-rz.lastBeat>Math.max(minGap,190)){
         rz.lastBeat=now;
         onBeat();
       }
@@ -950,7 +1345,7 @@
     const trapC=Math.min(0.10 + level*0.02, 0.25);
     if(r<trapC) type='trap';
     else if(r<trapC+0.12) type='gold';
-    spawnAt(idx, type, {lifeMs: Math.max(1600 - level*80, 800)});
+    spawnAt(idx, type, {lifeMs: Math.max(1600 - level*80, 800), rhythmTime: currentRhythmTime()});
   }
 
   // ---------- Interacción ----------
@@ -981,13 +1376,15 @@
         return;
       }
       if(shieldActive()){
-        beep(500,.08,'sine',.12);
+        if(mode!=='rhythm' && !playStrictRhythmSongFragment(o.rhythmTime, 'trap')) beep(500,.08,'sine',.12);
         burst(cell,'var(--white)',8);
         floatPts(cell,'🛡 ¡a salvo!','var(--white)');
         renderHUD();
         return;
       }
-      badSound(); shake();
+      if(mode==='rhythm') playStrictRhythmSongFragment(o.rhythmTime, 'trap');
+      else badSound();
+      if(mode!=='rhythm') shake();
       lives--; combo=1; comboProgress=0;
       misses++;
       burst(cell,'var(--red)',8);
@@ -1002,7 +1399,7 @@
     if(o.iced && o.type==='gold' && o.hp>1){
       o.hp--;
       o.el.classList.add('cracked');
-      beep(700,.06,'triangle',.15);
+      if(mode!=='rhythm' && !playStrictRhythmSongFragment(o.rhythmTime, 'gold')) beep(700,.06,'triangle',.15);
       floatPts(cell,'¡crack!','var(--gold)');
       return;
     }
@@ -1013,12 +1410,14 @@
     let pts;
     if(o.type==='gold'){
       pts = 50*combo*mult;
-      goldSound();
+      if(mode==='rhythm') playStrictRhythmSongFragment(o.rhythmTime, 'gold');
+      else goldSound();
       burst(cell,'var(--gold)',14);
       comboProgress = Math.min(comboProgress+30,100);
     }else{
       pts = 10*combo*mult;
-      hitSound();
+      if(mode==='rhythm') playStrictRhythmSongFragment(o.rhythmTime, 'target');
+      else hitSound();
       burst(cell, frenzy?'var(--magenta)':'var(--cyan)',10);
       comboProgress = Math.min(comboProgress+12,100);
     }
@@ -1037,7 +1436,7 @@
     const newLevel = Math.floor(score/400)+1;
     if(newLevel>level){
       level=newLevel;
-      levelSound();
+      if(mode!=='rhythm') levelSound();
       announce('¡NIVEL '+level+'! 🚀','var(--gold)');
     }
   }
@@ -1047,7 +1446,7 @@
     grid.classList.add('frenzy');
     document.body.classList.add('frenzy-bg');
     announce('🔥 ¡FRENESÍ! 🔥','var(--magenta)');
-    levelSound();
+    if(mode!=='rhythm') levelSound();
     frenzyTimer=setTimeout(endFrenzy, 6000);
     renderHUD();
   }
@@ -1078,7 +1477,8 @@
     overScreen.classList.add('hidden');
     if(mode==='rhythm'){
       announce('🎵 ¡SIENTE EL RITMO! 🎵','var(--magenta)');
-      rz.raf=requestAnimationFrame(rhythmLoop);
+      if(rz.preset) startPresetBeats();
+      else rz.raf=requestAnimationFrame(rhythmLoop);
     }else if(mode==='duel'){
       announce('⚔️ ¡DUELO! ⚔️','var(--red)');
       duelSt.startTime=Date.now();
@@ -1319,13 +1719,17 @@
   const rematchBtn=document.getElementById('duel-rematch');
   const rematchStatusEl=document.getElementById('rematch-status');
   const livesLabel=document.querySelector('#lives-box .hud-label');
-  const SAB_COST={freeze:5, bombs:25, storm:15};
+  const SAB_COST={freeze:5, bombs:20, storm:15};
   const PLAYER_POWER_CHARGE_PER_HIT=0.50;
   const SAB_META={
     freeze:{icon:'🧊', label:'HIELO', counter:'bombs'},
     bombs:{icon:'💥', label:'EXPLOSIÓN', counter:'storm'},
     storm:{icon:'🌪️', label:'TORMENTA', counter:'freeze'}
   };
+
+  function grantStartingPowers(powers){
+    Object.keys(SAB_META).forEach(kind=>{ powers[kind]=1; });
+  }
 
   const duelSt={
     rng:null, oppName:'', oppScore:0, energy:0, powerProgress:0,
@@ -1416,6 +1820,7 @@
     duelSt.energy=0;
     duelSt.powerProgress=0;
     duelSt.powers={freeze:0,bombs:0,storm:0};
+    grantStartingPowers(duelSt.powers);
     duelSt.locked=false;
     duelSt.oppLeft=false;
     duelSt.duration=m.duration||65000;
@@ -1568,7 +1973,12 @@
     const counter=SAB_META[duelSt.incoming.kind].counter;
     const meta=SAB_META[counter];
     const amount=duelSt.powers[counter];
+    const attackPanel=document.getElementById('incoming-attack');
+    attackPanel.classList.toggle('can-counter',amount>0);
     document.getElementById('incoming-count').textContent=(left/1000).toFixed(1)+'s';
+    document.getElementById('incoming-counter-hint').textContent=amount
+      ? 'TIENES '+meta.label+' PARA CONTRARRESTAR'
+      : 'NECESITAS '+meta.label+' PARA CONTRARRESTAR';
     const button=document.getElementById('counter-power');
     button.dataset.kind=counter;
     button.disabled=amount<1;
@@ -1846,6 +2256,8 @@
     duelSt.duration=65000;
     botRT.score=0; botRT.combo=1; botRT.energy=0; botRT.powerProgress=0;
     botRT.powers={freeze:0,bombs:0,storm:0};
+    grantStartingPowers(duelSt.powers);
+    grantStartingPowers(botRT.powers);
     botRT.frozenUntil=0; botRT.blackoutUntil=0; botRT.mirrorUntil=0; botRT.pendingBombs=0;
     rematchBtn.disabled=false;
     rematchStatusEl.textContent='';
@@ -2048,8 +2460,10 @@
   const botRulesDots=document.getElementById('bot-rules-dots');
   const botRulesPrev=document.getElementById('bot-rules-prev');
   const botRulesNext=document.getElementById('bot-rules-next');
+  const botRulesContinue=document.getElementById('bot-rules-continue');
   let botRuleCards=[];
   let botRuleIndex=0, botRuleScrollFrame=null;
+  let visitedBotRules=new Set();
 
   function buildBotRuleCards(rules){
     botRulesTrack.innerHTML='';
@@ -2067,15 +2481,22 @@
       return card;
     });
     botRuleIndex=0;
+    visitedBotRules=new Set([0]);
     renderBotRuleState();
   }
 
   function renderBotRuleState(){
     if(!botRuleCards.length) return;
+    visitedBotRules.add(botRuleIndex);
     botRuleCards.forEach((card,index)=>card.classList.toggle('active',index===botRuleIndex));
     [...botRulesDots.children].forEach((dot,index)=>dot.classList.toggle('active',index===botRuleIndex));
     botRulesPrev.disabled=botRuleIndex===0;
     botRulesNext.disabled=botRuleIndex===botRuleCards.length-1;
+    const tutorialComplete=visitedBotRules.size===botRuleCards.length;
+    botRulesContinue.disabled=!tutorialComplete;
+    botRulesContinue.textContent=tutorialComplete
+      ? 'CONTINUAR'
+      : 'REVISA TODAS LAS REGLAS ('+visitedBotRules.size+'/'+botRuleCards.length+')';
   }
   function goToBotRule(index,behavior='smooth'){
     if(!botRuleCards.length) return;
@@ -2131,8 +2552,10 @@
       {icon:'🛡️',title:'DEFIÉNDETE A TIEMPO',text:'Cuando el robot ataque tendrás 2 segundos. Abajo aparecerá únicamente el poder capaz de anularlo, si tienes cargas disponibles.',cycle:'💥 > 🧊 > 🌪️ > 💥'}
     ]},
     rhythm:{title:'🎵 MODO RITMO',cards:[
-      {icon:'🎤',title:'ELIGE EL AUDIO',text:'Usa el micrófono para escuchar el ambiente o carga una canción desde tu dispositivo.'},
-      {icon:'🥁',title:'SIGUE EL RITMO',text:'Los objetivos aparecen siguiendo los graves y golpes detectados en la música.'},
+      {icon:'🎤',title:'ELIGE EL AUDIO',text:'Busca una canción online, usa el micrófono para escuchar el ambiente o carga una canción desde tu dispositivo.'},
+      {icon:'🔎',title:'BUSCA TU CANCIÓN',text:'Con Jamendo configurado, el buscador reproduce canciones reales. Sin clave, conserva presets por BPM como respaldo.'},
+      {icon:'🥁',title:'SIGUE EL RITMO',text:'Los objetivos aparecen siguiendo los graves y golpes detectados en la música reproducida.'},
+      {icon:'🎧',title:'SAMPLES SINCRONIZADOS',text:'Cada círculo guarda el momento musical en que apareció. Si aciertas, suena un fragmento de esa parte de la canción.'},
       {icon:'🎚️',title:'AJUSTA SENSIBILIDAD',text:'Si aparecen demasiados o muy pocos objetivos, vuelve al menú y ajusta la sensibilidad.'}
     ]}
   };
@@ -2154,6 +2577,7 @@
     startScreen.classList.remove('hidden');
   });
   document.getElementById('bot-rules-continue').addEventListener('click',()=>{
+    if(visitedBotRules.size<botRuleCards.length) return;
     botRulesScreen.classList.add('hidden');
     const action=pendingRulesAction;
     pendingRulesAction=null;
@@ -2163,30 +2587,54 @@
 
   document.getElementById('play-robot').addEventListener('click',()=>showModeRules('robot',beginBotDuel));
 
+  const RHYTHM_MODE_ENABLED=false;
   let lastRhythmSource=null; // 'mic' o File
+  const rhythmModeCard=document.querySelector('.mode-card.rhythm');
+  if(RHYTHM_MODE_ENABLED){
+    if(rhythmModeCard) rhythmModeCard.classList.remove('hidden');
+    renderRhythmPresets();
+    if(rhythmSongSearch){
+      rhythmSongSearch.addEventListener('input',()=>{
+        clearTimeout(rhythmSearchTimer);
+        rhythmSearchTimer=setTimeout(()=>searchRhythmSongs(rhythmSongSearch.value),250);
+      });
+    }
+    if(rhythmSongList){
+      rhythmSongList.addEventListener('click',(e)=>{
+        const btn=e.target.closest('.rhythm-song');
+        if(!btn) return;
+        const song=rhythmRenderedSongs[Number(btn.dataset.song)];
+        showModeRules('rhythm',()=>{ startScreen.classList.remove('hidden'); song.audio ? startRhythmStream(song) : startRhythmPreset(song); });
+      });
+    }
+  }
   document.getElementById('play-classic').addEventListener('click',()=>showModeRules('classic',()=>start('classic')));
   const sensSlider=document.getElementById('sens-slider');
   const sensLabel=document.getElementById('sens-label');
-  if(sensSlider){
+  if(RHYTHM_MODE_ENABLED && sensSlider){
     sensSlider.addEventListener('input', ()=>{
       rzSensitivity=parseFloat(sensSlider.value);
       sensLabel.textContent = rzSensitivity<0.9 ? 'Alta' : (rzSensitivity>1.8 ? 'Baja' : 'Media');
     });
   }
   document.getElementById('play-power').addEventListener('click',()=>showModeRules('power',()=>start('power')));
-  document.getElementById('play-rhythm-mic').addEventListener('click',()=>showModeRules('rhythm',()=>{ startScreen.classList.remove('hidden'); lastRhythmSource='mic'; startRhythmMic(); }));
-  document.getElementById('play-rhythm-file').addEventListener('click',()=>showModeRules('rhythm',()=>{ startScreen.classList.remove('hidden'); songInput.click(); }));
-  songInput.addEventListener('change', ()=>{
-    if(songInput.files && songInput.files[0]){
-      lastRhythmSource=songInput.files[0];
-      startRhythmFile(songInput.files[0]);
-      songInput.value='';
-    }
-  });
+  if(RHYTHM_MODE_ENABLED){
+    document.getElementById('play-rhythm-mic').addEventListener('click',()=>showModeRules('rhythm',()=>{ startScreen.classList.remove('hidden'); lastRhythmSource='mic'; startRhythmMic(); }));
+    document.getElementById('play-rhythm-file').addEventListener('click',()=>showModeRules('rhythm',()=>{ startScreen.classList.remove('hidden'); songInput.click(); }));
+    songInput.addEventListener('change', ()=>{
+      if(songInput.files && songInput.files[0]){
+        lastRhythmSource=songInput.files[0];
+        startRhythmFile(songInput.files[0]);
+        songInput.value='';
+      }
+    });
+  }
   document.getElementById('retry-btn').addEventListener('click', ()=>{
-    if(mode==='rhythm'){
+    if(RHYTHM_MODE_ENABLED && mode==='rhythm'){
       overScreen.classList.add('hidden');
       if(lastRhythmSource==='mic') startRhythmMic();
+      else if(lastRhythmSource && lastRhythmSource.type==='stream') startRhythmStream(lastRhythmSource.song);
+      else if(lastRhythmSource && lastRhythmSource.type==='preset') startRhythmPreset(lastRhythmSource.song);
       else if(lastRhythmSource) startRhythmFile(lastRhythmSource);
       else { startScreen.classList.remove('hidden'); }
       return;
