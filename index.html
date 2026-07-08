@@ -264,6 +264,23 @@
   #rematch-status{font-size:12px;color:var(--dim);min-height:16px;margin:8px 0;}
   #duel-result-title{margin-bottom:6px;}
 
+  /* ---------- Tienda y monedero ---------- */
+  #wallet-row{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:10px;min-height:32px;}
+  #coins-chip{background:var(--panel);border-radius:99px;padding:6px 14px;font-weight:800;font-size:13px;color:var(--gold);}
+  #shop-open{background:linear-gradient(90deg,var(--gold),var(--fire));border:none;border-radius:99px;padding:7px 16px;font-weight:800;font-size:13px;cursor:pointer;color:#0c0a24;box-shadow:0 3px 0 #8a5a00;}
+  #shop-screen{z-index:65;}
+  .shop-item{width:100%;max-width:360px;display:flex;align-items:center;gap:10px;background:var(--panel);border-radius:14px;padding:12px;margin-bottom:10px;text-align:left;}
+  .shop-item .ic{font-size:26px;}
+  .shop-item .info{flex:1;}
+  .shop-item .info b{font-size:14px;display:block;}
+  .shop-item .info span{font-size:11.5px;color:var(--dim);line-height:1.3;display:block;}
+  .shop-item button{border:none;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,var(--cyan),var(--lime));color:#0c0a24;font-size:13px;white-space:nowrap;box-shadow:0 3px 0 rgba(0,0,0,.3);}
+  .shop-item button:disabled{opacity:.4;cursor:default;}
+  .shop-item button.money{background:linear-gradient(90deg,var(--gold),var(--fire));}
+  #shop-status{font-size:12px;color:var(--gold);min-height:18px;margin-bottom:8px;font-weight:700;}
+  .shop-sec{font-size:11px;letter-spacing:2px;color:var(--dim);margin:8px 0;text-transform:uppercase;font-weight:800;}
+  #revive-btn{background:linear-gradient(90deg,var(--red),var(--magenta));color:#fff;box-shadow:0 5px 0 #7a1020;max-width:280px;margin-bottom:10px;}
+
   /* ---------- Récords mundiales ---------- */
   .mode-card.records h2{color:var(--lime);}
   .lb-tabs{display:flex;gap:8px;margin-bottom:10px;}
@@ -370,6 +387,10 @@
     <h1>NEURO RUSH</h1>
     <div class="tagline">Reflejos + autocontrol. Elige tu modo:</div>
     <div id="player-chip"></div>
+    <div id="wallet-row" class="hidden">
+      <span id="coins-chip">🪙 0</span>
+      <button id="shop-open">🛒 TIENDA</button>
+    </div>
     <div class="rules-mini">
       <span>🔵 toca = puntos</span><span>⭐ bonus</span><span>💀 ¡NO tocar!</span><span>🔥 barra llena = FRENESÍ x2</span>
     </div>
@@ -471,6 +492,7 @@
       <button class="net-btn ig" id="share-ig" title="Instagram">📸</button>
     </div>
     <div class="share-hint" id="share-hint"></div>
+    <button class="btn hidden" id="revive-btn">❤️ REVIVIR (80 🪙)</button>
     <button class="btn" id="retry-btn" style="max-width:280px;">⚡ OTRA VEZ</button>
     <button class="btn secondary" id="menu-btn">Menú</button>
     <div class="credit">Creado por <b>Angel Fuentes</b></div>
@@ -518,6 +540,43 @@
       <button class="btn" id="bot-rules-continue">CONTINUAR</button>
       <button class="btn secondary" id="bot-rules-back">VOLVER</button>
     </div>
+  </div>
+
+  <!-- Tienda -->
+  <div class="overlay hidden" id="shop-screen">
+    <h1 style="font-size:clamp(26px,7vw,38px);">🛒 TIENDA</h1>
+    <div class="tagline">Monedas para revivir, corazones y escudos.<br>El duelo online siempre se juega limpio: aquí no se compra ventaja.</div>
+    <div id="shop-coins" style="font-size:22px;font-weight:900;color:var(--gold);margin-bottom:8px;">🪙 0</div>
+    <div id="shop-status"></div>
+    <div class="shop-sec">— Usa tus monedas —</div>
+    <div class="shop-item">
+      <span class="ic">💛</span>
+      <div class="info"><b>Corazón extra HOY</b><span>Tus partidas de hoy (Clásico y Power) empiezan con 4 vidas.</span></div>
+      <button data-item="heart_day">60 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">🛡</span>
+      <div class="info"><b>Pack de 3 escudos</b><span>Tus próximas 3 partidas Power empiezan con escudo activo (7s).</span></div>
+      <button data-item="shield_pack">100 🪙</button>
+    </div>
+    <div class="shop-sec">— Comprar monedas —</div>
+    <div class="shop-item">
+      <span class="ic">🪙</span>
+      <div class="info"><b>200 monedas</b><span>Para empezar: 2 revividas y un corazón.</span></div>
+      <button class="money" data-pack="small">$29 MXN</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">💰</span>
+      <div class="info"><b>700 monedas</b><span>El favorito: más monedas por peso.</span></div>
+      <button class="money" data-pack="medium">$89 MXN</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">🏆</span>
+      <div class="info"><b>1600 monedas</b><span>Máximo valor por peso.</span></div>
+      <button class="money" data-pack="large">$179 MXN</button>
+    </div>
+    <div style="font-size:10.5px;color:var(--dim);opacity:.8;margin-bottom:10px;">Pago seguro procesado por Stripe. No guardamos datos de tu tarjeta.</div>
+    <button class="btn secondary" id="shop-close">← Volver</button>
   </div>
 
   <!-- Registro de nombre (primera vez) -->
@@ -671,7 +730,7 @@
     // En duelo la caja de vidas muestra el tiempo restante
     livesEl.textContent = mode==='duel'
       ? (duelSt.timeLeft!=null ? duelSt.timeLeft+'s' : '—')
-      : '❤️'.repeat(lives) + '🖤'.repeat(3-lives);
+      : '❤️'.repeat(Math.max(0,lives)) + '🖤'.repeat(Math.max(0,3-lives));
     if(mode==='duel') renderDuelHUD();
     comboFill.style.width = Math.min(comboProgress,100)+'%';
     let txt = frenzy ? '🔥 FRENESÍ x'+combo+' 🔥' : 'COMBO x'+combo;
@@ -1459,7 +1518,10 @@
 
   // ---------- Ciclo de juego ----------
   function reset(){
-    score=0; level=1; lives=3; combo=1; comboBest=1; comboProgress=0;
+    score=0; level=1; combo=1; comboBest=1; comboProgress=0;
+    // Corazón extra del día (comprado en la tienda): solo modos solo
+    lives = (wallet.heartToday && (mode==='classic'||mode==='power')) ? 4 : 3;
+    revivedThisRun=false;
     hits=0; misses=0;
     shieldUntil=0; clearInterval(shieldTicker);
     frozen=false; document.body.classList.remove('frozen-bg'); grid.classList.remove('frozen');
@@ -1491,6 +1553,19 @@
       duelSt.ticker=setInterval(duelTick,250);
     }else{
       announce(mode==='power' ? '⚡ ¡POWER-UPS! ⚡' : '¡A JUGAR! ⚡', mode==='power'?'var(--gold)':'var(--cyan)');
+      // Escudo de tienda: se consume uno al iniciar partida Power
+      if(mode==='power' && wallet.shields>0){
+        wallet.shields--;
+        renderWallet();
+        shieldUntil=Date.now()+7000;
+        clearInterval(shieldTicker);
+        shieldTicker=setInterval(()=>{
+          renderHUD();
+          if(!shieldActive()){ clearInterval(shieldTicker); renderHUD(); }
+        },250);
+        announce('🛡 ¡ESCUDO DE TIENDA!','var(--white)');
+        shopSpend('use_shield'); // el servidor descuenta; la respuesta re-sincroniza
+      }
       spawn();
     }
   }
@@ -1544,6 +1619,9 @@
 
     lastResult={score, level, comboBest, acc, mode, medal};
     submitScore();
+    // Revivir: solo en modos solo, muerto de verdad, con saldo y una vez por partida
+    reviveBtn.classList.toggle('hidden',
+      !((mode==='classic'||mode==='power') && lives<=0 && player && !revivedThisRun && wallet.coins>=REVIVE_COST));
     overScreen.classList.remove('hidden');
   }
 
@@ -1648,6 +1726,7 @@
         saveIdentity(data);
         nameScreen.classList.add('hidden');
         loadLeaderboard();
+        loadWallet();
       }else if(resp.status===409){
         nameError.textContent='Ese nombre ya está en uso. Prueba otro.';
       }else if(resp.status===503){
@@ -1709,6 +1788,132 @@
     }).catch(()=>{});
   }
   loadLeaderboard();
+
+  // ---------- Tienda y monedero ----------
+  const wallet={coins:0, heartToday:false, shields:0};
+  const walletRow=document.getElementById('wallet-row');
+  const coinsChip=document.getElementById('coins-chip');
+  const shopScreen=document.getElementById('shop-screen');
+  const shopStatus=document.getElementById('shop-status');
+  const reviveBtn=document.getElementById('revive-btn');
+  const REVIVE_COST=80;
+  let revivedThisRun=false;
+
+  function renderWallet(){
+    const txt='🪙 '+wallet.coins.toLocaleString('es-MX');
+    coinsChip.textContent=txt
+      +(wallet.heartToday?' · 💛':'')
+      +(wallet.shields?' · 🛡×'+wallet.shields:'');
+    document.getElementById('shop-coins').textContent=txt;
+    walletRow.classList.toggle('hidden', !player);
+  }
+  function applyWallet(d){
+    wallet.coins=d.coins|0;
+    wallet.heartToday=!!d.heartToday;
+    wallet.shields=d.shields|0;
+    renderWallet();
+  }
+  async function loadWallet(){
+    if(!player){ renderWallet(); return; }
+    try{
+      const r=await fetch('/api/wallet?playerId='+encodeURIComponent(player.id));
+      if(r.ok) applyWallet(await r.json());
+    }catch(e){}
+  }
+  async function shopSpend(item){
+    if(!player) return {error:'not_registered'};
+    try{
+      const r=await fetch('/api/shop/spend',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({playerId:player.id, item})
+      });
+      const d=await r.json().catch(()=>({}));
+      if(r.ok){ applyWallet(d); return d; }
+      return {error:d.error||'error'};
+    }catch(e){ return {error:'offline'}; }
+  }
+  document.getElementById('shop-open').addEventListener('click', ()=>{
+    shopStatus.textContent='';
+    shopScreen.classList.remove('hidden');
+    loadWallet();
+  });
+  document.getElementById('shop-close').addEventListener('click', ()=>shopScreen.classList.add('hidden'));
+  shopScreen.querySelectorAll('button[data-item]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      b.disabled=true;
+      const res=await shopSpend(b.dataset.item);
+      b.disabled=false;
+      if(res.error){
+        const msgs={
+          insufficient_coins:'No te alcanzan las monedas 🪙',
+          already_active:'Ya tienes el corazón de hoy 💛',
+          offline:'Sin conexión con el servidor.',
+          not_registered:'Regístrate primero.'
+        };
+        shopStatus.textContent=msgs[res.error]||'No se pudo completar.';
+      }else{
+        shopStatus.textContent='✅ ¡Listo!';
+        goldSound();
+      }
+    });
+  });
+  shopScreen.querySelectorAll('button[data-pack]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      if(!player){ shopStatus.textContent='Regístrate primero.'; return; }
+      b.disabled=true;
+      shopStatus.textContent='Abriendo pago seguro…';
+      try{
+        const r=await fetch('/api/shop/checkout',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({playerId:player.id, pack:b.dataset.pack})
+        });
+        const d=await r.json().catch(()=>({}));
+        if(r.ok && d.url){ location.href=d.url; return; }
+        shopStatus.textContent = d.error==='shop_disabled'
+          ? 'La tienda aún no está configurada.'
+          : 'No se pudo iniciar el pago.';
+      }catch(e){ shopStatus.textContent='Sin conexión con el servidor.'; }
+      b.disabled=false;
+    });
+  });
+  // Acreditación al volver de Stripe (respaldo del webhook)
+  (function(){
+    const params=new URLSearchParams(location.search);
+    if(params.get('checkout')==='success' && params.get('session_id')){
+      fetch('/api/shop/confirm?session_id='+encodeURIComponent(params.get('session_id')))
+        .then(r=>r.ok?r.json():null)
+        .then(d=>{
+          if(d && typeof d.coins==='number'){
+            applyWallet(d);
+            announce('🪙 ¡MONEDAS ACREDITADAS!','var(--gold)');
+            goldSound();
+          }
+        }).catch(()=>{});
+    }
+    if(params.get('checkout')) history.replaceState(null,'',location.pathname);
+  })();
+  // Revivir en la partida actual
+  reviveBtn.addEventListener('click', async ()=>{
+    reviveBtn.disabled=true;
+    const res=await shopSpend('revive');
+    reviveBtn.disabled=false;
+    if(res.error){
+      reviveBtn.textContent = res.error==='insufficient_coins' ? 'SIN MONEDAS 🪙' : 'NO DISPONIBLE';
+      setTimeout(()=>{ reviveBtn.textContent='❤️ REVIVIR (80 🪙)'; },1600);
+      return;
+    }
+    revivedThisRun=true;
+    lives=1;
+    running=true;
+    reviveBtn.classList.add('hidden');
+    overScreen.classList.add('hidden');
+    announce('❤️ ¡SEGUNDA VIDA!','var(--red)');
+    renderHUD();
+    spawn();
+  });
+  loadWallet();
 
   // ---------- Duelo online 1v1 ----------
   const duelBar=document.getElementById('duel-bar');
