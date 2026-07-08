@@ -12,6 +12,7 @@ const os = require('node:os');
 const path = require('node:path');
 const db = require('./db');
 const duel = require('./duel');
+const shop = require('./shop');
 
 const HTTP_PORT = Number(process.env.PORT) || 3004;
 const HTTPS_PORT = Number(process.env.HTTPS_PORT) || 3443;
@@ -73,6 +74,12 @@ async function handleApi(request, response) {
 
   if (request.method === 'GET' && pathname === '/api/rhythm-songs') {
     return handleRhythmSongs(query, response);
+  }
+
+  // Tienda y pagos: maneja sus propios bodies (el webhook de Stripe
+  // necesita el body crudo para verificar la firma)
+  if (pathname === '/api/wallet' || pathname.startsWith('/api/shop/') || pathname === '/api/stripe/webhook') {
+    return shop.handle(request, response, pathname, query);
   }
 
   if (!db.enabled()) {
