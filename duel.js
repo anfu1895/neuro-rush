@@ -51,6 +51,8 @@ function tugMove(pull, pts, forA) {
 }
 const MAX_SCORE = 200000;
 const SABOTAGE_KINDS = new Set(['freeze', 'bombs', 'storm', 'raybomb']);
+const EMOTES = new Set(['😂', '🔥', '😱', '👏', '😎', '💀']);
+const MAX_EMOTES_PER_MATCH = 15;
 const MAX_SABOTAGES_PER_MATCH = 12; // freno de cordura contra spam
 // Sin caracteres confundibles (I, L, O, 0, 1)
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ';
@@ -112,6 +114,7 @@ function startMatch(room) {
     ws.meta.lastScore = 0;
     ws.meta.prevScore = 0;
     ws.meta.sabotages = 0;
+    ws.meta.emotesSent = 0;
     const opp = partnerOf(room, ws);
     send(ws, {
       t: 'matched',
@@ -241,6 +244,17 @@ function handleMessage(ws, msg) {
       if (++meta.sabotages > MAX_SABOTAGES_PER_MATCH) return;
       const partner = partnerOf(room, ws);
       if (partner) send(partner, { t: 'sabotaged', kind: msg.kind, from: meta.name });
+      break;
+    }
+
+    case 'emote': {
+      // Burla comprada en tienda: se reenvía tal cual (con freno anti-spam)
+      const room = meta.room;
+      if (!room || !EMOTES.has(msg.e)) return;
+      meta.emotesSent = (meta.emotesSent || 0) + 1;
+      if (meta.emotesSent > MAX_EMOTES_PER_MATCH) return;
+      const partner = partnerOf(room, ws);
+      if (partner) send(partner, { t: 'emote', e: msg.e, from: meta.name });
       break;
     }
 

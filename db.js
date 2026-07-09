@@ -269,6 +269,11 @@ async function getWallet(playerId) {
   let slot3 = false;
   let badgeStar = false;
   let dailyClaimed = false;
+  let emotes = false;
+  const themes = { lava: false, ocean: false, retro: false };
+  let slowmo = 0;
+  let magnet = 0;
+  let double = 0;
   for (const perk of perks) {
     if (perk.kind === 'heart_day') heartToday = perk.day === todayStr();
     if (perk.kind === 'shield') shields = perk.qty;
@@ -276,15 +281,31 @@ async function getWallet(playerId) {
     if (perk.kind === 'slot3') slot3 = perk.qty > 0;
     if (perk.kind === 'badge_star') badgeStar = perk.qty > 0;
     if (perk.kind === 'daily') dailyClaimed = perk.day === todayStr();
+    if (perk.kind === 'emotes') emotes = perk.qty > 0;
+    if (perk.kind === 'theme_lava') themes.lava = perk.qty > 0;
+    if (perk.kind === 'theme_ocean') themes.ocean = perk.qty > 0;
+    if (perk.kind === 'theme_retro') themes.retro = perk.qty > 0;
+    if (perk.kind === 'slowmo') slowmo = perk.qty;
+    if (perk.kind === 'magnet') magnet = perk.qty;
+    if (perk.kind === 'double') double = perk.qty;
   }
   const starterBought = await Purchase.count({ where: { player_id: playerId, pack: 'starter' } });
   return {
     coins: player.coins, heartToday, shields, raybombs,
     shieldMax: slot3 ? 3 : 2,
-    badgeStar,
+    badgeStar, emotes, themes, slowmo, magnet, double,
     dailyAvailable: !dailyClaimed,
     starterAvailable: starterBought === 0
   };
+}
+
+// Consume 1 unidad de un consumible (genérico, atómico)
+async function usePerk(playerId, kind) {
+  const [result] = await sequelize.query(
+    'UPDATE perks SET qty = qty - 1 WHERE player_id = ? AND kind = ? AND qty > 0',
+    { replacements: [playerId, kind] }
+  );
+  return result.affectedRows > 0;
 }
 
 // Regalo diario de monedas: una vez por día (UTC)
@@ -364,5 +385,5 @@ async function useRaybomb(playerId) {
 
 module.exports = {
   enabled, init, registerPlayer, saveScore, leaderboard, saveMatch,
-  getWallet, creditPurchase, spendCoins, grantPerk, useShield, useRaybomb, claimDaily, todayStr
+  getWallet, creditPurchase, spendCoins, grantPerk, useShield, useRaybomb, usePerk, claimDaily, todayStr
 };

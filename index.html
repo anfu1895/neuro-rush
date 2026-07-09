@@ -318,6 +318,29 @@
   #rematch-status{font-size:12px;color:var(--dim);min-height:16px;margin:8px 0;}
   #duel-result-title{margin-bottom:6px;}
 
+  /* ---------- Temas de tablero (comprados en tienda) ---------- */
+  body.theme-lava{--bg:#2b0d08;--bg2:#57160a;--panel:#5c2412;}
+  body.theme-ocean{--bg:#06182b;--bg2:#0a3355;--panel:#0e3f5c;}
+  body.theme-retro{--bg:#12061f;--bg2:#2e0a4a;--panel:#3a1160;}
+
+  /* ---------- Poderes de modos SOLO (tienda) ---------- */
+  #solo-row{display:none;gap:6px;align-items:stretch;margin-top:10px;flex-shrink:0;}
+  #solo-row.on{display:flex;}
+  #solo-row .sab{font-size:17px;}
+  body.slowmo-bg{filter:saturate(.85);}
+  body.slowmo-bg #grid{box-shadow:0 0 0 2px var(--ice),0 0 26px rgba(165,232,255,.35);border-radius:20px;}
+  body.double-bg #grid{box-shadow:0 0 0 2px var(--gold),0 0 26px rgba(255,210,62,.4);border-radius:20px;}
+
+  /* ---------- Emotes del duelo ---------- */
+  #emote-row{display:none;gap:5px;justify-content:center;margin-top:6px;}
+  #emote-row.on{display:flex;}
+  #emote-row button{background:var(--panel);border:none;border-radius:10px;font-size:16px;padding:4px 9px;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.3);transition:transform .08s;}
+  #emote-row button:active{transform:scale(.9);}
+  .emote-fly{position:absolute;left:50%;top:55%;z-index:80;transform:translateX(-50%);text-align:center;pointer-events:none;animation:emoteFly 1.6s ease-out forwards;}
+  .emote-fly .e{font-size:58px;display:block;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5));}
+  .emote-fly .n{font-size:12px;font-weight:800;color:var(--gold);text-shadow:0 1px 4px #000;}
+  @keyframes emoteFly{0%{transform:translate(-50%,20px) scale(.4);opacity:0;}15%{transform:translate(-50%,0) scale(1.15);opacity:1;}30%{transform:translate(-50%,-6px) scale(1);}80%{opacity:1;}100%{transform:translate(-50%,-70px) scale(.9);opacity:0;}}
+
   /* ---------- Tienda y monedero ---------- */
   #wallet-row{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:10px;min-height:32px;}
   #coins-chip{background:var(--panel);border-radius:99px;padding:6px 14px;font-weight:800;font-size:13px;color:var(--gold);}
@@ -424,6 +447,10 @@
       <button id="counter-shield" type="button"><span>⚪ ×0</span><small>ESCUDO</small></button>
     </div>
     <div id="opp-shield-banner" class="hidden"></div>
+    <div id="emote-row">
+      <button data-e="😂">😂</button><button data-e="🔥">🔥</button><button data-e="😱">😱</button>
+      <button data-e="👏">👏</button><button data-e="😎">😎</button><button data-e="💀">💀</button>
+    </div>
   </div>
 
   <div id="grid"></div>
@@ -436,6 +463,13 @@
     <button class="sab" data-kind="storm" title="Se obtiene cada 15 puntos"><span class="cost">15 pts</span>🌪️<span class="qty">×0</span></button>
     <button class="sab shop-power sh-shield" id="sab-shield" title="Escudo — comprado en tienda"><span class="cost">🛒</span>⚪<span class="qty">×0</span></button>
     <button class="sab shop-power sh-ray" id="sab-raybomb" title="Bomba Rayo — comprada en tienda (rompe escudos)"><span class="cost">🛒</span>⚡<span class="qty">×0</span></button>
+  </div>
+
+  <!-- Poderes de tienda para modos SOLO (clásico y power) -->
+  <div id="solo-row">
+    <button class="sab" data-solo="slowmo" title="Cámara lenta 6s"><span class="cost">🛒</span>🕐<span class="qty">×0</span></button>
+    <button class="sab" data-solo="magnet" title="Imán: atrapa 3 orbes"><span class="cost">🛒</span>🧲<span class="qty">×0</span></button>
+    <button class="sab" data-solo="double" title="Doble puntos 10s"><span class="cost">🛒</span>✨<span class="qty">×0</span></button>
   </div>
 
   <div id="announce"></div>
@@ -608,6 +642,11 @@
     <div id="shop-coins" style="font-size:22px;font-weight:900;color:var(--gold);margin-bottom:8px;">🪙 0</div>
     <div id="shop-status"></div>
     <div class="shop-sec">— Usa tus monedas —</div>
+    <div class="shop-item" id="deal-item" style="border:2px solid var(--magenta);box-shadow:0 0 18px rgba(255,62,200,.3);">
+      <span class="ic">🔥</span>
+      <div class="info"><b>Oferta del día</b><span id="deal-desc">Cargando…</span></div>
+      <button data-item="daily_deal" id="deal-btn">— 🪙</button>
+    </div>
     <div class="shop-item">
       <span class="ic">💛</span>
       <div class="info"><b>Corazón extra HOY</b><span>Tus partidas de hoy (Clásico y Power) empiezan con 4 vidas.</span></div>
@@ -632,6 +671,48 @@
       <span class="ic">⭐</span>
       <div class="info"><b>Insignia de estrella</b><span>Tu nombre brilla con ⭐ en los récords mundiales. Que todos lo vean.</span></div>
       <button data-item="badge_star">200 🪙</button>
+    </div>
+    <div class="shop-sec">— Poderes para modos solo (máx. 3 c/u) —</div>
+    <div class="shop-item">
+      <span class="ic">🕐</span>
+      <div class="info"><b>Cámara lenta</b> <span id="slowmo-owned" style="color:var(--ice);"></span><span>6 segundos donde los orbes duran mucho más. Respirá.</span></div>
+      <button data-item="slowmo">40 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">🧲</span>
+      <div class="info"><b>Imán</b> <span id="magnet-owned" style="color:var(--cyan);"></span><span>Atrapa al instante hasta 3 orbes del tablero.</span></div>
+      <button data-item="magnet">50 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">✨</span>
+      <div class="info"><b>Doble puntos</b> <span id="double-owned" style="color:var(--gold);"></span><span>10 segundos con TODO x2 (se apila con el frenesí).</span></div>
+      <button data-item="double">60 🪙</button>
+    </div>
+    <div class="shop-sec">— Estilo —</div>
+    <div class="shop-item">
+      <span class="ic">😂</span>
+      <div class="info"><b>Pack de burlas</b><span>6 emotes para picar al rival en pleno duelo online. Única vez.</span></div>
+      <button data-item="emotes">100 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">🌋</span>
+      <div class="info"><b>Tema Lava</b><span>Tablero al rojo vivo. Permanente.</span></div>
+      <button data-item="theme_lava" data-theme="lava">250 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">🌊</span>
+      <div class="info"><b>Tema Océano</b><span>Profundo y azul. Permanente.</span></div>
+      <button data-item="theme_ocean" data-theme="ocean">250 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">👾</span>
+      <div class="info"><b>Tema Retro</b><span>Púrpura arcade de los 80. Permanente.</span></div>
+      <button data-item="theme_retro" data-theme="retro">250 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">🌌</span>
+      <div class="info"><b>Tema Neón</b><span>El original de Neuro Rush.</span></div>
+      <button data-theme="default" id="theme-default-btn">EN USO</button>
     </div>
     <div class="shop-sec">— Comprar monedas —</div>
     <div class="shop-item" id="starter-item" style="border:2px solid var(--gold);box-shadow:0 0 18px rgba(255,210,62,.35);">
@@ -837,7 +918,7 @@
   // ---------- Dificultad ----------
   function cfg(){
     const l = level;
-    return {
+    const c = {
       spawnMs: Math.max(950 - l*70, 380),
       lifeMs:  Math.max(1700 - l*110, 750),
       trapChance: Math.min(0.08 + l*0.035, 0.32),
@@ -847,6 +928,9 @@
       stormChance: 0.03,
       maxSimul: Math.min(1 + Math.floor(l/2), 4)
     };
+    // 🕐 Cámara lenta (poder de tienda): todo más pausado
+    if(slowActive()){ c.spawnMs=Math.round(c.spawnMs*1.6); c.lifeMs=Math.round(c.lifeMs*1.9); }
+    return c;
   }
   function shieldActive(){ return Date.now() < shieldUntil; }
 
@@ -1026,7 +1110,7 @@
     announce('🔥 ¡EXPLOSIÓN! 🔥','var(--fire)');
     burst(fromCell,'var(--fire)',18);
     let gained=0;
-    const mult = frenzy?2:1;
+    const mult = (frenzy?2:1)*(doubleActive()?2:1); // ✨ doble puntos de tienda
     orbs.forEach((o,i)=>{
       if(o.type==='target'){ gained += 10*combo*mult; hits++; burst(cells[i],'var(--cyan)',6); }
       else if(o.type==='gold'){ gained += 50*combo*mult; hits++; burst(cells[i],'var(--gold)',8); }
@@ -1643,7 +1727,7 @@
 
     removeOrb(idx);
     hits++;
-    const mult = frenzy?2:1;
+    const mult = (frenzy?2:1)*(doubleActive()?2:1); // ✨ doble puntos de tienda
     let pts;
     if(o.type==='gold'){
       pts = 50*combo*mult;
@@ -1706,6 +1790,9 @@
     endFrenzy();
     clearTimeout(spawnTimer); clearTimeout(frenzyTimer); clearTimeout(freezeTimer);
     stopDuelUI();
+    // Efectos de poderes de tienda
+    slowUntil=0; doubleUntil=0;
+    document.body.classList.remove('slowmo-bg','double-bg');
     clearBoard();
     renderHUD();
   }
@@ -1715,6 +1802,7 @@
     running=true;
     startScreen.classList.add('hidden');
     overScreen.classList.add('hidden');
+    showSoloRow((mode==='classic'||mode==='power') && !!player);
     if(mode==='rhythm'){
       announce('🎵 ¡SIENTE EL RITMO! 🎵','var(--magenta)');
       if(rz.preset) startPresetBeats();
@@ -1748,6 +1836,7 @@
   function gameOver(){
     running=false;
     resetQuitBtn();
+    showSoloRow(false);
     stopRhythm();
     clearTimeout(spawnTimer); clearTimeout(frenzyTimer); clearTimeout(freezeTimer);
     clearInterval(shieldTicker); shieldUntil=0;
@@ -2023,6 +2112,29 @@
     // Regalo diario
     const dc=document.getElementById('daily-claim');
     if(dc) dc.classList.toggle('hidden', !player || !wallet.dailyAvailable);
+    // Oferta del día
+    const dealNames={shield:'⚪ Escudo', heart_day:'💛 Corazón extra hoy', slowmo:'🕐 Cámara lenta', raybomb:'⚡ Bomba Rayo', magnet:'🧲 Imán', double:'✨ Doble puntos'};
+    const dealDesc=document.getElementById('deal-desc');
+    const dealBtn=document.getElementById('deal-btn');
+    if(wallet.deal && dealDesc && dealBtn){
+      dealDesc.textContent=(dealNames[wallet.deal.item]||wallet.deal.item)+' — hoy a '+wallet.deal.cost+' 🪙 (normal '+wallet.deal.normal+' 🪙)';
+      dealBtn.textContent=wallet.deal.cost+' 🪙';
+    }
+    // Poderes de modos solo (máx. 3)
+    const soloCosts={slowmo:40, magnet:50, double:60};
+    Object.keys(soloCosts).forEach(k=>{
+      const own=document.getElementById(k+'-owned');
+      if(own) own.textContent=(wallet[k]|0)?('· tienes '+wallet[k]+'/3 '):'';
+      const b=shopScreen.querySelector('button[data-item="'+k+'"]');
+      if(b){ const m=(wallet[k]|0)>=3; b.disabled=m; b.textContent=m?'MÁX ✓':soloCosts[k]+' 🪙'; }
+    });
+    // Emotes (compra única)
+    const emBtn=shopScreen.querySelector('button[data-item="emotes"]');
+    if(emBtn){ emBtn.disabled=wallet.emotes; emBtn.textContent=wallet.emotes?'TUYO ✓':'100 🪙'; }
+    // Temas: comprar / usar / en uso + revalidar el aplicado
+    renderThemeButtons();
+    applyTheme(currentTheme());
+    renderSoloRow();
   }
   function applyWallet(d){
     wallet.coins=d.coins|0;
@@ -2033,6 +2145,12 @@
     wallet.badgeStar=!!d.badgeStar;
     wallet.dailyAvailable=!!d.dailyAvailable;
     wallet.starterAvailable=!!d.starterAvailable;
+    wallet.emotes=!!d.emotes;
+    wallet.themes=d.themes||{lava:false,ocean:false,retro:false};
+    wallet.slowmo=d.slowmo|0;
+    wallet.magnet=d.magnet|0;
+    wallet.double=d.double|0;
+    wallet.deal=d.deal||null;
     renderWallet();
   }
   async function loadWallet(){
@@ -2087,16 +2205,24 @@
   });
   shopScreen.querySelectorAll('button[data-item]').forEach(b=>{
     b.addEventListener('click', async ()=>{
+      // Tema ya comprado: el botón pasa a equipar
+      const th=b.dataset.theme;
+      if(th && wallet.themes && wallet.themes[th]){
+        setTheme(th);
+        shopStatus.textContent='✅ Tema aplicado';
+        return;
+      }
       b.disabled=true;
       const res=await shopSpend(b.dataset.item);
       b.disabled=false;
-      renderWallet(); // reaplica topes (escudo máx 2, bomba rayo máx 1)
+      renderWallet(); // reaplica topes y estados
       if(res.error){
         const msgs={
           insufficient_coins:'No te alcanzan las monedas 🪙',
           already_active:'Ya tienes el corazón de hoy 💛',
           max_shields:'Ya tienes el máximo de escudos ⚪',
           max_raybombs:'Solo puedes tener 1 bomba rayo ⚡',
+          max_items:'Ya tienes el máximo (3) de ese poder',
           already_owned:'Ya lo tienes ✓',
           already_claimed:'Ya reclamaste el regalo de hoy 🎁',
           offline:'Sin conexión con el servidor.',
@@ -2106,6 +2232,7 @@
       }else{
         shopStatus.textContent='✅ ¡Listo!';
         goldSound();
+        if(th) setTheme(th); // tema recién comprado: se aplica al instante
       }
     });
   });
@@ -2166,12 +2293,102 @@
     renderHUD();
     spawn();
   });
+  // ---------- Temas de tablero ----------
+  function currentTheme(){ try{ return localStorage.getItem('nr-theme')||'default'; }catch(e){ return 'default'; } }
+  function applyTheme(t){
+    document.body.classList.remove('theme-lava','theme-ocean','theme-retro');
+    if(t!=='default' && wallet.themes && wallet.themes[t]) document.body.classList.add('theme-'+t);
+  }
+  function setTheme(t){
+    try{ localStorage.setItem('nr-theme', t); }catch(e){}
+    applyTheme(t);
+    renderThemeButtons();
+  }
+  function renderThemeButtons(){
+    const cur=currentTheme();
+    shopScreen.querySelectorAll('button[data-theme]').forEach(b=>{
+      const t=b.dataset.theme;
+      if(t==='default'){ b.textContent = cur==='default' ? 'EN USO' : 'USAR'; b.disabled = cur==='default'; return; }
+      const owned=wallet.themes && wallet.themes[t];
+      if(owned){ const inUse=cur===t; b.textContent=inUse?'EN USO':'USAR'; b.disabled=inUse; }
+      else { b.textContent='250 🪙'; b.disabled=false; }
+    });
+  }
+  document.getElementById('theme-default-btn').addEventListener('click',()=>{
+    setTheme('default');
+    shopStatus.textContent='✅ Tema aplicado';
+  });
+
+  // ---------- Poderes de tienda para modos SOLO ----------
+  const soloRow=document.getElementById('solo-row');
+  let slowUntil=0, doubleUntil=0, slowFxTimer=null, doubleFxTimer=null;
+  function slowActive(){ return Date.now()<slowUntil; }
+  function doubleActive(){ return Date.now()<doubleUntil; }
+  function showSoloRow(on){ soloRow.classList.toggle('on', !!on); renderSoloRow(); }
+  function renderSoloRow(){
+    soloRow.querySelectorAll('button[data-solo]').forEach(b=>{
+      const k=b.dataset.solo, q=wallet[k]|0;
+      b.querySelector('.qty').textContent='×'+q;
+      b.disabled = !running || q<1 || (k==='slowmo'&&slowActive()) || (k==='double'&&doubleActive());
+    });
+  }
+  soloRow.querySelectorAll('button[data-solo]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const k=b.dataset.solo;
+      if(!running || (mode!=='classic'&&mode!=='power') || (wallet[k]|0)<1) return;
+      if(k==='slowmo'&&slowActive()) return;
+      if(k==='double'&&doubleActive()) return;
+      wallet[k]--; renderWallet();
+      shopSpend('use_'+k); // el server descuenta y re-sincroniza
+      if(k==='slowmo'){
+        slowUntil=Date.now()+6000;
+        document.body.classList.add('slowmo-bg');
+        announce('🕐 ¡CÁMARA LENTA!','var(--ice)');
+        iceSound();
+        clearTimeout(slowFxTimer);
+        slowFxTimer=setTimeout(()=>{ document.body.classList.remove('slowmo-bg'); renderSoloRow(); },6000);
+      }else if(k==='magnet'){
+        announce('🧲 ¡IMÁN!','var(--cyan)');
+        goldSound();
+        let taken=0;
+        const mult=(frenzy?2:1)*(doubleActive()?2:1);
+        Array.from(orbs.entries()).forEach(([i,o])=>{
+          if(taken>=3 || (o.type!=='target'&&o.type!=='gold')) return;
+          taken++;
+          const pts=(o.type==='gold'?50:10)*combo*mult;
+          score+=pts; hits++; combo++;
+          comboBest=Math.max(comboBest,combo);
+          burst(cells[i], o.type==='gold'?'var(--gold)':'var(--cyan)', 8);
+          floatPts(cells[i],'+'+pts, o.type==='gold'?'var(--gold)':'var(--cyan)');
+          comboProgress=Math.min(comboProgress+(o.type==='gold'?30:12),100);
+          removeOrb(i);
+        });
+        if(comboProgress>=100 && !frenzy) startFrenzy();
+        checkLevel();
+        renderHUD();
+      }else if(k==='double'){
+        doubleUntil=Date.now()+10000;
+        document.body.classList.add('double-bg');
+        announce('✨ ¡DOBLE PUNTOS 10s!','var(--gold)');
+        levelSound();
+        clearTimeout(doubleFxTimer);
+        doubleFxTimer=setTimeout(()=>{ document.body.classList.remove('double-bg'); renderSoloRow(); },10000);
+      }
+      renderSoloRow();
+    });
+  });
+
   loadWallet();
 
   // ---------- Duelo online 1v1 ----------
   const duelBar=document.getElementById('duel-bar');
   const sabRow=document.getElementById('sab-row');
-  function showDuelBars(on){ duelBar.classList.toggle('hidden', !on); sabRow.classList.toggle('hidden', !on); }
+  const emoteRowEl=document.getElementById('emote-row');
+  function showDuelBars(on){
+    duelBar.classList.toggle('hidden', !on);
+    sabRow.classList.toggle('hidden', !on);
+    emoteRowEl.classList.toggle('on', !!on && !duelSt.vsBot && !!wallet.emotes);
+  }
   const duelLobby=document.getElementById('duel-lobby');
   const duelOver=document.getElementById('duel-over');
   const lobbyCode=document.getElementById('lobby-code');
@@ -2272,6 +2489,7 @@
       case 'opp_score': duelSt.oppScore=m.value; renderDuelHUD(); break;
       case 'tug': duelSt.tug=m.me; updateTugBar(); break;
       case 'opp_shield': showOppShield(m.from, m.duration); break;
+      case 'emote': showEmoteFly(m.e, m.from); break;
       case 'sabotaged':
         if(m.kind==='raybomb') applySabotage('raybomb', m.from); // no se puede contrarrestar
         else queueIncomingAttack(m.kind, m.from);
@@ -2705,6 +2923,29 @@
     oppShieldInterval=setInterval(()=>{ left--; if(left<=0) hideOppShield(); else upd(); },1000);
   }
   function hideOppShield(){ clearInterval(oppShieldInterval); oppShieldBanner.classList.add('hidden'); }
+
+  // ---------- Emotes de burla (pack de tienda, solo duelo online) ----------
+  let lastEmoteAt=0;
+  function showEmoteFly(e, from){
+    const el=document.createElement('div');
+    el.className='emote-fly';
+    const big=document.createElement('span'); big.className='e'; big.textContent=e;
+    const who=document.createElement('span'); who.className='n'; who.textContent=from||'';
+    el.append(big,who);
+    app.appendChild(el);
+    beep(700,.08,'sine',.12);
+    setTimeout(()=>el.remove(),1700);
+  }
+  emoteRowEl.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(!running || mode!=='duel' || duelSt.vsBot || !wallet.emotes) return;
+      const now=Date.now();
+      if(now-lastEmoteAt<2000) return; // freno anti-spam
+      lastEmoteAt=now;
+      wsSend({t:'emote', e:b.dataset.e});
+      showEmoteFly(b.dataset.e,'TÚ');
+    });
+  });
   if(sabRayBtn) sabRayBtn.addEventListener('click', ()=>{
     if(!running || mode!=='duel' || wallet.raybombs<1) return;
     wallet.raybombs--; renderWallet();
@@ -3391,6 +3632,7 @@
     frozen=false; document.body.classList.remove('frozen-bg'); grid.classList.remove('frozen');
     endFrenzy();
     stopDuelUI();
+    showSoloRow(false);
     clearTimeout(duelSt.resultTimer);
     if(wasDuel && !duelSt.vsBot) wsSend({t:'cancel'}); // el rival gana por abandono
     clearBoard();
