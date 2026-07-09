@@ -16,10 +16,12 @@
 
   Gasto de monedas (validado siempre en servidor):
     POST /api/shop/spend {playerId, item}
-      revive      80  → segunda vida en la partida actual
-      heart_day   60  → partidas de hoy con 4 vidas
-      shield_pack 100 → 3 escudos de inicio (modo power)
-      use_shield   0  → consume 1 escudo al iniciar partida
+      revive       80  → segunda vida en la partida actual
+      heart_day    60  → partidas de hoy con 4 vidas
+      shield       50  → 1 escudo de inicio (modo power); máx. 2 en posesión
+      raybomb     120  → 1 bomba rayo que rompe escudos; máx. 1 en posesión
+      use_shield    0  → consume 1 escudo al iniciar partida
+      use_raybomb   0  → consume 1 bomba rayo (rompe el escudo del rival)
 
   Config (.env):
     STRIPE_SECRET_KEY      sk_test_... / sk_live_...
@@ -43,7 +45,9 @@ const PACKS = {
 };
 
 // Consumibles comprables con monedas
-const ITEM_COST = { revive: 80, heart_day: 60, shield_pack: 100 };
+const ITEM_COST = { revive: 80, heart_day: 30, shield: 50, raybomb: 120 };
+// Tope de unidades que un jugador puede tener a la vez
+const PERK_MAX = { shield: 2, raybomb: 1 };
 const MAX_BODY = 64 * 1024;
 
 function sendJson(response, status, payload) {
@@ -165,9 +169,30 @@ async function handleSpend(request, response) {
   const playerId = String(body.playerId || '');
   const item = String(body.item || '');
 
+  // Consumir un poder (no cuesta monedas): use_shield | use_raybomb
   if (item === 'use_shield') {
     const used = await db.useShield(playerId);
     if (!used) return sendJson(response, 400, { error: 'no_shields' });
+    return sendJson(response, 200, await db.getWallet(playerId));
+  }
+  if (item === 'use_raybomb') {
+    const used = await db.useRaybomb(playerId);
+    if (!used) return sendJson(response, 400, { error: 'no_raybombs' });
+    return sendJson(response, 200, await db.getWallet(playerId));
+  }
+
+  // Compra desde el loadout del duelo: mismo precio que la tienda, mismos topes
+  if (item === 'loadout_shield' || item === 'loadout_raybomb') {
+    const kind = item === 'loadout_shield' ? 'shield' : 'raybomb';
+    const w = await db.getWallet(playerId);
+    if (w.error) return sendJson(response, 400, w);
+    const owned = kind === 'shield' ? w.shields : w.raybombs;
+    if (owned >= PERK_MAX[kind]) {
+      return sendJson(response, 400, { error: kind === 'shield' ? 'max_shields' : 'max_raybombs' });
+    }
+    const paidLd = await db.spendCoins(playerId, ITEM_COST[kind]);
+    if (!paidLd) return sendJson(response, 400, { error: 'insufficient_coins' });
+    await db.grantPerk(playerId, kind, 1, null);
     return sendJson(response, 200, await db.getWallet(playerId));
   }
 
@@ -179,12 +204,20 @@ async function handleSpend(request, response) {
   if (item === 'heart_day' && wallet.heartToday) {
     return sendJson(response, 400, { error: 'already_active' });
   }
+  // Topes de posesión: escudo máx 2, bomba rayo máx 1
+  if (item === 'shield' && wallet.shields >= PERK_MAX.shield) {
+    return sendJson(response, 400, { error: 'max_shields' });
+  }
+  if (item === 'raybomb' && wallet.raybombs >= PERK_MAX.raybomb) {
+    return sendJson(response, 400, { error: 'max_raybombs' });
+  }
 
   const paid = await db.spendCoins(playerId, cost);
   if (!paid) return sendJson(response, 400, { error: 'insufficient_coins' });
 
   if (item === 'heart_day') await db.grantPerk(playerId, 'heart_day', 0, db.todayStr());
-  else if (item === 'shield_pack') await db.grantPerk(playerId, 'shield', 3, null);
+  else if (item === 'shield') await db.grantPerk(playerId, 'shield', 1, null);
+  else if (item === 'raybomb') await db.grantPerk(playerId, 'raybomb', 1, null);
   // revive: solo descuenta — el efecto es inmediato en el cliente
 
   return sendJson(response, 200, await db.getWallet(playerId));

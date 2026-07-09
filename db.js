@@ -128,7 +128,8 @@ function defineModels() {
     currency: { type: DataTypes.STRING(8), allowNull: false }
   }, { tableName: 'purchases' });
 
-  // Consumibles del jugador: corazón del día y escudos acumulables
+  // Consumibles del jugador: corazón del día, escudos y bomba rayo.
+  // kind es VARCHAR (no ENUM) para no requerir migraciones al sumar poderes.
   Perk = sequelize.define('Perk', {
     id: {
       type: DataTypes.BIGINT.UNSIGNED,
@@ -141,7 +142,7 @@ function defineModels() {
       references: { model: 'players', key: 'id' }
     },
     kind: {
-      type: DataTypes.ENUM('heart_day', 'shield'),
+      type: DataTypes.STRING(16), // heart_day | shield | raybomb
       allowNull: false
     },
     qty: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
@@ -181,6 +182,13 @@ async function init() {
       allowNull: false,
       defaultValue: 0
     });
+  }
+
+  // perks.kind pudo crearse como ENUM('heart_day','shield') antes de sumar
+  // 'raybomb'. Convertir a VARCHAR es idempotente y evita migrar el ENUM.
+  const perksDesc = await sequelize.getQueryInterface().describeTable('perks').catch(() => null);
+  if (perksDesc && perksDesc.kind && /enum/i.test(perksDesc.kind.type || '')) {
+    await sequelize.query('ALTER TABLE perks MODIFY COLUMN kind VARCHAR(16) NOT NULL');
   }
 
   ready = true;
@@ -246,11 +254,13 @@ async function getWallet(playerId) {
   const perks = await Perk.findAll({ where: { player_id: playerId } });
   let heartToday = false;
   let shields = 0;
+  let raybombs = 0;
   for (const perk of perks) {
     if (perk.kind === 'heart_day') heartToday = perk.day === todayStr();
     if (perk.kind === 'shield') shields = perk.qty;
+    if (perk.kind === 'raybomb') raybombs = perk.qty;
   }
-  return { coins: player.coins, heartToday, shields };
+  return { coins: player.coins, heartToday, shields, raybombs };
 }
 
 // Acredita monedas de una compra Stripe. Idempotente por session_id.
@@ -306,7 +316,15 @@ async function useShield(playerId) {
   return result.affectedRows > 0;
 }
 
+async function useRaybomb(playerId) {
+  const [result] = await sequelize.query(
+    "UPDATE perks SET qty = qty - 1 WHERE player_id = ? AND kind = 'raybomb' AND qty > 0",
+    { replacements: [playerId] }
+  );
+  return result.affectedRows > 0;
+}
+
 module.exports = {
   enabled, init, registerPlayer, saveScore, leaderboard, saveMatch,
-  getWallet, creditPurchase, spendCoins, grantPerk, useShield, todayStr
+  getWallet, creditPurchase, spendCoins, grantPerk, useShield, useRaybomb, todayStr
 };
