@@ -92,6 +92,10 @@
   .announce{ position:absolute; left:0; right:0; top:44%; text-align:center; z-index:11; font-size:20px; font-weight:900; pointer-events:none; opacity:0; padding:0 10px; text-wrap:balance; }
   .announce.show{ animation:ann 1.2s ease-out; }
   @keyframes ann{ 0%{opacity:0;transform:scale(.6);} 20%{opacity:1;transform:scale(1.12);} 45%{transform:scale(1);} 80%{opacity:1;} 100%{opacity:0;} }
+  .demo-emote{ position:absolute; z-index:14; text-align:center; pointer-events:none; transform:translateX(-50%); }
+  .demo-emote .e{ font-size:46px; display:block; filter:drop-shadow(0 3px 8px rgba(0,0,0,.5)); animation:emoteUp 1.5s ease-out forwards; }
+  .demo-emote .n{ font-size:11px; font-weight:800; }
+  @keyframes emoteUp{ 0%{transform:translateY(16px) scale(.4);opacity:0;} 18%{transform:translateY(0) scale(1.15);opacity:1;} 80%{opacity:1;} 100%{transform:translateY(-52px) scale(.9);opacity:0;} }
 
   /* ---------- Barra de ventaja (full width) ---------- */
   .advwrap{ width:100%; display:flex; flex-direction:column; gap:5px; }
@@ -240,6 +244,13 @@
   function announce(text, color){ announceEl.textContent=text; announceEl.style.color=color; announceEl.style.textShadow='0 0 20px '+color;
     announceEl.classList.remove('show'); void announceEl.offsetWidth; announceEl.classList.add('show'); }
   function caption(t, c){ captionEl.innerHTML=t; captionEl.style.borderColor=c||'var(--amber)'; }
+  function demoEmote(board, icon, who, color){
+    const a=arena.getBoundingClientRect(), f=board.el.getBoundingClientRect();
+    const el=document.createElement('div'); el.className='demo-emote';
+    el.style.left=(f.left-a.left+f.width/2)+'px'; el.style.top=(f.top-a.top+f.height*0.3)+'px';
+    el.innerHTML='<span class="e">'+icon+'</span><span class="n" style="color:'+(color||'var(--gold)')+'">'+who+'</span>';
+    arena.appendChild(el); setTimeout(()=>el.remove(),1500);
+  }
   function flashChip(k, dur){ const c=chips[k]; if(!c) return; c.classList.add('on'); setTimeout(()=>c.classList.remove('on'), dur||1400); }
 
   // proyectil de sabotaje entre tableros
@@ -292,7 +303,7 @@
       li.innerHTML='<span class="rk">'+(i+1)+'.</span><span class="nm">'+r.n+'</span><span class="pt">'+r.b.toLocaleString('es-MX')+'</span>'; lbList.appendChild(li); });
   }
 
-  const TOTAL=22500;
+  const TOTAL=25000;
 
   function staticFrame(){
     reset();
@@ -362,20 +373,27 @@
     at(0, ()=>{ caption('⚡ <b>Bomba Rayo</b> (🛒 tienda) — azul y eléctrica. Es el ÚNICO poder que <b>rompe el escudo blanco</b>.'); flashChip('raybomb',2000); });
     at(300, ()=>bolt(B.bot, B.you, '⚡', 'var(--elec)', ()=>{ elecBreak(B.you); announce('⚡ ¡ESCUDO ROTO!','var(--elec)'); }));
 
+    // Pack de burlas (tienda): sirve vs robot Y vs otro jugador
+    seq(18200);
+    at(0, ()=>caption('😂 <b>Pack de burlas</b> (🛒 tienda): pícalo con un emote — vale contra el robot y contra otro jugador.'));
+    at(300, ()=>demoEmote(B.you, '😂', 'TÚ', 'var(--cyan)'));
+    at(1100, ()=>{ demoEmote(B.bot, '😠', 'ROBOT', 'var(--amber)'); caption('Pero el robot <b>RAZONA la burla</b>: se pica, juega más fuerte y te contraataca. 🤖'); });
+    at(1500, ()=>{ hit(B.bot, 6, 40, 'var(--amber)'); hit(B.bot, 9, 40, 'var(--amber)'); });
+
     // Final
-    seq(18600);
+    seq(20800);
     at(0, ()=>{ if(clockTimer){ clearInterval(clockTimer); clockTimer=null; } clockEl.textContent='0'; clearBoard(B.you); clearBoard(B.bot);
       setScore(B.you,1490); setScore(B.bot,1320); caption('¡Se acabó el tiempo! La barra lo dice: ganaste <b>1490 – 1320</b>.'); });
     at(200, ()=>announce('🏆 ¡GANASTE!','var(--gold)'));
 
     // Aprendizaje
-    seq(20000);
+    seq(22200);
     at(0, ()=>{ caption('Al perder, el <b>robot APRENDE</b>: sube un nivel entero y la revancha será más dura.');
       learnTxt.innerHTML='Perdió, así que <b>sube a Nivel 4</b>. Mejor puntería y mejores sabotajes en cada revancha.'; learnEl.classList.add('show'); });
     at(400, ()=>{ lvlEl.textContent='4'; lvlEl.classList.add('bump'); });
 
     // Récords
-    seq(21600);
+    seq(23800);
     at(0, ()=>{ caption('El tablero de récords guarda solo dos: <b>TÚ y el ROBOT</b>. 🤖'); fillLeaderboard(); lbEl.classList.add('show'); });
 
     timers.push(setTimeout(play, TOTAL));

@@ -2387,7 +2387,7 @@
   function showDuelBars(on){
     duelBar.classList.toggle('hidden', !on);
     sabRow.classList.toggle('hidden', !on);
-    emoteRowEl.classList.toggle('on', !!on && !duelSt.vsBot && !!wallet.emotes);
+    emoteRowEl.classList.toggle('on', !!on && !!wallet.emotes); // burlas en online Y vs robot
   }
   const duelLobby=document.getElementById('duel-lobby');
   const duelOver=document.getElementById('duel-over');
@@ -2938,12 +2938,13 @@
   }
   emoteRowEl.querySelectorAll('button').forEach(b=>{
     b.addEventListener('click', ()=>{
-      if(!running || mode!=='duel' || duelSt.vsBot || !wallet.emotes) return;
+      if(!running || mode!=='duel' || !wallet.emotes) return;
       const now=Date.now();
       if(now-lastEmoteAt<2000) return; // freno anti-spam
       lastEmoteAt=now;
-      wsSend({t:'emote', e:b.dataset.e});
       showEmoteFly(b.dataset.e,'TÚ');
+      if(duelSt.vsBot) botReactToTaunt();       // el robot reacciona
+      else wsSend({t:'emote', e:b.dataset.e});  // al rival online
     });
   });
   if(sabRayBtn) sabRayBtn.addEventListener('click', ()=>{
@@ -3029,16 +3030,31 @@
   function botLevelInt(){ return Math.max(1, Math.min(10, Math.floor(botMem.level))); }
   // Perfil medio normalizado: todas las decisiones porcentuales parten de 50%.
   function botParams(){
+    // Si lo provocaste con una burla, se pica: apunta mejor y ataca más
+    const provoked = Date.now() < botRT.provokedUntil;
     return {
-      hitRate:BOT_ACTIVE.accuracy,
-      trapAvoid:BOT_ACTIVE.trapAvoidance,
-      aggression:BOT_ACTIVE.aggression,
-      jitter:BOT_ACTIVE.reactionDelayMs
+      hitRate: Math.min(0.98, BOT_ACTIVE.accuracy*(provoked?1.15:1)),
+      trapAvoid: BOT_ACTIVE.trapAvoidance,
+      aggression: BOT_ACTIVE.aggression*(provoked?1.7:1),
+      jitter: Math.round(BOT_ACTIVE.reactionDelayMs*(provoked?0.8:1))
     };
   }
   const botRT={score:0, combo:1, energy:0, powerProgress:0,
     powers:{freeze:0,bombs:0,storm:0}, timer:null, sabPending:null,
-    frozenUntil:0, blackoutUntil:0, mirrorUntil:0, pendingBombs:0};
+    frozenUntil:0, blackoutUntil:0, mirrorUntil:0, pendingBombs:0, provokedUntil:0};
+
+  // El robot RAZONA la burla: se pica, juega más fuerte y a veces contraataca
+  const BOT_TAUNT_BACK=['😠','😏','🤨','🔩','🤖','😤'];
+  function botReactToTaunt(){
+    if(!running || !duelSt.vsBot) return;
+    botRT.provokedUntil=Date.now()+4200;
+    setTimeout(()=>{
+      if(!running || !duelSt.vsBot) return;
+      showEmoteFly(BOT_TAUNT_BACK[Math.floor(Math.random()*BOT_TAUNT_BACK.length)], duelSt.oppName);
+      announce('🤖 ¡SE PICÓ! Ahora juega más fuerte','var(--amber)');
+      if(Math.random()<0.6) botMaybeSabotage(); // devuelve el golpe
+    }, 700);
+  }
   function updateBotLabel(){
     const el=document.getElementById('bot-level-label');
     if(el) el.textContent=botLevelInt();
@@ -3075,7 +3091,7 @@
     botRT.powers={freeze:0,bombs:0,storm:0};
     grantStartingPowers(duelSt.powers);
     grantStartingPowers(botRT.powers);
-    botRT.frozenUntil=0; botRT.blackoutUntil=0; botRT.mirrorUntil=0; botRT.pendingBombs=0;
+    botRT.frozenUntil=0; botRT.blackoutUntil=0; botRT.mirrorUntil=0; botRT.pendingBombs=0; botRT.provokedUntil=0;
     rematchBtn.disabled=false;
     rematchStatusEl.textContent='';
     duelOver.classList.add('hidden');
