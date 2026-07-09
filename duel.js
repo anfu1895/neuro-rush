@@ -33,9 +33,26 @@ const { WebSocketServer } = require('ws');
 const crypto = require('crypto');
 const db = require('./db');
 
-const DUEL_MS = 65000;
+const DUEL_MS = 90000; // tope de tiempo (guarda): si nadie llena la barra, gana quien esté adelante
+
+// ---------- Barra tug-of-war ----------
+// pull 0..100 desde la perspectiva del jugador A (50 = empate).
+// Llega a 100 → gana A; llega a 0 → gana B.
+const TUG_SENS = 0.06;     // % de barra por punto
+const TUG_BAND_MAX = 1.3;  // empuje cuando vas MUY atrás (rubber-banding)
+const TUG_BAND_MIN = 0.4;  // empuje en la zona final (dura): cuesta cerrar
+function tugMove(pull, pts, forA) {
+  if (forA) {
+    const band = Math.max(TUG_BAND_MIN, TUG_BAND_MAX - pull / 100);
+    return Math.min(100, pull + pts * TUG_SENS * band);
+  }
+  const band = Math.max(TUG_BAND_MIN, TUG_BAND_MAX - (100 - pull) / 100);
+  return Math.max(0, pull - pts * TUG_SENS * band);
+}
 const MAX_SCORE = 200000;
-const SABOTAGE_KINDS = new Set(['freeze', 'bombs', 'storm']);
+const SABOTAGE_KINDS = new Set(['freeze', 'bombs', 'storm', 'raybomb']);
+const EMOTES = new Set(['😂', '🔥', '😱', '👏', '😎', '💀']);
+const MAX_EMOTES_PER_MATCH = 15;
 const MAX_SABOTAGES_PER_MATCH = 12; // freno de cordura contra spam
 // Sin caracteres confundibles (I, L, O, 0, 1)
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ';
@@ -90,11 +107,14 @@ function startMatch(room) {
   room.finished = false;
   room.finals = new Map();
   room.rematch = new Set();
+  room.pull = 50; // barra tug-of-war centrada
   if (room.finalTimer) { clearTimeout(room.finalTimer); room.finalTimer = null; }
 
   for (const ws of room.players) {
     ws.meta.lastScore = 0;
+    ws.meta.prevScore = 0;
     ws.meta.sabotages = 0;
+    ws.meta.emotesSent = 0;
     const opp = partnerOf(room, ws);
     send(ws, {
       t: 'matched',
@@ -105,7 +125,7 @@ function startMatch(room) {
   }
 }
 
-function finishMatch(room, forfeiter) {
+function finishMatch(room, forfeiter, tugWinner, reason) {
   if (room.finished) return;
   room.finished = true;
   if (room.finalTimer) { clearTimeout(room.finalTimer); room.finalTimer = null; }
@@ -113,18 +133,21 @@ function finishMatch(room, forfeiter) {
   const [a, b] = room.players;
   const scoreA = room.finals.has(a) ? room.finals.get(a) : (a.meta.lastScore || 0);
   const scoreB = room.finals.has(b) ? room.finals.get(b) : (b.meta.lastScore || 0);
+  const pull = room.pull == null ? 50 : room.pull;
 
   let winner = null;
   if (forfeiter) winner = partnerOf(room, forfeiter);
-  else if (scoreA > scoreB) winner = a;
-  else if (scoreB > scoreA) winner = b;
+  else if (tugWinner) winner = tugWinner;   // llenó la barra
+  else if (pull > 50) winner = a;           // tope de tiempo: gana quien va adelante
+  else if (pull < 50) winner = b;
 
   const forfeit = !!forfeiter;
+  const why = reason || (forfeit ? 'forfeit' : 'time');
   for (const ws of room.players) {
     const mine = ws === a ? scoreA : scoreB;
     const theirs = ws === a ? scoreB : scoreA;
     const outcome = winner === null ? 'tie' : (winner === ws ? 'win' : 'lose');
-    send(ws, { t: 'result', you: mine, opp: theirs, outcome, forfeit });
+    send(ws, { t: 'result', you: mine, opp: theirs, outcome, forfeit, reason: why, pull: ws === a ? pull : 100 - pull });
   }
 
   if (db.enabled()) {
@@ -195,11 +218,22 @@ function handleMessage(ws, msg) {
     case 'score': {
       const value = Math.floor(Number(msg.value));
       if (!Number.isFinite(value) || value < 0 || value > MAX_SCORE) return;
-      meta.lastScore = value;
       const room = meta.room;
+      const delta = value - (meta.prevScore || 0);
+      meta.prevScore = value;
+      meta.lastScore = value;
       if (room && !room.finished) {
         const partner = partnerOf(room, ws);
         if (partner) send(partner, { t: 'opp_score', value });
+        // Tug-of-war: cada punto empuja la barra (con rubber-banding en tugMove)
+        if (room.startedAt && delta > 0) {
+          const [a, b] = room.players;
+          room.pull = tugMove(room.pull, delta, ws === a);
+          send(a, { t: 'tug', me: room.pull });
+          send(b, { t: 'tug', me: 100 - room.pull });
+          if (room.pull >= 100) return finishMatch(room, null, a, 'filled');
+          if (room.pull <= 0) return finishMatch(room, null, b, 'filled');
+        }
       }
       break;
     }
@@ -210,6 +244,26 @@ function handleMessage(ws, msg) {
       if (++meta.sabotages > MAX_SABOTAGES_PER_MATCH) return;
       const partner = partnerOf(room, ws);
       if (partner) send(partner, { t: 'sabotaged', kind: msg.kind, from: meta.name });
+      break;
+    }
+
+    case 'emote': {
+      // Burla comprada en tienda: se reenvía tal cual (con freno anti-spam)
+      const room = meta.room;
+      if (!room || !EMOTES.has(msg.e)) return;
+      meta.emotesSent = (meta.emotesSent || 0) + 1;
+      if (meta.emotesSent > MAX_EMOTES_PER_MATCH) return;
+      const partner = partnerOf(room, ws);
+      if (partner) send(partner, { t: 'emote', e: msg.e, from: meta.name });
+      break;
+    }
+
+    case 'shield_up': {
+      // Avisar al rival que este jugador activó escudo (7s) → puede tirar bomba rayo
+      const room = meta.room;
+      if (!room || room.finished) return;
+      const partner = partnerOf(room, ws);
+      if (partner) send(partner, { t: 'opp_shield', from: meta.name, duration: 7000 });
       break;
     }
 

@@ -88,6 +88,31 @@
   .orb.fire .orb-ic{font-size:.6em;filter:saturate(1.9) hue-rotate(-18deg) drop-shadow(0 0 6px #ff2b1a);animation:flameFlicker .45s infinite alternate;}
   @keyframes flameFlicker{from{transform:scale(1);filter:saturate(1.9) hue-rotate(-18deg) drop-shadow(0 0 5px #ff2b1a) brightness(1);}to{transform:scale(1.18);filter:saturate(2.2) hue-rotate(-24deg) drop-shadow(0 0 10px #ff2b1a) brightness(1.25);}}
   .orb.white{background:radial-gradient(circle at 35% 30%, #ffffff, #f0f0ff 55%, #9aa0d8);box-shadow:0 0 24px var(--white),0 0 48px rgba(255,255,255,.6);}
+  .orb.storm{background:radial-gradient(circle at 40% 35%, #ffd9f4, var(--magenta) 55%, #8a0f68);box-shadow:0 0 24px var(--magenta),0 0 48px rgba(255,62,200,.5);}
+  .orb.storm .orb-ic{animation:stormSpin 1.1s linear infinite;}
+  @keyframes stormSpin{to{transform:rotate(360deg);}}
+
+  /* ---------- Efecto TORMENTA (power-up) ---------- */
+  #grid.storming{animation:stormWobble .9s ease-in-out;}
+  @keyframes stormWobble{
+    0%{transform:rotate(0) scale(1);}
+    18%{transform:rotate(-2.4deg) scale(1.015);}
+    45%{transform:rotate(2.2deg) scale(1.02);}
+    72%{transform:rotate(-1.2deg) scale(1.01);}
+    100%{transform:rotate(0) scale(1);}
+  }
+  body.storm-bg{background:radial-gradient(ellipse at 50% -10%, #5c1350 0%, #22093a 60%);}
+  .storm-streak{position:absolute;height:3px;left:-30%;width:160%;border-radius:99px;pointer-events:none;z-index:26;
+    background:linear-gradient(90deg,transparent,rgba(255,62,200,.85),rgba(255,255,255,.9),rgba(255,62,200,.85),transparent);
+    filter:drop-shadow(0 0 6px var(--magenta));opacity:0;animation:streakFly .55s ease-in forwards;}
+  @keyframes streakFly{0%{transform:translateX(-40%) skewX(-18deg);opacity:0;}15%{opacity:1;}100%{transform:translateX(46%) skewX(-18deg);opacity:0;}}
+  .storm-leaf{position:absolute;font-size:15px;pointer-events:none;z-index:27;animation:leafSwirl .8s ease-in forwards;filter:drop-shadow(0 0 5px var(--magenta));}
+  @keyframes leafSwirl{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}100%{transform:translate(var(--lx),var(--ly)) rotate(660deg) scale(.3);opacity:0;}}
+  .orb.storm-out{animation:stormOut .55s ease-in forwards !important;}
+  @keyframes stormOut{0%{transform:rotate(0) scale(1);opacity:1;}100%{transform:rotate(720deg) translate(30px,-90px) scale(.15);opacity:0;}}
+  @media (prefers-reduced-motion: reduce){
+    #grid.storming,.storm-streak,.storm-leaf,.orb.storm-out{animation:none !important;}
+  }
   .orb.shrink{animation:shrink linear forwards;}
   @keyframes shrink{from{transform:scale(1);opacity:1;}to{transform:scale(.35);opacity:.55;}}
 
@@ -222,14 +247,39 @@
   #duel-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;}
   #duel-me{color:var(--cyan);}
   #duel-opp{color:var(--red);}
-  #adv-bar{height:10px;background:var(--panel);border-radius:99px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.5);}
-  #adv-fill{height:100%;width:50%;border-radius:99px;background:linear-gradient(90deg,var(--cyan),var(--lime));transition:width .3s;}
-  #sab-row{display:flex;gap:8px;align-items:center;}
+  #adv-bar{position:relative;height:20px;background:linear-gradient(90deg,#6b1220,var(--red));border-radius:99px;overflow:hidden;box-shadow:inset 0 2px 6px rgba(0,0,0,.55);}
+  #adv-bar::after{content:'';position:absolute;left:50%;top:2px;bottom:2px;width:2px;background:rgba(255,255,255,.35);transform:translateX(-50%);}
+  #adv-fill{position:relative;height:100%;width:50%;background:linear-gradient(90deg,#0e7fa0,var(--cyan));border-right:2px solid #fff;box-shadow:2px 0 10px rgba(255,255,255,.5);transition:width .35s cubic-bezier(.4,0,.3,1);}
+  #sab-row{display:flex;gap:6px;align-items:stretch;margin-top:10px;flex-shrink:0;}
   .sab{flex:1;background:var(--panel);border:none;border-radius:12px;padding:7px 4px;font-size:18px;cursor:pointer;color:var(--text);box-shadow:0 3px 0 rgba(0,0,0,.35);position:relative;transition:transform .08s;}
   .sab:active{transform:translateY(2px);}
   .sab:disabled{opacity:.35;cursor:default;}
   .sab .cost{position:absolute;top:1px;right:5px;font-size:10px;color:var(--gold);font-weight:800;}
   .sab .qty{position:absolute;bottom:1px;right:5px;font-size:10px;color:var(--cyan);font-weight:900;}
+  .sab.shop-power .cost{color:var(--gold);}
+  .sab.sh-shield{box-shadow:0 3px 0 rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(255,255,255,.55);}
+  .sab.sh-ray{color:#7fd0ff;box-shadow:0 3px 0 rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(127,208,255,.7);}
+
+  /* ---------- Tutorial en video (iframe mismo origen, escalado para caber) ---------- */
+  #tutorial-screen{z-index:68;justify-content:flex-start;align-items:center;gap:6px;padding-top:12px;}
+  #tut-frame-wrap{width:min(92vw,416px);overflow:hidden;border-radius:16px;margin:8px auto 0;background:#12102b;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+  #tut-frame{width:716px;height:720px;border:none;transform-origin:top left;background:#12102b;}
+  #tut-btnrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%;max-width:420px;margin-top:auto;}
+  #tut-btnrow .btn{width:auto;flex:1;min-width:96px;padding:11px 10px;font-size:15px;margin:0;}
+  #tut-countdown{font-size:15px;font-weight:800;color:var(--cyan);min-height:46px;display:flex;align-items:center;justify-content:center;gap:8px;}
+  #tut-countdown b{font-size:26px;color:var(--gold);font-variant-numeric:tabular-nums;}
+  #duel-loadout{z-index:67;}
+  #duel-loadout .loadout-item{width:100%;max-width:340px;display:flex;align-items:center;gap:10px;background:var(--panel);border-radius:14px;padding:12px;margin-bottom:10px;text-align:left;}
+  #duel-loadout .loadout-item .ic{font-size:26px;}
+  #duel-loadout .loadout-item .info{flex:1;}
+  #duel-loadout .loadout-item .info b{font-size:14px;display:block;}
+  #duel-loadout .loadout-item .info .own{font-size:11.5px;color:var(--dim);}
+  #duel-loadout .loadout-item .buy{border:none;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,var(--gold),var(--fire));color:#0c0a24;font-size:13px;white-space:nowrap;box-shadow:0 3px 0 rgba(0,0,0,.3);}
+  #duel-loadout .loadout-item .buy:disabled{opacity:.4;cursor:default;}
+  #duel-loadout .qtag{font-weight:900;color:var(--cyan);font-size:16px;font-variant-numeric:tabular-nums;padding-right:4px;}
+  .loadout-sec{font-size:10.5px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;font-weight:800;margin:2px 0 8px;}
+  #loadout-status{font-size:12px;color:var(--gold);min-height:18px;margin-bottom:6px;font-weight:700;}
+  #tut-skip-hint{font-size:11px;color:var(--dim);}
   #power-meter{width:62px;flex:0 0 62px;}
   #power-label{font-size:10px;color:var(--gold);font-weight:900;text-align:center;margin-bottom:3px;}
   #power-track{height:8px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden;}
@@ -247,6 +297,10 @@
   #counter-power{z-index:1;min-width:88px;background:var(--panel);border:2px solid var(--gold);border-radius:12px;color:var(--text);padding:7px;font-size:19px;font-weight:900;cursor:pointer;}
   #counter-power:disabled{opacity:.35;cursor:default;}
   #counter-power small{display:block;font-size:9px;color:var(--gold);letter-spacing:.5px;}
+  #counter-shield{z-index:1;min-width:88px;background:var(--panel);border:2px solid var(--white);border-radius:12px;color:var(--text);padding:7px;font-size:19px;font-weight:900;cursor:pointer;}
+  #counter-shield:disabled{display:none;}
+  #counter-shield small{display:block;font-size:9px;color:var(--white);letter-spacing:.5px;}
+  #opp-shield-banner{margin-top:8px;background:rgba(127,208,255,.14);border:1px solid rgba(127,208,255,.5);border-radius:12px;padding:8px 10px;font-size:12.5px;font-weight:800;color:#bfe6ff;text-align:center;}
   @keyframes incomingPulse{from{transform:scale(.88) rotate(-8deg);}to{transform:scale(1.12) rotate(8deg);}}
   @keyframes attackSweep{from{transform:translateX(-100%);}to{transform:translateX(100%);}}
   #energy-dots{display:flex;gap:5px;align-items:center;padding:0 4px;}
@@ -264,10 +318,35 @@
   #rematch-status{font-size:12px;color:var(--dim);min-height:16px;margin:8px 0;}
   #duel-result-title{margin-bottom:6px;}
 
+  /* ---------- Temas de tablero (comprados en tienda) ---------- */
+  body.theme-lava{--bg:#2b0d08;--bg2:#57160a;--panel:#5c2412;}
+  body.theme-ocean{--bg:#06182b;--bg2:#0a3355;--panel:#0e3f5c;}
+  body.theme-retro{--bg:#12061f;--bg2:#2e0a4a;--panel:#3a1160;}
+
+  /* ---------- Poderes de modos SOLO (tienda) ---------- */
+  #solo-row{display:none;gap:6px;align-items:stretch;margin-top:10px;flex-shrink:0;}
+  #solo-row.on{display:flex;}
+  #solo-row .sab{font-size:17px;}
+  body.slowmo-bg{filter:saturate(.85);}
+  body.slowmo-bg #grid{box-shadow:0 0 0 2px var(--ice),0 0 26px rgba(165,232,255,.35);border-radius:20px;}
+  body.double-bg #grid{box-shadow:0 0 0 2px var(--gold),0 0 26px rgba(255,210,62,.4);border-radius:20px;}
+
+  /* ---------- Emotes del duelo ---------- */
+  #emote-row{display:none;gap:5px;justify-content:center;margin-top:6px;}
+  #emote-row.on{display:flex;}
+  #emote-row button{background:var(--panel);border:none;border-radius:10px;font-size:16px;padding:4px 9px;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.3);transition:transform .08s;}
+  #emote-row button:active{transform:scale(.9);}
+  .emote-fly{position:absolute;left:50%;top:55%;z-index:80;transform:translateX(-50%);text-align:center;pointer-events:none;animation:emoteFly 1.6s ease-out forwards;}
+  .emote-fly .e{font-size:58px;display:block;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5));}
+  .emote-fly .n{font-size:12px;font-weight:800;color:var(--gold);text-shadow:0 1px 4px #000;}
+  @keyframes emoteFly{0%{transform:translate(-50%,20px) scale(.4);opacity:0;}15%{transform:translate(-50%,0) scale(1.15);opacity:1;}30%{transform:translate(-50%,-6px) scale(1);}80%{opacity:1;}100%{transform:translate(-50%,-70px) scale(.9);opacity:0;}}
+
   /* ---------- Tienda y monedero ---------- */
   #wallet-row{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:10px;min-height:32px;}
   #coins-chip{background:var(--panel);border-radius:99px;padding:6px 14px;font-weight:800;font-size:13px;color:var(--gold);}
   #shop-open{background:linear-gradient(90deg,var(--gold),var(--fire));border:none;border-radius:99px;padding:7px 16px;font-weight:800;font-size:13px;cursor:pointer;color:#0c0a24;box-shadow:0 3px 0 #8a5a00;}
+  #daily-claim{background:linear-gradient(90deg,var(--lime),var(--cyan));border:none;border-radius:99px;padding:7px 14px;font-weight:800;font-size:13px;cursor:pointer;color:#0c0a24;box-shadow:0 3px 0 #0a5d70;animation:dailyPulse 1.4s infinite alternate;}
+  @keyframes dailyPulse{from{transform:scale(1);}to{transform:scale(1.08);box-shadow:0 3px 0 #0a5d70,0 0 16px rgba(141,255,74,.6);}}
   #shop-screen{z-index:65;}
   .shop-item{width:100%;max-width:360px;display:flex;align-items:center;gap:10px;background:var(--panel);border-radius:14px;padding:12px;margin-bottom:10px;text-align:left;}
   .shop-item .ic{font-size:26px;}
@@ -357,12 +436,6 @@
       <span id="duel-opp">RIVAL: 0</span>
     </div>
     <div id="adv-bar"><div id="adv-fill"></div></div>
-    <div id="sab-row">
-      <div id="power-meter"><div id="power-label">⚡ 0</div><div id="power-track"><div id="power-fill"></div></div></div>
-      <button class="sab" data-kind="freeze" title="Se obtiene cada 5 puntos"><span class="cost">5 pts</span>🧊<span class="qty">×0</span></button>
-      <button class="sab" data-kind="bombs" title="Se obtiene cada 20 puntos"><span class="cost">20 pts</span>💥<span class="qty">×0</span></button>
-      <button class="sab" data-kind="storm" title="Se obtiene cada 15 puntos"><span class="cost">15 pts</span>🌪️<span class="qty">×0</span></button>
-    </div>
     <div id="incoming-attack" class="hidden">
       <div id="incoming-icon">🧊</div>
       <div id="incoming-info">
@@ -371,10 +444,34 @@
         <div id="incoming-counter-hint">REVISA TU DEFENSA</div>
       </div>
       <button id="counter-power" type="button"><span>💣 ×0</span><small>ANULAR</small></button>
+      <button id="counter-shield" type="button"><span>⚪ ×0</span><small>ESCUDO</small></button>
+    </div>
+    <div id="opp-shield-banner" class="hidden"></div>
+    <div id="emote-row">
+      <button data-e="😂">😂</button><button data-e="🔥">🔥</button><button data-e="😱">😱</button>
+      <button data-e="👏">👏</button><button data-e="😎">😎</button><button data-e="💀">💀</button>
     </div>
   </div>
 
   <div id="grid"></div>
+
+  <!-- Poderes del duelo: al fondo, siempre visibles con su cantidad -->
+  <div id="sab-row" class="hidden">
+    <div id="power-meter"><div id="power-label">⚡ 0</div><div id="power-track"><div id="power-fill"></div></div></div>
+    <button class="sab" data-kind="freeze" title="Se obtiene cada 5 puntos"><span class="cost">5 pts</span>🧊<span class="qty">×0</span></button>
+    <button class="sab" data-kind="bombs" title="Se obtiene cada 20 puntos"><span class="cost">20 pts</span>💥<span class="qty">×0</span></button>
+    <button class="sab" data-kind="storm" title="Se obtiene cada 15 puntos"><span class="cost">15 pts</span>🌪️<span class="qty">×0</span></button>
+    <button class="sab shop-power sh-shield" id="sab-shield" title="Escudo — comprado en tienda"><span class="cost">🛒</span>⚪<span class="qty">×0</span></button>
+    <button class="sab shop-power sh-ray" id="sab-raybomb" title="Bomba Rayo — comprada en tienda (rompe escudos)"><span class="cost">🛒</span>⚡<span class="qty">×0</span></button>
+  </div>
+
+  <!-- Poderes de tienda para modos SOLO (clásico y power) -->
+  <div id="solo-row">
+    <button class="sab" data-solo="slowmo" title="Cámara lenta 6s"><span class="cost">🛒</span>🕐<span class="qty">×0</span></button>
+    <button class="sab" data-solo="magnet" title="Imán: atrapa 3 orbes"><span class="cost">🛒</span>🧲<span class="qty">×0</span></button>
+    <button class="sab" data-solo="double" title="Doble puntos 10s"><span class="cost">🛒</span>✨<span class="qty">×0</span></button>
+  </div>
+
   <div id="announce"></div>
   <div id="rhythm-loading" class="hidden" aria-live="polite" aria-busy="true">
     <div class="rhythm-spinner"></div>
@@ -390,6 +487,7 @@
     <div id="wallet-row" class="hidden">
       <span id="coins-chip">🪙 0</span>
       <button id="shop-open">🛒 TIENDA</button>
+      <button id="daily-claim" class="hidden">🎁 +5</button>
     </div>
     <div class="rules-mini">
       <span>🔵 toca = puntos</span><span>⭐ bonus</span><span>💀 ¡NO tocar!</span><span>🔥 barra llena = FRENESÍ x2</span>
@@ -397,24 +495,19 @@
 
     <div class="mode-card classic">
       <h2>🎯 CLÁSICO</h2>
-      <p>El original. Toca los orbes azules antes de que se encojan, atrapa estrellas doradas, evita los rojos y llena la barra para el MODO FRENESÍ. Velocidad pura.</p>
+      <p>Solo vos y tus reflejos. Los orbes van y vienen en un parpadeo. Velocidad pura, sin excusas. ¿Hasta dónde llegás? 🔥</p>
       <button class="btn" id="play-classic">▶ JUGAR CLÁSICO</button>
     </div>
 
     <div class="mode-card power">
       <h2>⚡ POWER-UPS</h2>
-      <p>Todo lo del clásico + 3 power-ups que aparecen por sorpresa:</p>
-      <div class="pu-list">
-        <div class="pu"><span class="ic">❄️</span><span><b>Bola de hielo:</b> congela el escenario 3 segundos y lo llena de bolas normales y doradas. Las normales se rompen con 1 toque y las doradas con 2. ¡Rompe todas las que puedas!</span></div>
-        <div class="pu"><span class="ic">🔥</span><span><b>Bola de fuego:</b> destruye todo el escenario y te da puntos por cada bola normal y dorada. Las bolas malas no te hacen efecto.</span></div>
-        <div class="pu"><span class="ic">⚪</span><span><b>Bola blanca:</b> escudo de 7 segundos. Nada te afecta: tocar bolas malas o dejar escapar bolas no te quita vidas ni rompe tu combo.</span></div>
-      </div>
+      <p>El clásico, pero con poderes que caen por sorpresa: congelá el tiempo, hacé volar todo por los aires o desatá una tormenta. Puro caos a tu favor. ✨</p>
       <button class="btn gold-btn" id="play-power">⚡ JUGAR POWER-UPS</button>
     </div>
 
     <div class="mode-card duel">
       <h2>⚔️ DUELO ONLINE</h2>
-      <p>Reta a otro jugador durante 65 segundos. Cada barra llena suma 1 punto: hielo se obtiene cada 5, tormenta cada 15 y explosión cada 25. Contrarresta con 💥 &gt; 🧊, 🌪️ &gt; 💥 y 🧊 &gt; 🌪️.</p>
+      <p>Reta a otro jugador en tiempo real. Un tira y afloja sin tregua: sabotealo, remontá y quedate con la barra. Que gane el mejor. ⚡</p>
       <button class="btn" id="play-duel" style="background:linear-gradient(90deg,var(--red),var(--magenta));box-shadow:0 5px 0 #7a1020,0 10px 24px rgba(255,74,94,.35);color:#fff;">⚔️ BUSCAR RIVAL</button>
     </div>
 
@@ -549,17 +642,84 @@
     <div id="shop-coins" style="font-size:22px;font-weight:900;color:var(--gold);margin-bottom:8px;">🪙 0</div>
     <div id="shop-status"></div>
     <div class="shop-sec">— Usa tus monedas —</div>
+    <div class="shop-item" id="deal-item" style="border:2px solid var(--magenta);box-shadow:0 0 18px rgba(255,62,200,.3);">
+      <span class="ic">🔥</span>
+      <div class="info"><b>Oferta del día</b><span id="deal-desc">Cargando…</span></div>
+      <button data-item="daily_deal" id="deal-btn">— 🪙</button>
+    </div>
     <div class="shop-item">
       <span class="ic">💛</span>
       <div class="info"><b>Corazón extra HOY</b><span>Tus partidas de hoy (Clásico y Power) empiezan con 4 vidas.</span></div>
-      <button data-item="heart_day">60 🪙</button>
+      <button data-item="heart_day">30 🪙</button>
     </div>
     <div class="shop-item">
-      <span class="ic">🛡</span>
-      <div class="info"><b>Pack de 3 escudos</b><span>Tus próximas 3 partidas Power empiezan con escudo activo (7s).</span></div>
-      <button data-item="shield_pack">100 🪙</button>
+      <span class="ic">⚪</span>
+      <div class="info"><b>Escudo</b> <span id="shield-owned" style="color:var(--white);"></span><span>Empieza tu partida Power con escudo de 7s: nada te afecta. Máximo 2 en tu inventario.</span></div>
+      <button data-item="shield">50 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">⚡</span>
+      <div class="info"><b>Bomba Rayo</b> <span id="raybomb-owned" style="color:var(--gold);"></span><span>El único poder que ROMPE el escudo blanco del rival en el duelo. Solo puedes tener 1.</span></div>
+      <button data-item="raybomb">120 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">🎰</span>
+      <div class="info"><b>3er slot de escudo</b><span>Permanente: tu inventario de escudos sube de 2 a 3. Compra única.</span></div>
+      <button data-item="shield_slot">500 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">⭐</span>
+      <div class="info"><b>Insignia de estrella</b><span>Tu nombre brilla con ⭐ en los récords mundiales. Que todos lo vean.</span></div>
+      <button data-item="badge_star">200 🪙</button>
+    </div>
+    <div class="shop-sec">— Poderes para modos solo (máx. 3 c/u) —</div>
+    <div class="shop-item">
+      <span class="ic">🕐</span>
+      <div class="info"><b>Cámara lenta</b> <span id="slowmo-owned" style="color:var(--ice);"></span><span>6 segundos donde los orbes duran mucho más. Respirá.</span></div>
+      <button data-item="slowmo">40 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">🧲</span>
+      <div class="info"><b>Imán</b> <span id="magnet-owned" style="color:var(--cyan);"></span><span>Atrapa al instante hasta 3 orbes del tablero.</span></div>
+      <button data-item="magnet">50 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">✨</span>
+      <div class="info"><b>Doble puntos</b> <span id="double-owned" style="color:var(--gold);"></span><span>10 segundos con TODO x2 (se apila con el frenesí).</span></div>
+      <button data-item="double">60 🪙</button>
+    </div>
+    <div class="shop-sec">— Estilo —</div>
+    <div class="shop-item">
+      <span class="ic">😂</span>
+      <div class="info"><b>Pack de burlas</b><span>6 emotes para picar al rival en pleno duelo online. Única vez.</span></div>
+      <button data-item="emotes">100 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">🌋</span>
+      <div class="info"><b>Tema Lava</b><span>Tablero al rojo vivo. Permanente.</span></div>
+      <button data-item="theme_lava" data-theme="lava">250 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">🌊</span>
+      <div class="info"><b>Tema Océano</b><span>Profundo y azul. Permanente.</span></div>
+      <button data-item="theme_ocean" data-theme="ocean">250 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">👾</span>
+      <div class="info"><b>Tema Retro</b><span>Púrpura arcade de los 80. Permanente.</span></div>
+      <button data-item="theme_retro" data-theme="retro">250 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">🌌</span>
+      <div class="info"><b>Tema Neón</b><span>El original de Neuro Rush.</span></div>
+      <button data-theme="default" id="theme-default-btn">EN USO</button>
     </div>
     <div class="shop-sec">— Comprar monedas —</div>
+    <div class="shop-item" id="starter-item" style="border:2px solid var(--gold);box-shadow:0 0 18px rgba(255,210,62,.35);">
+      <span class="ic">🎁</span>
+      <div class="info"><b>Pack de Inicio — única vez</b><span>300 monedas + 1 escudo + corazón de hoy. El mejor valor para empezar.</span></div>
+      <button class="money" data-pack="starter">$19 MXN</button>
+    </div>
     <div class="shop-item">
       <span class="ic">🪙</span>
       <div class="info"><b>200 monedas</b><span>Para empezar: 2 revividas y un corazón.</span></div>
@@ -577,6 +737,54 @@
     </div>
     <div style="font-size:10.5px;color:var(--dim);opacity:.8;margin-bottom:10px;">Pago seguro procesado por Stripe. No guardamos datos de tu tarjeta.</div>
     <button class="btn secondary" id="shop-close">← Volver</button>
+  </div>
+
+  <!-- Tutorial animado (Power-Ups y VS Robot) -->
+  <div class="overlay center hidden" id="tutorial-screen">
+    <h1 id="tut-title" style="font-size:clamp(18px,5vw,26px);">CÓMO SE JUEGA</h1>
+    <div id="tut-frame-wrap"><iframe id="tut-frame" title="Tutorial" src="about:blank" sandbox="allow-scripts" scrolling="no"></iframe></div>
+    <div id="tut-countdown" style="display:none;"></div>
+    <div id="tut-btnrow">
+      <button class="btn secondary" id="tut-back">← Menú</button>
+      <button class="btn secondary" id="tut-shop">🛒 Tienda</button>
+      <button class="btn" id="tut-play">▶ JUGAR</button>
+    </div>
+    <div id="tut-skip-hint">Podés tocar JUGAR en cualquier momento para saltar.</div>
+  </div>
+
+  <!-- Loadout previo al duelo VS Robot: escudo / bomba rayo -->
+  <div class="overlay center hidden" id="duel-loadout">
+    <h1 style="font-size:clamp(24px,7vw,34px);">TU EQUIPO ⚔️</h1>
+    <div class="tagline">Estos son tus poderes. Los de arriba se recargan con <b>combos</b>; los de abajo se compran con monedas (precio de tienda).</div>
+    <div id="loadout-coins" style="font-size:20px;font-weight:900;color:var(--gold);margin-bottom:6px;">🪙 0</div>
+    <div class="loadout-sec">— Entrás con estos (se recargan con combos) —</div>
+    <div class="loadout-item"><span class="ic">🧊</span><div class="info"><b>Hielo</b><span class="own">Se carga con combos</span></div><span class="qtag">×1</span></div>
+    <div class="loadout-item"><span class="ic">💥</span><div class="info"><b>Explosión</b><span class="own">Se carga con combos</span></div><span class="qtag">×1</span></div>
+    <div class="loadout-item"><span class="ic">🌪️</span><div class="info"><b>Tormenta</b><span class="own">Se carga con combos</span></div><span class="qtag">×1</span></div>
+    <div class="loadout-sec">— Se compran con monedas —</div>
+    <div class="loadout-item" id="ld-shield">
+      <span class="ic">⚪</span>
+      <div class="info"><b>Escudo</b><span class="own"></span></div>
+      <button class="buy" data-buy="loadout_shield">50 🪙</button>
+    </div>
+    <div class="loadout-item" id="ld-raybomb">
+      <span class="ic">⚡</span>
+      <div class="info"><b>Bomba Rayo</b><span class="own"></span></div>
+      <button class="buy" data-buy="loadout_raybomb">120 🪙</button>
+    </div>
+    <div id="loadout-status"></div>
+    <button class="btn" id="loadout-ready" style="max-width:280px;">▶ LISTO</button>
+    <button class="btn secondary" id="loadout-back">← Menú</button>
+  </div>
+
+  <!-- Loadout previo a Power-Ups: activar escudo o omitir -->
+  <div class="overlay center hidden" id="shield-screen">
+    <h1 style="font-size:clamp(28px,7vw,40px);">🛡 ¿ESCUDO?</h1>
+    <div class="tagline">La <b>bola blanca</b> es un escudo de 7 segundos: nada te afecta. Se consigue con monedas <b>🛒 en la tienda</b> (máximo 2). Actívalo al empezar tu partida.</div>
+    <div id="shield-have" style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:12px;min-height:20px;"></div>
+    <button class="btn" id="shield-use" style="max-width:300px;background:linear-gradient(90deg,#eef2ff,#c8d0ff);box-shadow:0 5px 0 #7a82b8;color:#14103a;">🛡 EMPEZAR CON ESCUDO</button>
+    <div id="shield-shop-hint" class="hidden" style="font-size:12px;color:var(--dim);margin:6px 0 4px;">¿Sin escudos? Consíguelos en la 🛒 Tienda del menú.</div>
+    <button class="btn secondary" id="shield-skip" style="max-width:300px;">OMITIR</button>
   </div>
 
   <!-- Registro de nombre (primera vez) -->
@@ -710,16 +918,19 @@
   // ---------- Dificultad ----------
   function cfg(){
     const l = level;
-    return {
+    const c = {
       spawnMs: Math.max(950 - l*70, 380),
       lifeMs:  Math.max(1700 - l*110, 750),
       trapChance: Math.min(0.08 + l*0.035, 0.32),
       goldChance: 0.10,
       iceChance: 0.035,
       fireChance: 0.03,
-      whiteChance: 0.03,
+      stormChance: 0.03,
       maxSimul: Math.min(1 + Math.floor(l/2), 4)
     };
+    // 🕐 Cámara lenta (poder de tienda): todo más pausado
+    if(slowActive()){ c.spawnMs=Math.round(c.spawnMs*1.6); c.lifeMs=Math.round(c.lifeMs*1.9); }
+    return c;
   }
   function shieldActive(){ return Date.now() < shieldUntil; }
 
@@ -789,7 +1000,7 @@
     return cells.map((c,i)=>i).filter(i=>!orbs.has(i));
   }
   function iconFor(type){
-    return {trap:'💀', gold:'⭐', ice:'❄️', fire:'🔥', white:'🛡️', target:''}[type] || '';
+    return {trap:'💀', gold:'⭐', ice:'❄️', fire:'🔥', white:'🛡️', storm:'🌪️', target:''}[type] || '';
   }
   function spawnAt(idx, type, opts){
     opts = opts || {};
@@ -830,7 +1041,7 @@
         else if(mode==='power'){
           if(r < (acc += c.iceChance)) type='ice';
           else if(r < (acc += c.fireChance)) type='fire';
-          else if(r < (acc += c.whiteChance)) type='white';
+          else if(r < (acc += c.stormChance)) type='storm';
         }
         spawnAt(idx, type);
       }
@@ -899,7 +1110,7 @@
     announce('🔥 ¡EXPLOSIÓN! 🔥','var(--fire)');
     burst(fromCell,'var(--fire)',18);
     let gained=0;
-    const mult = frenzy?2:1;
+    const mult = (frenzy?2:1)*(doubleActive()?2:1); // ✨ doble puntos de tienda
     orbs.forEach((o,i)=>{
       if(o.type==='target'){ gained += 10*combo*mult; hits++; burst(cells[i],'var(--cyan)',6); }
       else if(o.type==='gold'){ gained += 50*combo*mult; hits++; burst(cells[i],'var(--gold)',8); }
@@ -913,6 +1124,56 @@
       checkLevel();
       if(comboProgress>=100 && !frenzy) startFrenzy();
     }
+    renderHUD();
+  }
+  function activateStorm(fromCell){
+    // Silbido de viento ascendente
+    [220,380,560,820,1150].forEach((f,i)=>setTimeout(()=>beep(f,.16,'sine',.16), i*70));
+    setTimeout(()=>beep(180,.4,'sawtooth',.18), 380);
+    announce('🌪️ ¡TORMENTA! 🌪️','var(--magenta)');
+    burst(fromCell,'var(--magenta)',18);
+    // Vórtice: el tablero se tuerce y el fondo se tiñe
+    grid.classList.remove('storming'); void grid.offsetWidth;
+    grid.classList.add('storming');
+    document.body.classList.add('storm-bg');
+    setTimeout(()=>{ grid.classList.remove('storming'); document.body.classList.remove('storm-bg'); }, 950);
+    // Ráfagas de viento cruzando el tablero
+    const gr=grid.getBoundingClientRect(), ar=app.getBoundingClientRect();
+    for(let k=0;k<6;k++){
+      setTimeout(()=>{
+        const s=document.createElement('div');
+        s.className='storm-streak';
+        s.style.top=(gr.top-ar.top + Math.random()*gr.height)+'px';
+        app.appendChild(s);
+        setTimeout(()=>s.remove(),600);
+      }, k*90);
+    }
+    // Las trampas salen VOLANDO con giro (y hojas magenta por el aire)
+    Array.from(orbs.entries()).forEach(([i,o],k)=>{
+      if(o.type!=='trap') return;
+      if(o.timeout) clearTimeout(o.timeout);
+      orbs.delete(i);
+      const el=o.el;
+      setTimeout(()=>{
+        el.classList.add('storm-out');
+        burst(cells[i],'var(--magenta)',6);
+        for(let n=0;n<3;n++){
+          const leaf=document.createElement('div');
+          leaf.className='storm-leaf';
+          leaf.textContent='🌪️';
+          leaf.style.left='40%'; leaf.style.top='40%';
+          const ang=-Math.PI/2 + (Math.random()-.5)*1.6, d=50+Math.random()*70;
+          leaf.style.setProperty('--lx', (Math.cos(ang)*d)+'px');
+          leaf.style.setProperty('--ly', (Math.sin(ang)*d)+'px');
+          cells[i].appendChild(leaf);
+          setTimeout(()=>leaf.remove(),850);
+        }
+        setTimeout(()=>el.remove(),580);
+      }, 120+k*90);
+    });
+    // Recompensa: barra llena → FRENESÍ x2
+    comboProgress=100;
+    if(!frenzy) setTimeout(()=>{ if(running && !frenzy) startFrenzy(); }, 500);
     renderHUD();
   }
   function activateShield(fromCell){
@@ -1420,6 +1681,7 @@
     // Power-ups
     if(o.type==='ice'){ removeOrb(idx); return activateIce(cell); }
     if(o.type==='fire'){ removeOrb(idx); return activateFire(cell); }
+    if(o.type==='storm'){ removeOrb(idx); return activateStorm(cell); }
     if(o.type==='white'){ removeOrb(idx); return activateShield(cell); }
 
     if(o.type==='trap'){
@@ -1465,7 +1727,7 @@
 
     removeOrb(idx);
     hits++;
-    const mult = frenzy?2:1;
+    const mult = (frenzy?2:1)*(doubleActive()?2:1); // ✨ doble puntos de tienda
     let pts;
     if(o.type==='gold'){
       pts = 50*combo*mult;
@@ -1528,6 +1790,9 @@
     endFrenzy();
     clearTimeout(spawnTimer); clearTimeout(frenzyTimer); clearTimeout(freezeTimer);
     stopDuelUI();
+    // Efectos de poderes de tienda
+    slowUntil=0; doubleUntil=0;
+    document.body.classList.remove('slowmo-bg','double-bg');
     clearBoard();
     renderHUD();
   }
@@ -1537,6 +1802,7 @@
     running=true;
     startScreen.classList.add('hidden');
     overScreen.classList.add('hidden');
+    showSoloRow((mode==='classic'||mode==='power') && !!player);
     if(mode==='rhythm'){
       announce('🎵 ¡SIENTE EL RITMO! 🎵','var(--magenta)');
       if(rz.preset) startPresetBeats();
@@ -1547,24 +1813,22 @@
       duelSt.timeLeft=Math.ceil(duelSt.duration/1000);
       duelSt.lastSent=-1;
       livesLabel.textContent='Tiempo';
-      duelBar.classList.remove('hidden');
+      showDuelBars(true);
       renderHUD();
       duelSpawn();
       duelSt.ticker=setInterval(duelTick,250);
     }else{
       announce(mode==='power' ? '⚡ ¡POWER-UPS! ⚡' : '¡A JUGAR! ⚡', mode==='power'?'var(--gold)':'var(--cyan)');
-      // Escudo de tienda: se consume uno al iniciar partida Power
-      if(mode==='power' && wallet.shields>0){
-        wallet.shields--;
-        renderWallet();
+      // Escudo elegido en la pantalla previa (ver startPowerFlow)
+      if(mode==='power' && pendingShield){
+        pendingShield=false;
         shieldUntil=Date.now()+7000;
         clearInterval(shieldTicker);
         shieldTicker=setInterval(()=>{
           renderHUD();
           if(!shieldActive()){ clearInterval(shieldTicker); renderHUD(); }
         },250);
-        announce('🛡 ¡ESCUDO DE TIENDA!','var(--white)');
-        shopSpend('use_shield'); // el servidor descuenta; la respuesta re-sincroniza
+        announce('🛡 ¡ESCUDO ACTIVO!','var(--white)');
       }
       spawn();
     }
@@ -1572,6 +1836,7 @@
   function gameOver(){
     running=false;
     resetQuitBtn();
+    showSoloRow(false);
     stopRhythm();
     clearTimeout(spawnTimer); clearTimeout(frenzyTimer); clearTimeout(freezeTimer);
     clearInterval(shieldTicker); shieldUntil=0;
@@ -1620,9 +1885,8 @@
     lastResult={score, level, comboBest, acc, mode, medal};
     submitScore();
     // Revivir: solo en modos solo, muerto de verdad, con saldo y una vez por partida
-    reviveBtn.classList.toggle('hidden',
-      !((mode==='classic'||mode==='power') && lives<=0 && player && !revivedThisRun && wallet.coins>=REVIVE_COST));
     overScreen.classList.remove('hidden');
+    startReviveOffer((mode==='classic'||mode==='power') && lives<=0 && player && !revivedThisRun && wallet.coins>=REVIVE_COST);
   }
 
   // ---------- Compartir ----------
@@ -1762,7 +2026,7 @@
         const li=document.createElement('li');
         if(player && row.name===player.name) li.classList.add('me');
         const rk=document.createElement('span'); rk.className='rk'; rk.textContent=(i+1)+'.';
-        const nm=document.createElement('span'); nm.className='nm'; nm.textContent=row.name;
+        const nm=document.createElement('span'); nm.className='nm'; nm.textContent=(row.star?'⭐ ':'')+row.name;
         const pt=document.createElement('span'); pt.className='pt'; pt.textContent=Number(row.best).toLocaleString('es-MX');
         li.append(rk,nm,pt);
         lbList.appendChild(li);
@@ -1790,7 +2054,7 @@
   loadLeaderboard();
 
   // ---------- Tienda y monedero ----------
-  const wallet={coins:0, heartToday:false, shields:0};
+  const wallet={coins:0, heartToday:false, shields:0, raybombs:0, shieldMax:2, badgeStar:false, dailyAvailable:false, starterAvailable:true};
   const walletRow=document.getElementById('wallet-row');
   const coinsChip=document.getElementById('coins-chip');
   const shopScreen=document.getElementById('shop-screen');
@@ -1798,19 +2062,95 @@
   const reviveBtn=document.getElementById('revive-btn');
   const REVIVE_COST=80;
   let revivedThisRun=false;
+  let reviveTimer=null;
+  // Oferta de revivir con URGENCIA: cuenta regresiva de 5s y desaparece
+  function startReviveOffer(canRevive){
+    clearInterval(reviveTimer);
+    reviveBtn.classList.toggle('hidden', !canRevive);
+    if(!canRevive) return;
+    let n=5;
+    reviveBtn.textContent='❤️ REVIVIR (80 🪙) · '+n;
+    reviveTimer=setInterval(()=>{
+      n--;
+      if(n<=0 || overScreen.classList.contains('hidden')){
+        clearInterval(reviveTimer);
+        reviveBtn.classList.add('hidden');
+        reviveBtn.textContent='❤️ REVIVIR (80 🪙)';
+      }else{
+        reviveBtn.textContent='❤️ REVIVIR (80 🪙) · '+n;
+        beep(300+n*40,.05,'sine',.08);
+      }
+    },1000);
+  }
+  let pendingShield=false; // escudo elegido en la pantalla previa de Power-Ups
 
   function renderWallet(){
     const txt='🪙 '+wallet.coins.toLocaleString('es-MX');
     coinsChip.textContent=txt
       +(wallet.heartToday?' · 💛':'')
-      +(wallet.shields?' · 🛡×'+wallet.shields:'');
+      +(wallet.shields?' · ⚪×'+wallet.shields:'')
+      +(wallet.raybombs?' · ⚡×'+wallet.raybombs:'');
     document.getElementById('shop-coins').textContent=txt;
     walletRow.classList.toggle('hidden', !player);
+    // Estado de la tienda: cuántos tienes y tope alcanzado
+    const shOwned=document.getElementById('shield-owned');
+    const rbOwned=document.getElementById('raybomb-owned');
+    if(shOwned) shOwned.textContent=wallet.shields?('· tienes '+wallet.shields+'/'+wallet.shieldMax+' '):'';
+    if(rbOwned) rbOwned.textContent=wallet.raybombs?('· tienes '+wallet.raybombs+'/1 '):'';
+    const shBtn=shopScreen.querySelector('button[data-item="shield"]');
+    const rbBtn=shopScreen.querySelector('button[data-item="raybomb"]');
+    if(shBtn){ const m=wallet.shields>=wallet.shieldMax; shBtn.disabled=m; shBtn.textContent=m?'MÁX ✓':'50 🪙'; }
+    if(rbBtn){ const m=wallet.raybombs>=1; rbBtn.disabled=m; rbBtn.textContent=m?'MÁX ✓':'120 🪙'; }
+    // Compras únicas: slot extra e insignia
+    const slBtn=shopScreen.querySelector('button[data-item="shield_slot"]');
+    const bgBtn=shopScreen.querySelector('button[data-item="badge_star"]');
+    if(slBtn){ const o=wallet.shieldMax>=3; slBtn.disabled=o; slBtn.textContent=o?'TUYO ✓':'500 🪙'; }
+    if(bgBtn){ bgBtn.disabled=wallet.badgeStar; bgBtn.textContent=wallet.badgeStar?'TUYA ✓':'200 🪙'; }
+    // Pack de inicio: solo si nunca lo compró
+    const st=document.getElementById('starter-item');
+    if(st) st.classList.toggle('hidden', !wallet.starterAvailable);
+    // Regalo diario
+    const dc=document.getElementById('daily-claim');
+    if(dc) dc.classList.toggle('hidden', !player || !wallet.dailyAvailable);
+    // Oferta del día
+    const dealNames={shield:'⚪ Escudo', heart_day:'💛 Corazón extra hoy', slowmo:'🕐 Cámara lenta', raybomb:'⚡ Bomba Rayo', magnet:'🧲 Imán', double:'✨ Doble puntos'};
+    const dealDesc=document.getElementById('deal-desc');
+    const dealBtn=document.getElementById('deal-btn');
+    if(wallet.deal && dealDesc && dealBtn){
+      dealDesc.textContent=(dealNames[wallet.deal.item]||wallet.deal.item)+' — hoy a '+wallet.deal.cost+' 🪙 (normal '+wallet.deal.normal+' 🪙)';
+      dealBtn.textContent=wallet.deal.cost+' 🪙';
+    }
+    // Poderes de modos solo (máx. 3)
+    const soloCosts={slowmo:40, magnet:50, double:60};
+    Object.keys(soloCosts).forEach(k=>{
+      const own=document.getElementById(k+'-owned');
+      if(own) own.textContent=(wallet[k]|0)?('· tienes '+wallet[k]+'/3 '):'';
+      const b=shopScreen.querySelector('button[data-item="'+k+'"]');
+      if(b){ const m=(wallet[k]|0)>=3; b.disabled=m; b.textContent=m?'MÁX ✓':soloCosts[k]+' 🪙'; }
+    });
+    // Emotes (compra única)
+    const emBtn=shopScreen.querySelector('button[data-item="emotes"]');
+    if(emBtn){ emBtn.disabled=wallet.emotes; emBtn.textContent=wallet.emotes?'TUYO ✓':'100 🪙'; }
+    // Temas: comprar / usar / en uso + revalidar el aplicado
+    renderThemeButtons();
+    applyTheme(currentTheme());
+    renderSoloRow();
   }
   function applyWallet(d){
     wallet.coins=d.coins|0;
     wallet.heartToday=!!d.heartToday;
     wallet.shields=d.shields|0;
+    wallet.raybombs=d.raybombs|0;
+    wallet.shieldMax=(d.shieldMax|0)||2;
+    wallet.badgeStar=!!d.badgeStar;
+    wallet.dailyAvailable=!!d.dailyAvailable;
+    wallet.starterAvailable=!!d.starterAvailable;
+    wallet.emotes=!!d.emotes;
+    wallet.themes=d.themes||{lava:false,ocean:false,retro:false};
+    wallet.slowmo=d.slowmo|0;
+    wallet.magnet=d.magnet|0;
+    wallet.double=d.double|0;
+    wallet.deal=d.deal||null;
     renderWallet();
   }
   async function loadWallet(){
@@ -1833,21 +2173,58 @@
       return {error:d.error||'error'};
     }catch(e){ return {error:'offline'}; }
   }
-  document.getElementById('shop-open').addEventListener('click', ()=>{
+  // Abrir la tienda desde CUALQUIER lugar: si no hay nombre, pide registro
+  function openShop(){
+    if(!player){
+      startScreen.classList.remove('hidden');
+      shopScreen.classList.add('hidden');
+      nameScreen.classList.remove('hidden');
+      nameError.textContent='Registrá tu nombre para entrar a la tienda.';
+      return;
+    }
     shopStatus.textContent='';
     shopScreen.classList.remove('hidden');
     loadWallet();
+  }
+  document.getElementById('shop-open').addEventListener('click', openShop);
+  // Regalo diario: +5 monedas por entrar
+  document.getElementById('daily-claim').addEventListener('click', async function(){
+    if(!player) return;
+    this.disabled=true;
+    try{
+      const r=await fetch('/api/shop/daily',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({playerId:player.id})});
+      const d=await r.json().catch(()=>({}));
+      if(r.ok){ applyWallet(d); announce('🎁 ¡+5 MONEDAS!','var(--lime)'); goldSound(); }
+      else renderWallet();
+    }catch(e){}
+    this.disabled=false;
   });
-  document.getElementById('shop-close').addEventListener('click', ()=>shopScreen.classList.add('hidden'));
+  document.getElementById('shop-close').addEventListener('click', ()=>{
+    shopScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden'); // siempre vuelve al menú (evita quedar en un limbo)
+  });
   shopScreen.querySelectorAll('button[data-item]').forEach(b=>{
     b.addEventListener('click', async ()=>{
+      // Tema ya comprado: el botón pasa a equipar
+      const th=b.dataset.theme;
+      if(th && wallet.themes && wallet.themes[th]){
+        setTheme(th);
+        shopStatus.textContent='✅ Tema aplicado';
+        return;
+      }
       b.disabled=true;
       const res=await shopSpend(b.dataset.item);
       b.disabled=false;
+      renderWallet(); // reaplica topes y estados
       if(res.error){
         const msgs={
           insufficient_coins:'No te alcanzan las monedas 🪙',
           already_active:'Ya tienes el corazón de hoy 💛',
+          max_shields:'Ya tienes el máximo de escudos ⚪',
+          max_raybombs:'Solo puedes tener 1 bomba rayo ⚡',
+          max_items:'Ya tienes el máximo (3) de ese poder',
+          already_owned:'Ya lo tienes ✓',
+          already_claimed:'Ya reclamaste el regalo de hoy 🎁',
           offline:'Sin conexión con el servidor.',
           not_registered:'Regístrate primero.'
         };
@@ -1855,6 +2232,7 @@
       }else{
         shopStatus.textContent='✅ ¡Listo!';
         goldSound();
+        if(th) setTheme(th); // tema recién comprado: se aplica al instante
       }
     });
   });
@@ -1896,6 +2274,8 @@
   })();
   // Revivir en la partida actual
   reviveBtn.addEventListener('click', async ()=>{
+    clearInterval(reviveTimer);
+    reviveBtn.textContent='❤️ REVIVIR (80 🪙)';
     reviveBtn.disabled=true;
     const res=await shopSpend('revive');
     reviveBtn.disabled=false;
@@ -1913,10 +2293,102 @@
     renderHUD();
     spawn();
   });
+  // ---------- Temas de tablero ----------
+  function currentTheme(){ try{ return localStorage.getItem('nr-theme')||'default'; }catch(e){ return 'default'; } }
+  function applyTheme(t){
+    document.body.classList.remove('theme-lava','theme-ocean','theme-retro');
+    if(t!=='default' && wallet.themes && wallet.themes[t]) document.body.classList.add('theme-'+t);
+  }
+  function setTheme(t){
+    try{ localStorage.setItem('nr-theme', t); }catch(e){}
+    applyTheme(t);
+    renderThemeButtons();
+  }
+  function renderThemeButtons(){
+    const cur=currentTheme();
+    shopScreen.querySelectorAll('button[data-theme]').forEach(b=>{
+      const t=b.dataset.theme;
+      if(t==='default'){ b.textContent = cur==='default' ? 'EN USO' : 'USAR'; b.disabled = cur==='default'; return; }
+      const owned=wallet.themes && wallet.themes[t];
+      if(owned){ const inUse=cur===t; b.textContent=inUse?'EN USO':'USAR'; b.disabled=inUse; }
+      else { b.textContent='250 🪙'; b.disabled=false; }
+    });
+  }
+  document.getElementById('theme-default-btn').addEventListener('click',()=>{
+    setTheme('default');
+    shopStatus.textContent='✅ Tema aplicado';
+  });
+
+  // ---------- Poderes de tienda para modos SOLO ----------
+  const soloRow=document.getElementById('solo-row');
+  let slowUntil=0, doubleUntil=0, slowFxTimer=null, doubleFxTimer=null;
+  function slowActive(){ return Date.now()<slowUntil; }
+  function doubleActive(){ return Date.now()<doubleUntil; }
+  function showSoloRow(on){ soloRow.classList.toggle('on', !!on); renderSoloRow(); }
+  function renderSoloRow(){
+    soloRow.querySelectorAll('button[data-solo]').forEach(b=>{
+      const k=b.dataset.solo, q=wallet[k]|0;
+      b.querySelector('.qty').textContent='×'+q;
+      b.disabled = !running || q<1 || (k==='slowmo'&&slowActive()) || (k==='double'&&doubleActive());
+    });
+  }
+  soloRow.querySelectorAll('button[data-solo]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const k=b.dataset.solo;
+      if(!running || (mode!=='classic'&&mode!=='power') || (wallet[k]|0)<1) return;
+      if(k==='slowmo'&&slowActive()) return;
+      if(k==='double'&&doubleActive()) return;
+      wallet[k]--; renderWallet();
+      shopSpend('use_'+k); // el server descuenta y re-sincroniza
+      if(k==='slowmo'){
+        slowUntil=Date.now()+6000;
+        document.body.classList.add('slowmo-bg');
+        announce('🕐 ¡CÁMARA LENTA!','var(--ice)');
+        iceSound();
+        clearTimeout(slowFxTimer);
+        slowFxTimer=setTimeout(()=>{ document.body.classList.remove('slowmo-bg'); renderSoloRow(); },6000);
+      }else if(k==='magnet'){
+        announce('🧲 ¡IMÁN!','var(--cyan)');
+        goldSound();
+        let taken=0;
+        const mult=(frenzy?2:1)*(doubleActive()?2:1);
+        Array.from(orbs.entries()).forEach(([i,o])=>{
+          if(taken>=3 || (o.type!=='target'&&o.type!=='gold')) return;
+          taken++;
+          const pts=(o.type==='gold'?50:10)*combo*mult;
+          score+=pts; hits++; combo++;
+          comboBest=Math.max(comboBest,combo);
+          burst(cells[i], o.type==='gold'?'var(--gold)':'var(--cyan)', 8);
+          floatPts(cells[i],'+'+pts, o.type==='gold'?'var(--gold)':'var(--cyan)');
+          comboProgress=Math.min(comboProgress+(o.type==='gold'?30:12),100);
+          removeOrb(i);
+        });
+        if(comboProgress>=100 && !frenzy) startFrenzy();
+        checkLevel();
+        renderHUD();
+      }else if(k==='double'){
+        doubleUntil=Date.now()+10000;
+        document.body.classList.add('double-bg');
+        announce('✨ ¡DOBLE PUNTOS 10s!','var(--gold)');
+        levelSound();
+        clearTimeout(doubleFxTimer);
+        doubleFxTimer=setTimeout(()=>{ document.body.classList.remove('double-bg'); renderSoloRow(); },10000);
+      }
+      renderSoloRow();
+    });
+  });
+
   loadWallet();
 
   // ---------- Duelo online 1v1 ----------
   const duelBar=document.getElementById('duel-bar');
+  const sabRow=document.getElementById('sab-row');
+  const emoteRowEl=document.getElementById('emote-row');
+  function showDuelBars(on){
+    duelBar.classList.toggle('hidden', !on);
+    sabRow.classList.toggle('hidden', !on);
+    emoteRowEl.classList.toggle('on', !!on && !!wallet.emotes); // burlas en online Y vs robot
+  }
   const duelLobby=document.getElementById('duel-lobby');
   const duelOver=document.getElementById('duel-over');
   const lobbyCode=document.getElementById('lobby-code');
@@ -1939,11 +2411,23 @@
   const duelSt={
     rng:null, oppName:'', oppScore:0, energy:0, powerProgress:0,
     powers:{freeze:0,bombs:0,storm:0}, locked:false, oppLeft:false,
-    vsBot:false, duration:65000, startTime:0, timeLeft:65, lastSent:-1,
+    vsBot:false, duration:90000, startTime:0, timeLeft:90, lastSent:-1,
+    tug:50, prevMy:0, prevOpp:0,
     spawnTimer:null, ticker:null, cd:null, resultTimer:null,
     fxFreeze:null, fxDark:null, fxMirror:null,
     incoming:null, incomingTimer:null, incomingTicker:null
   };
+
+  // Barra tug-of-war (cliente): mismo cálculo que el servidor.
+  // Online la barra la manda el servidor; VS Robot se calcula acá.
+  function tugMoveClient(t, pts, mine){
+    if(mine){ const band=Math.max(0.4,1.3-t/100); return Math.min(100,t+pts*0.06*band); }
+    const band=Math.max(0.4,1.3-(100-t)/100); return Math.max(0,t-pts*0.06*band);
+  }
+  function updateTugBar(){
+    const f=document.getElementById('adv-fill');
+    if(f) f.style.width=duelSt.tug+'%';
+  }
 
   // PRNG determinista: misma semilla ⇒ misma secuencia en ambos jugadores
   function mulberry32(a){
@@ -2003,7 +2487,13 @@
         break;
       case 'matched': beginDuel(m); break;
       case 'opp_score': duelSt.oppScore=m.value; renderDuelHUD(); break;
-      case 'sabotaged': queueIncomingAttack(m.kind, m.from); break;
+      case 'tug': duelSt.tug=m.me; updateTugBar(); break;
+      case 'opp_shield': showOppShield(m.from, m.duration); break;
+      case 'emote': showEmoteFly(m.e, m.from); break;
+      case 'sabotaged':
+        if(m.kind==='raybomb') applySabotage('raybomb', m.from); // no se puede contrarrestar
+        else queueIncomingAttack(m.kind, m.from);
+        break;
       case 'rematch_wait':
         if(!duelOver.classList.contains('hidden')) rematchStatusEl.textContent='⚔️ El rival quiere revancha. ¡Acepta!';
         break;
@@ -2028,7 +2518,8 @@
     grantStartingPowers(duelSt.powers);
     duelSt.locked=false;
     duelSt.oppLeft=false;
-    duelSt.duration=m.duration||65000;
+    duelSt.duration=m.duration||90000;
+    duelSt.tug=50; duelSt.prevMy=0; duelSt.prevOpp=0;
     rematchBtn.disabled=false;
     rematchStatusEl.textContent='';
     duelLobby.classList.add('hidden');
@@ -2037,7 +2528,7 @@
     overScreen.classList.add('hidden');
     mode='duel';
     reset();
-    duelBar.classList.remove('hidden');
+    showDuelBars(true);
     renderDuelHUD();
     let n=3;
     clearTimeout(duelSt.cd);
@@ -2093,9 +2584,19 @@
       duelWS.send(JSON.stringify({t:'score', value:score}));
       duelSt.lastSent=score;
     }
+    // VS Robot: la barra se calcula localmente y puede terminar la partida antes
+    if(duelSt.vsBot){
+      const dMy=score-duelSt.prevMy;
+      if(dMy>0){ duelSt.tug=tugMoveClient(duelSt.tug, dMy, true); duelSt.prevMy=score; }
+      const dOpp=botRT.score-duelSt.prevOpp;
+      if(dOpp>0){ duelSt.tug=tugMoveClient(duelSt.tug, dOpp, false); duelSt.prevOpp=botRT.score; }
+      updateTugBar();
+      if(duelSt.tug>=100) return duelEnd('win');
+      if(duelSt.tug<=0) return duelEnd('lose');
+    }
     if(left<=0) duelEnd();
   }
-  function duelEnd(){
+  function duelEnd(tugOutcome){
     if(!running || mode!=='duel') return;
     running=false;
     clearTimeout(duelSt.spawnTimer);
@@ -2103,18 +2604,22 @@
     clearBoard();
     endFrenzy();
     resetQuitBtn();
-    announce('⏱ ¡TIEMPO!','var(--gold)');
+    const filled=(tugOutcome==='win'||tugOutcome==='lose');
+    announce(filled ? (tugOutcome==='win'?'🏆 ¡LLENASTE LA BARRA!':'💥 ¡TE LLENARON LA BARRA!') : '⏱ ¡TIEMPO!',
+      (filled&&tugOutcome==='lose') ? 'var(--red)' : 'var(--gold)');
     if(duelSt.vsBot){
-      const outcome = score>botRT.score ? 'win' : (score<botRT.score ? 'lose' : 'tie');
+      // Por barra (fin anticipado) o, al tope de tiempo, por quién va adelante
+      const outcome = filled ? tugOutcome : (duelSt.tug>50?'win':(duelSt.tug<50?'lose':'tie'));
       finishBotMatch(outcome);
-      showDuelResult({you:score, opp:botRT.score, outcome});
+      showDuelResult({you:score, opp:botRT.score, outcome, reason: filled?'filled':'time'});
       return;
     }
+    // Online: reporto mi final; el servidor decide el ganador por la barra
     wsSend({t:'final', score});
     clearTimeout(duelSt.resultTimer);
     duelSt.resultTimer=setTimeout(()=>{
       showDuelResult({you:score, opp:duelSt.oppScore,
-        outcome: score>duelSt.oppScore?'win':(score<duelSt.oppScore?'lose':'tie'),
+        outcome: duelSt.tug>50?'win':(duelSt.tug<50?'lose':'tie'),
         local:true});
     },5000);
   }
@@ -2129,7 +2634,8 @@
     else { title.textContent='🤝 EMPATE'; title.style.color='var(--dim)'; }
     sub.textContent = m.forfeit ? 'El rival abandonó el duelo'
       : (m.disconnected ? 'Se perdió la conexión con el servidor'
-      : (m.local ? 'Resultado local (sin confirmación del servidor)' : 'vs '+duelSt.oppName));
+      : (m.reason==='filled' ? (m.outcome==='win'?'¡Llenaste la barra!':'Te llenaron la barra')
+      : (m.local ? 'Resultado local (sin confirmación del servidor)' : 'vs '+duelSt.oppName)));
     document.getElementById('d-my').textContent=m.you;
     document.getElementById('d-opp').textContent=m.opp;
     document.getElementById('d-opp-label').textContent=duelSt.oppName||'Rival';
@@ -2189,6 +2695,10 @@
     button.disabled=amount<1;
     button.querySelector('span').textContent=meta.icon+' ×'+amount;
     button.querySelector('small').textContent=amount ? 'ANULAR' : 'SIN ENERGÍA';
+    // También podés contrarrestar con el escudo (si tenés y no está activo)
+    const sBtn=document.getElementById('counter-shield');
+    sBtn.disabled = !(wallet.shields>0) || shieldActive();
+    sBtn.querySelector('span').textContent='⚪ ×'+wallet.shields;
   }
   function counterIncomingAttack(){
     if(!duelSt.incoming) return;
@@ -2212,6 +2722,28 @@
 
   function applySabotage(kind, from){
     if(!running || mode!=='duel') return;
+    // Bomba rayo: eléctrica y azul. Atraviesa el escudo y lo ROMPE.
+    if(kind==='raybomb'){
+      if(shieldActive()){
+        shieldUntil=0; grid.classList.remove('shielded');
+        announce('⚡ ¡'+from+' te ROMPIÓ el escudo!','#7fd0ff');
+        shake(); badSound(); burst(grid,'#7fd0ff',16);
+      }else{
+        announce('⚡ ¡'+from+' te electrocutó!','#7fd0ff');
+        shake(); badSound(); burst(grid,'#7fd0ff',12);
+        duelSt.locked=true; grid.classList.add('sab-locked');
+        clearTimeout(duelSt.fxFreeze);
+        duelSt.fxFreeze=setTimeout(()=>{ duelSt.locked=false; grid.classList.remove('sab-locked'); },1500);
+      }
+      renderDuelHUD();
+      return;
+    }
+    // El escudo (de tienda) absorbe cualquier sabotaje normal
+    if(shieldActive()){
+      announce('🛡 ¡ESCUDO BLOQUEÓ EL ATAQUE!','var(--white)');
+      shieldSound();
+      return;
+    }
     shake();
     if(kind==='freeze'){
       announce('🧊 ¡'+from+' te congeló!','var(--ice)');
@@ -2263,15 +2795,25 @@
   function renderDuelHUD(){
     document.getElementById('duel-me').textContent='TÚ: '+score;
     document.getElementById('duel-opp').textContent=(duelSt.oppName||'RIVAL').toUpperCase()+': '+duelSt.oppScore;
-    const total=score+duelSt.oppScore;
-    document.getElementById('adv-fill').style.width=(total? Math.round(score/total*100) : 50)+'%';
+    document.getElementById('adv-fill').style.width=duelSt.tug+'%';
     document.getElementById('power-label').textContent='⚡ '+duelSt.energy;
     document.getElementById('power-fill').style.width=duelSt.powerProgress+'%';
-    document.querySelectorAll('.sab').forEach(b=>{
+    document.querySelectorAll('.sab[data-kind]').forEach(b=>{
       const amount=duelSt.powers[b.dataset.kind];
       b.querySelector('.qty').textContent='×'+amount;
       b.disabled = !running || mode!=='duel' || amount<1;
     });
+    // Poderes de tienda: solo se muestran si los tienes comprados
+    const shBtn=document.getElementById('sab-shield');
+    const rbBtn=document.getElementById('sab-raybomb');
+    if(shBtn){
+      shBtn.querySelector('.qty').textContent='×'+wallet.shields;
+      shBtn.disabled = !running || mode!=='duel' || wallet.shields<1 || shieldActive();
+    }
+    if(rbBtn){
+      rbBtn.querySelector('.qty').textContent='×'+wallet.raybombs;
+      rbBtn.disabled = !running || mode!=='duel' || wallet.raybombs<1;
+    }
   }
   function stopDuelUI(){
     clearTimeout(duelSt.spawnTimer);
@@ -2283,9 +2825,11 @@
     clearTimeout(botRT.timer);
     clearTimeout(botRT.sabPending);
     clearIncomingAttack();
+    hideOppShield();
     duelSt.locked=false;
-    grid.classList.remove('sab-locked','sab-dark','mirrored');
-    duelBar.classList.add('hidden');
+    shieldUntil=0;
+    grid.classList.remove('sab-locked','sab-dark','mirrored','shielded');
+    showDuelBars(false);
     livesLabel.textContent='Vidas';
   }
 
@@ -2344,6 +2888,74 @@
       announce(SAB_META[kind].icon+' ¡ENVIADO!','var(--gold)');
       renderDuelHUD();
     });
+  });
+
+  // Poderes de tienda dentro del duelo: Escudo y Bomba Rayo
+  const sabShieldBtn=document.getElementById('sab-shield');
+  const sabRayBtn=document.getElementById('sab-raybomb');
+  // Activa el escudo (7s): bloquea TODO ataque menos la bomba rayo, y avisa al rival
+  function activateDuelShield(){
+    if(!running || mode!=='duel' || wallet.shields<1 || shieldActive()) return false;
+    wallet.shields--; renderWallet();
+    shopSpend('use_shield');            // el server descuenta y re-sincroniza
+    shieldUntil=Date.now()+7000;
+    grid.classList.add('shielded');
+    shieldSound();
+    announce('🛡 ¡ESCUDO ACTIVO 7s!','var(--white)');
+    if(!duelSt.vsBot) wsSend({t:'shield_up'}); // el rival ve que tenés escudo
+    renderDuelHUD();
+    return true;
+  }
+  if(sabShieldBtn) sabShieldBtn.addEventListener('click', activateDuelShield);
+  document.getElementById('counter-shield').addEventListener('click',()=>{
+    if(!duelSt.incoming) return;
+    if(activateDuelShield()) clearIncomingAttack(); // el escudo bloquea el ataque entrante
+  });
+
+  // Aviso: el rival tiene escudo (7s) → ventana para tirarle bomba rayo
+  let oppShieldInterval=null;
+  const oppShieldBanner=document.getElementById('opp-shield-banner');
+  function showOppShield(from, duration){
+    let left=Math.ceil((duration||7000)/1000);
+    const upd=()=>{ oppShieldBanner.innerHTML='🛡 '+(from||'RIVAL')+' tiene escudo ('+left+'s) — ¡tirá ⚡ bomba rayo!'; };
+    upd(); oppShieldBanner.classList.remove('hidden');
+    clearInterval(oppShieldInterval);
+    oppShieldInterval=setInterval(()=>{ left--; if(left<=0) hideOppShield(); else upd(); },1000);
+  }
+  function hideOppShield(){ clearInterval(oppShieldInterval); oppShieldBanner.classList.add('hidden'); }
+
+  // ---------- Emotes de burla (pack de tienda, solo duelo online) ----------
+  let lastEmoteAt=0;
+  function showEmoteFly(e, from){
+    const el=document.createElement('div');
+    el.className='emote-fly';
+    const big=document.createElement('span'); big.className='e'; big.textContent=e;
+    const who=document.createElement('span'); who.className='n'; who.textContent=from||'';
+    el.append(big,who);
+    app.appendChild(el);
+    beep(700,.08,'sine',.12);
+    setTimeout(()=>el.remove(),1700);
+  }
+  emoteRowEl.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(!running || mode!=='duel' || !wallet.emotes) return;
+      const now=Date.now();
+      if(now-lastEmoteAt<2000) return; // freno anti-spam
+      lastEmoteAt=now;
+      showEmoteFly(b.dataset.e,'TÚ');
+      if(duelSt.vsBot) botReactToTaunt();       // el robot reacciona
+      else wsSend({t:'emote', e:b.dataset.e});  // al rival online
+    });
+  });
+  if(sabRayBtn) sabRayBtn.addEventListener('click', ()=>{
+    if(!running || mode!=='duel' || wallet.raybombs<1) return;
+    wallet.raybombs--; renderWallet();
+    shopSpend('use_raybomb');
+    if(duelSt.vsBot) applyRaybombToBot();
+    else wsSend({t:'sabotage', kind:'raybomb'});
+    beep(300,.1,'square',.2);
+    announce('⚡ ¡BOMBA RAYO ENVIADA!','#7fd0ff');
+    renderDuelHUD();
   });
 
   // ---------- VS Robot (rival local que aprende) ----------
@@ -2418,16 +3030,31 @@
   function botLevelInt(){ return Math.max(1, Math.min(10, Math.floor(botMem.level))); }
   // Perfil medio normalizado: todas las decisiones porcentuales parten de 50%.
   function botParams(){
+    // Si lo provocaste con una burla, se pica: apunta mejor y ataca más
+    const provoked = Date.now() < botRT.provokedUntil;
     return {
-      hitRate:BOT_ACTIVE.accuracy,
-      trapAvoid:BOT_ACTIVE.trapAvoidance,
-      aggression:BOT_ACTIVE.aggression,
-      jitter:BOT_ACTIVE.reactionDelayMs
+      hitRate: Math.min(0.98, BOT_ACTIVE.accuracy*(provoked?1.15:1)),
+      trapAvoid: BOT_ACTIVE.trapAvoidance,
+      aggression: BOT_ACTIVE.aggression*(provoked?1.7:1),
+      jitter: Math.round(BOT_ACTIVE.reactionDelayMs*(provoked?0.8:1))
     };
   }
   const botRT={score:0, combo:1, energy:0, powerProgress:0,
     powers:{freeze:0,bombs:0,storm:0}, timer:null, sabPending:null,
-    frozenUntil:0, blackoutUntil:0, mirrorUntil:0, pendingBombs:0};
+    frozenUntil:0, blackoutUntil:0, mirrorUntil:0, pendingBombs:0, provokedUntil:0};
+
+  // El robot RAZONA la burla: se pica, juega más fuerte y a veces contraataca
+  const BOT_TAUNT_BACK=['😠','😏','🤨','🔩','🤖','😤'];
+  function botReactToTaunt(){
+    if(!running || !duelSt.vsBot) return;
+    botRT.provokedUntil=Date.now()+4200;
+    setTimeout(()=>{
+      if(!running || !duelSt.vsBot) return;
+      showEmoteFly(BOT_TAUNT_BACK[Math.floor(Math.random()*BOT_TAUNT_BACK.length)], duelSt.oppName);
+      announce('🤖 ¡SE PICÓ! Ahora juega más fuerte','var(--amber)');
+      if(Math.random()<0.6) botMaybeSabotage(); // devuelve el golpe
+    }, 700);
+  }
   function updateBotLabel(){
     const el=document.getElementById('bot-level-label');
     if(el) el.textContent=botLevelInt();
@@ -2458,12 +3085,13 @@
     duelSt.oppName=BOT_NAME+' '+BOT_ACTIVE.label+' Nv.'+botLevelInt();
     duelSt.oppScore=0; duelSt.energy=0; duelSt.powerProgress=0;
     duelSt.powers={freeze:0,bombs:0,storm:0}; duelSt.locked=false; duelSt.oppLeft=false;
-    duelSt.duration=65000;
+    duelSt.duration=90000;
+    duelSt.tug=50; duelSt.prevMy=0; duelSt.prevOpp=0;
     botRT.score=0; botRT.combo=1; botRT.energy=0; botRT.powerProgress=0;
     botRT.powers={freeze:0,bombs:0,storm:0};
     grantStartingPowers(duelSt.powers);
     grantStartingPowers(botRT.powers);
-    botRT.frozenUntil=0; botRT.blackoutUntil=0; botRT.mirrorUntil=0; botRT.pendingBombs=0;
+    botRT.frozenUntil=0; botRT.blackoutUntil=0; botRT.mirrorUntil=0; botRT.pendingBombs=0; botRT.provokedUntil=0;
     rematchBtn.disabled=false;
     rematchStatusEl.textContent='';
     duelOver.classList.add('hidden');
@@ -2471,7 +3099,7 @@
     overScreen.classList.add('hidden');
     mode='duel';
     reset();
-    duelBar.classList.remove('hidden');
+    showDuelBars(true);
     renderDuelHUD();
     let n=3;
     clearTimeout(duelSt.cd);
@@ -2619,6 +3247,12 @@
       botRT.blackoutUntil=now+2000;
       botRT.mirrorUntil=now+4000;
     }
+  }
+
+  // Bomba rayo contra el robot: no tiene escudo, la descarga lo aturde
+  function applyRaybombToBot(){
+    botRT.frozenUntil=Date.now()+1500;
+    announce('⚡ ¡ELECTROCUTASTE AL ROBOT!','#7fd0ff');
   }
 
   function finishBotMatch(outcome){
@@ -2790,7 +3424,119 @@
   });
   renderBotRuleState();
 
-  document.getElementById('play-robot').addEventListener('click',()=>showModeRules('robot',beginBotDuel));
+  // ---------- Tutorial: reproduce el video (mismo origen, en iframe escalado) ----------
+  const tutScreen=document.getElementById('tutorial-screen');
+  const tutFrame=document.getElementById('tut-frame');
+  const tutFrameWrap=document.getElementById('tut-frame-wrap');
+  const tutShopBtn=document.getElementById('tut-shop');
+  const tutTitleEl=document.getElementById('tut-title');
+  let tutOnPlay=null, tutBtnTimer=null, tutCountTimer=null;
+  const TUT_SRC={ power:'tutorial-powerups.html', robot:'tutorial-vsrobot.html' };
+  const tutBtnRow=document.getElementById('tut-btnrow');
+  const tutHint=document.getElementById('tut-skip-hint');
+  const tutCountdown=document.getElementById('tut-countdown');
+  function tutSeen(kind){ try{ return (localStorage.getItem('nr-tut-seen')||'').includes(kind); }catch(e){ return false; } }
+  function markTutSeen(kind){ try{ const v=localStorage.getItem('nr-tut-seen')||''; if(!v.includes(kind)) localStorage.setItem('nr-tut-seen', v+kind); }catch(e){} }
+  // Escala el video completo para que quepa entero en el ancho disponible
+  function fitTutFrame(){
+    const w=tutFrameWrap.clientWidth||460;
+    const scale=Math.min(1, w/716);
+    tutFrame.style.transform='scale('+scale+')';
+    tutFrameWrap.style.height=(720*scale)+'px';
+  }
+  window.addEventListener('resize',()=>{ if(!tutScreen.classList.contains('hidden')) fitTutFrame(); });
+  function runTutorial(kind, onPlay){
+    tutOnPlay=onPlay;
+    tutTitleEl.textContent = kind==='power' ? 'POWER-UPS — CÓMO SE JUEGA' : 'VS ROBOT — CÓMO SE JUEGA';
+    tutShopBtn.style.display = kind==='robot' ? '' : 'none'; // Tienda solo en el robot
+    tutFrame.src = TUT_SRC[kind] || TUT_SRC.power;
+    startScreen.classList.add('hidden');
+    tutScreen.classList.remove('hidden');
+    requestAnimationFrame(fitTutFrame);
+    // La primera vez, esconder los botones y mostrar un contador de 3s
+    clearTimeout(tutBtnTimer); clearInterval(tutCountTimer);
+    if(!tutSeen(kind)){
+      markTutSeen(kind);
+      tutBtnRow.style.visibility='hidden';
+      tutHint.style.visibility='hidden';
+      let n=3;
+      tutCountdown.style.display='';
+      tutCountdown.innerHTML='Mirá el tutorial… <b>'+n+'</b>';
+      tutCountTimer=setInterval(()=>{
+        n--;
+        if(n<=0){
+          clearInterval(tutCountTimer);
+          tutCountdown.style.display='none';
+          tutBtnRow.style.visibility='';
+          tutHint.style.visibility='';
+        }else{
+          tutCountdown.innerHTML='Mirá el tutorial… <b>'+n+'</b>';
+        }
+      },1000);
+    }else{
+      tutCountdown.style.display='none';
+      tutBtnRow.style.visibility='';
+      tutHint.style.visibility='';
+    }
+  }
+  function closeTutorial(){ clearTimeout(tutBtnTimer); clearInterval(tutCountTimer); tutCountdown.style.display='none'; tutBtnRow.style.visibility=''; tutHint.style.visibility=''; tutFrame.src='about:blank'; tutScreen.classList.add('hidden'); } // detiene el video
+  document.getElementById('tut-play').addEventListener('click',()=>{
+    closeTutorial();
+    const fn=tutOnPlay; tutOnPlay=null;
+    if(fn) fn();
+  });
+  tutShopBtn.addEventListener('click',()=>{ tutOnPlay=null; closeTutorial(); openShop(); });
+  document.getElementById('tut-back').addEventListener('click',()=>{
+    tutOnPlay=null;
+    closeTutorial();
+    startScreen.classList.remove('hidden');
+  });
+
+  // ---------- Loadout previo al duelo VS Robot ----------
+  const duelLoadoutScreen=document.getElementById('duel-loadout');
+  const loadoutStatus=document.getElementById('loadout-status');
+  let duelLoadoutReady=null;
+  function renderLoadout(){
+    document.getElementById('loadout-coins').textContent='🪙 '+wallet.coins.toLocaleString('es-MX');
+    const sh=document.getElementById('ld-shield'), rb=document.getElementById('ld-raybomb');
+    sh.querySelector('.own').textContent = wallet.shields>0 ? ('Tenés ×'+wallet.shields+' · máx '+wallet.shieldMax) : 'No tenés';
+    rb.querySelector('.own').textContent = wallet.raybombs>0 ? ('Tenés ×'+wallet.raybombs+' · máx 1') : 'No tenés';
+    const shBuy=sh.querySelector('.buy'), rbBuy=rb.querySelector('.buy');
+    const shMax=wallet.shields>=wallet.shieldMax, rbMax=wallet.raybombs>=1;
+    shBuy.disabled=shMax; shBuy.textContent=shMax?'MÁX ✓':'50 🪙';
+    rbBuy.disabled=rbMax; rbBuy.textContent=rbMax?'MÁX ✓':'120 🪙';
+  }
+  function showDuelLoadout(onReady){
+    duelLoadoutReady=onReady;
+    loadoutStatus.textContent='';
+    renderLoadout();
+    startScreen.classList.add('hidden');
+    duelLoadoutScreen.classList.remove('hidden');
+    loadWallet().then(renderLoadout);
+  }
+  duelLoadoutScreen.querySelectorAll('.buy').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      b.disabled=true;
+      const res=await shopSpend(b.dataset.buy);
+      renderLoadout();
+      if(res.error){
+        const msgs={insufficient_coins:'No te alcanzan las monedas 🪙', max_shields:'Ya tenés el máximo de escudos ⚪', max_raybombs:'Solo podés tener 1 bomba rayo ⚡', not_registered:'Registrate primero.', offline:'Sin conexión.'};
+        loadoutStatus.textContent=msgs[res.error]||'No se pudo comprar.';
+      }else{ loadoutStatus.textContent='✅ ¡Comprado!'; goldSound(); }
+    });
+  });
+  document.getElementById('loadout-ready').addEventListener('click',()=>{
+    duelLoadoutScreen.classList.add('hidden');
+    const fn=duelLoadoutReady; duelLoadoutReady=null;
+    if(fn) fn();
+  });
+  document.getElementById('loadout-back').addEventListener('click',()=>{
+    duelLoadoutReady=null;
+    duelLoadoutScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+  });
+
+  document.getElementById('play-robot').addEventListener('click',()=>runTutorial('robot',()=>showDuelLoadout(beginBotDuel)));
 
   const RHYTHM_MODE_ENABLED=false;
   let lastRhythmSource=null; // 'mic' o File
@@ -2822,7 +3568,40 @@
       sensLabel.textContent = rzSensitivity<0.9 ? 'Alta' : (rzSensitivity>1.8 ? 'Baja' : 'Media');
     });
   }
-  document.getElementById('play-power').addEventListener('click',()=>showModeRules('power',()=>start('power')));
+  // ---------- Loadout de escudo antes de Power-Ups ----------
+  const shieldScreen=document.getElementById('shield-screen');
+  const shieldUseBtn=document.getElementById('shield-use');
+  const shieldHaveEl=document.getElementById('shield-have');
+  const shieldShopHint=document.getElementById('shield-shop-hint');
+  function startPowerFlow(){
+    pendingShield=false;
+    const have=wallet.shields|0;
+    if(have>0){
+      shieldHaveEl.textContent='🛡 Tienes '+have+' escudo'+(have>1?'s':'');
+      shieldUseBtn.textContent='🛡 EMPEZAR CON ESCUDO ('+have+')';
+      shieldShopHint.classList.add('hidden');
+    }else{
+      shieldHaveEl.textContent='No tienes escudos guardados';
+      shieldUseBtn.textContent='🛒 CONSEGUIR EN LA TIENDA';
+      shieldShopHint.classList.remove('hidden');
+    }
+    shieldUseBtn.disabled=false; // siempre activo: usa el escudo o te lleva a la tienda
+    shieldScreen.classList.remove('hidden');
+  }
+  shieldUseBtn.addEventListener('click',()=>{
+    if((wallet.shields|0)<=0){ shieldScreen.classList.add('hidden'); openShop(); return; } // sin escudos → tienda
+    wallet.shields--; renderWallet();  // optimista; el server confirma
+    shopSpend('use_shield');
+    pendingShield=true;
+    shieldScreen.classList.add('hidden');
+    start('power');
+  });
+  document.getElementById('shield-skip').addEventListener('click',()=>{
+    pendingShield=false;
+    shieldScreen.classList.add('hidden');
+    start('power');
+  });
+  document.getElementById('play-power').addEventListener('click',()=>runTutorial('power',startPowerFlow));
   if(RHYTHM_MODE_ENABLED){
     document.getElementById('play-rhythm-mic').addEventListener('click',()=>showModeRules('rhythm',()=>{ startScreen.classList.remove('hidden'); lastRhythmSource='mic'; startRhythmMic(); }));
     document.getElementById('play-rhythm-file').addEventListener('click',()=>showModeRules('rhythm',()=>{ startScreen.classList.remove('hidden'); songInput.click(); }));
@@ -2869,6 +3648,7 @@
     frozen=false; document.body.classList.remove('frozen-bg'); grid.classList.remove('frozen');
     endFrenzy();
     stopDuelUI();
+    showSoloRow(false);
     clearTimeout(duelSt.resultTimer);
     if(wasDuel && !duelSt.vsBot) wsSend({t:'cancel'}); // el rival gana por abandono
     clearBoard();
