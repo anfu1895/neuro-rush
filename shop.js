@@ -39,15 +39,19 @@ const CURRENCY = (process.env.SHOP_CURRENCY || 'mxn').toLowerCase();
 
 // Paquetes de monedas (amount en centavos)
 const PACKS = {
+  starter: { coins: 300,  amount: 1900,  name: 'NEURO RUSH — Pack de Inicio (300 monedas + escudo + corazón)' },
   small:  { coins: 200,  amount: 2900,  name: 'NEURO RUSH — 200 Neuro Monedas' },
   medium: { coins: 700,  amount: 8900,  name: 'NEURO RUSH — 700 Neuro Monedas' },
   large:  { coins: 1600, amount: 17900, name: 'NEURO RUSH — 1600 Neuro Monedas' }
 };
 
 // Consumibles comprables con monedas
-const ITEM_COST = { revive: 80, heart_day: 30, shield: 50, raybomb: 120 };
+const ITEM_COST = { revive: 80, heart_day: 30, shield: 50, raybomb: 120, shield_slot: 500, badge_star: 200 };
 // Tope de unidades que un jugador puede tener a la vez
-const PERK_MAX = { shield: 2, raybomb: 1 };
+// (el tope real de escudos viene de wallet.shieldMax: 2, o 3 con el slot extra)
+const PERK_MAX = { raybomb: 1 };
+// Regalo diario por entrar al juego
+const DAILY_COINS = 5;
 const MAX_BODY = 64 * 1024;
 
 function sendJson(response, status, payload) {
@@ -91,12 +95,21 @@ async function creditFromSession(session) {
   const meta = session.metadata || {};
   const pack = PACKS[meta.pack];
   if (!meta.playerId || !pack) return { error: 'bad_metadata' };
-  return db.creditPurchase(
+  const result = await db.creditPurchase(
     meta.playerId, meta.pack, pack.coins,
     session.amount_total || pack.amount,
     session.currency || CURRENCY,
     session.id
   );
+  // Regalos del Pack de Inicio (solo al acreditar por primera vez)
+  if (result.credited && meta.pack === 'starter') {
+    const w = await db.getWallet(meta.playerId);
+    if (!w.error) {
+      if (w.shields < w.shieldMax) await db.grantPerk(meta.playerId, 'shield', 1, null);
+      if (!w.heartToday) await db.grantPerk(meta.playerId, 'heart_day', 0, db.todayStr());
+    }
+  }
+  return result;
 }
 
 async function handleCheckout(request, response) {
@@ -108,6 +121,10 @@ async function handleCheckout(request, response) {
 
   const wallet = await db.getWallet(playerId);
   if (wallet.error) return sendJson(response, 400, wallet);
+  // El Pack de Inicio es una sola vez por jugador
+  if (body.pack === 'starter' && !wallet.starterAvailable) {
+    return sendJson(response, 400, { error: 'starter_already' });
+  }
 
   const origin = requestOrigin(request);
   const session = await stripe.checkout.sessions.create({
@@ -186,9 +203,11 @@ async function handleSpend(request, response) {
     const kind = item === 'loadout_shield' ? 'shield' : 'raybomb';
     const w = await db.getWallet(playerId);
     if (w.error) return sendJson(response, 400, w);
-    const owned = kind === 'shield' ? w.shields : w.raybombs;
-    if (owned >= PERK_MAX[kind]) {
-      return sendJson(response, 400, { error: kind === 'shield' ? 'max_shields' : 'max_raybombs' });
+    if (kind === 'shield' && w.shields >= w.shieldMax) {
+      return sendJson(response, 400, { error: 'max_shields' });
+    }
+    if (kind === 'raybomb' && w.raybombs >= PERK_MAX.raybomb) {
+      return sendJson(response, 400, { error: 'max_raybombs' });
     }
     const paidLd = await db.spendCoins(playerId, ITEM_COST[kind]);
     if (!paidLd) return sendJson(response, 400, { error: 'insufficient_coins' });
@@ -204,12 +223,19 @@ async function handleSpend(request, response) {
   if (item === 'heart_day' && wallet.heartToday) {
     return sendJson(response, 400, { error: 'already_active' });
   }
-  // Topes de posesión: escudo máx 2, bomba rayo máx 1
-  if (item === 'shield' && wallet.shields >= PERK_MAX.shield) {
+  // Topes de posesión (escudo: 2, o 3 con el slot extra)
+  if (item === 'shield' && wallet.shields >= wallet.shieldMax) {
     return sendJson(response, 400, { error: 'max_shields' });
   }
   if (item === 'raybomb' && wallet.raybombs >= PERK_MAX.raybomb) {
     return sendJson(response, 400, { error: 'max_raybombs' });
+  }
+  // Compras únicas
+  if (item === 'shield_slot' && wallet.shieldMax >= 3) {
+    return sendJson(response, 400, { error: 'already_owned' });
+  }
+  if (item === 'badge_star' && wallet.badgeStar) {
+    return sendJson(response, 400, { error: 'already_owned' });
   }
 
   const paid = await db.spendCoins(playerId, cost);
@@ -218,6 +244,8 @@ async function handleSpend(request, response) {
   if (item === 'heart_day') await db.grantPerk(playerId, 'heart_day', 0, db.todayStr());
   else if (item === 'shield') await db.grantPerk(playerId, 'shield', 1, null);
   else if (item === 'raybomb') await db.grantPerk(playerId, 'raybomb', 1, null);
+  else if (item === 'shield_slot') await db.grantPerk(playerId, 'slot3', 1, null);
+  else if (item === 'badge_star') await db.grantPerk(playerId, 'badge_star', 1, null);
   // revive: solo descuenta — el efecto es inmediato en el cliente
 
   return sendJson(response, 200, await db.getWallet(playerId));
@@ -246,6 +274,16 @@ async function handle(request, response, pathname, query) {
     }
     if (request.method === 'POST' && pathname === '/api/shop/spend') {
       return await handleSpend(request, response);
+    }
+    if (request.method === 'POST' && pathname === '/api/shop/daily') {
+      const body = await readJson(request);
+      const playerId = String(body.playerId || '');
+      const wallet = await db.getWallet(playerId);
+      if (wallet.error) return sendJson(response, 400, wallet);
+      if (!wallet.dailyAvailable) return sendJson(response, 400, { error: 'already_claimed' });
+      const claimed = await db.claimDaily(playerId, DAILY_COINS);
+      if (claimed.error) return sendJson(response, 400, claimed);
+      return sendJson(response, 200, await db.getWallet(playerId));
     }
     if (request.method === 'POST' && pathname === '/api/stripe/webhook') {
       return await handleWebhook(request, response);

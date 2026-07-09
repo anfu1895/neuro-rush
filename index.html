@@ -322,6 +322,8 @@
   #wallet-row{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:10px;min-height:32px;}
   #coins-chip{background:var(--panel);border-radius:99px;padding:6px 14px;font-weight:800;font-size:13px;color:var(--gold);}
   #shop-open{background:linear-gradient(90deg,var(--gold),var(--fire));border:none;border-radius:99px;padding:7px 16px;font-weight:800;font-size:13px;cursor:pointer;color:#0c0a24;box-shadow:0 3px 0 #8a5a00;}
+  #daily-claim{background:linear-gradient(90deg,var(--lime),var(--cyan));border:none;border-radius:99px;padding:7px 14px;font-weight:800;font-size:13px;cursor:pointer;color:#0c0a24;box-shadow:0 3px 0 #0a5d70;animation:dailyPulse 1.4s infinite alternate;}
+  @keyframes dailyPulse{from{transform:scale(1);}to{transform:scale(1.08);box-shadow:0 3px 0 #0a5d70,0 0 16px rgba(141,255,74,.6);}}
   #shop-screen{z-index:65;}
   .shop-item{width:100%;max-width:360px;display:flex;align-items:center;gap:10px;background:var(--panel);border-radius:14px;padding:12px;margin-bottom:10px;text-align:left;}
   .shop-item .ic{font-size:26px;}
@@ -451,6 +453,7 @@
     <div id="wallet-row" class="hidden">
       <span id="coins-chip">🪙 0</span>
       <button id="shop-open">🛒 TIENDA</button>
+      <button id="daily-claim" class="hidden">🎁 +5</button>
     </div>
     <div class="rules-mini">
       <span>🔵 toca = puntos</span><span>⭐ bonus</span><span>💀 ¡NO tocar!</span><span>🔥 barra llena = FRENESÍ x2</span>
@@ -620,7 +623,22 @@
       <div class="info"><b>Bomba Rayo</b> <span id="raybomb-owned" style="color:var(--gold);"></span><span>El único poder que ROMPE el escudo blanco del rival en el duelo. Solo puedes tener 1.</span></div>
       <button data-item="raybomb">120 🪙</button>
     </div>
+    <div class="shop-item">
+      <span class="ic">🎰</span>
+      <div class="info"><b>3er slot de escudo</b><span>Permanente: tu inventario de escudos sube de 2 a 3. Compra única.</span></div>
+      <button data-item="shield_slot">500 🪙</button>
+    </div>
+    <div class="shop-item">
+      <span class="ic">⭐</span>
+      <div class="info"><b>Insignia de estrella</b><span>Tu nombre brilla con ⭐ en los récords mundiales. Que todos lo vean.</span></div>
+      <button data-item="badge_star">200 🪙</button>
+    </div>
     <div class="shop-sec">— Comprar monedas —</div>
+    <div class="shop-item" id="starter-item" style="border:2px solid var(--gold);box-shadow:0 0 18px rgba(255,210,62,.35);">
+      <span class="ic">🎁</span>
+      <div class="info"><b>Pack de Inicio — única vez</b><span>300 monedas + 1 escudo + corazón de hoy. El mejor valor para empezar.</span></div>
+      <button class="money" data-pack="starter">$19 MXN</button>
+    </div>
     <div class="shop-item">
       <span class="ic">🪙</span>
       <div class="info"><b>200 monedas</b><span>Para empezar: 2 revividas y un corazón.</span></div>
@@ -1778,9 +1796,8 @@
     lastResult={score, level, comboBest, acc, mode, medal};
     submitScore();
     // Revivir: solo en modos solo, muerto de verdad, con saldo y una vez por partida
-    reviveBtn.classList.toggle('hidden',
-      !((mode==='classic'||mode==='power') && lives<=0 && player && !revivedThisRun && wallet.coins>=REVIVE_COST));
     overScreen.classList.remove('hidden');
+    startReviveOffer((mode==='classic'||mode==='power') && lives<=0 && player && !revivedThisRun && wallet.coins>=REVIVE_COST);
   }
 
   // ---------- Compartir ----------
@@ -1920,7 +1937,7 @@
         const li=document.createElement('li');
         if(player && row.name===player.name) li.classList.add('me');
         const rk=document.createElement('span'); rk.className='rk'; rk.textContent=(i+1)+'.';
-        const nm=document.createElement('span'); nm.className='nm'; nm.textContent=row.name;
+        const nm=document.createElement('span'); nm.className='nm'; nm.textContent=(row.star?'⭐ ':'')+row.name;
         const pt=document.createElement('span'); pt.className='pt'; pt.textContent=Number(row.best).toLocaleString('es-MX');
         li.append(rk,nm,pt);
         lbList.appendChild(li);
@@ -1948,7 +1965,7 @@
   loadLeaderboard();
 
   // ---------- Tienda y monedero ----------
-  const wallet={coins:0, heartToday:false, shields:0, raybombs:0};
+  const wallet={coins:0, heartToday:false, shields:0, raybombs:0, shieldMax:2, badgeStar:false, dailyAvailable:false, starterAvailable:true};
   const walletRow=document.getElementById('wallet-row');
   const coinsChip=document.getElementById('coins-chip');
   const shopScreen=document.getElementById('shop-screen');
@@ -1956,6 +1973,26 @@
   const reviveBtn=document.getElementById('revive-btn');
   const REVIVE_COST=80;
   let revivedThisRun=false;
+  let reviveTimer=null;
+  // Oferta de revivir con URGENCIA: cuenta regresiva de 5s y desaparece
+  function startReviveOffer(canRevive){
+    clearInterval(reviveTimer);
+    reviveBtn.classList.toggle('hidden', !canRevive);
+    if(!canRevive) return;
+    let n=5;
+    reviveBtn.textContent='❤️ REVIVIR (80 🪙) · '+n;
+    reviveTimer=setInterval(()=>{
+      n--;
+      if(n<=0 || overScreen.classList.contains('hidden')){
+        clearInterval(reviveTimer);
+        reviveBtn.classList.add('hidden');
+        reviveBtn.textContent='❤️ REVIVIR (80 🪙)';
+      }else{
+        reviveBtn.textContent='❤️ REVIVIR (80 🪙) · '+n;
+        beep(300+n*40,.05,'sine',.08);
+      }
+    },1000);
+  }
   let pendingShield=false; // escudo elegido en la pantalla previa de Power-Ups
 
   function renderWallet(){
@@ -1969,18 +2006,33 @@
     // Estado de la tienda: cuántos tienes y tope alcanzado
     const shOwned=document.getElementById('shield-owned');
     const rbOwned=document.getElementById('raybomb-owned');
-    if(shOwned) shOwned.textContent=wallet.shields?('· tienes '+wallet.shields+'/2 '):'';
+    if(shOwned) shOwned.textContent=wallet.shields?('· tienes '+wallet.shields+'/'+wallet.shieldMax+' '):'';
     if(rbOwned) rbOwned.textContent=wallet.raybombs?('· tienes '+wallet.raybombs+'/1 '):'';
     const shBtn=shopScreen.querySelector('button[data-item="shield"]');
     const rbBtn=shopScreen.querySelector('button[data-item="raybomb"]');
-    if(shBtn){ const m=wallet.shields>=2; shBtn.disabled=m; shBtn.textContent=m?'MÁX ✓':'50 🪙'; }
+    if(shBtn){ const m=wallet.shields>=wallet.shieldMax; shBtn.disabled=m; shBtn.textContent=m?'MÁX ✓':'50 🪙'; }
     if(rbBtn){ const m=wallet.raybombs>=1; rbBtn.disabled=m; rbBtn.textContent=m?'MÁX ✓':'120 🪙'; }
+    // Compras únicas: slot extra e insignia
+    const slBtn=shopScreen.querySelector('button[data-item="shield_slot"]');
+    const bgBtn=shopScreen.querySelector('button[data-item="badge_star"]');
+    if(slBtn){ const o=wallet.shieldMax>=3; slBtn.disabled=o; slBtn.textContent=o?'TUYO ✓':'500 🪙'; }
+    if(bgBtn){ bgBtn.disabled=wallet.badgeStar; bgBtn.textContent=wallet.badgeStar?'TUYA ✓':'200 🪙'; }
+    // Pack de inicio: solo si nunca lo compró
+    const st=document.getElementById('starter-item');
+    if(st) st.classList.toggle('hidden', !wallet.starterAvailable);
+    // Regalo diario
+    const dc=document.getElementById('daily-claim');
+    if(dc) dc.classList.toggle('hidden', !player || !wallet.dailyAvailable);
   }
   function applyWallet(d){
     wallet.coins=d.coins|0;
     wallet.heartToday=!!d.heartToday;
     wallet.shields=d.shields|0;
     wallet.raybombs=d.raybombs|0;
+    wallet.shieldMax=(d.shieldMax|0)||2;
+    wallet.badgeStar=!!d.badgeStar;
+    wallet.dailyAvailable=!!d.dailyAvailable;
+    wallet.starterAvailable=!!d.starterAvailable;
     renderWallet();
   }
   async function loadWallet(){
@@ -2017,6 +2069,18 @@
     loadWallet();
   }
   document.getElementById('shop-open').addEventListener('click', openShop);
+  // Regalo diario: +5 monedas por entrar
+  document.getElementById('daily-claim').addEventListener('click', async function(){
+    if(!player) return;
+    this.disabled=true;
+    try{
+      const r=await fetch('/api/shop/daily',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({playerId:player.id})});
+      const d=await r.json().catch(()=>({}));
+      if(r.ok){ applyWallet(d); announce('🎁 ¡+5 MONEDAS!','var(--lime)'); goldSound(); }
+      else renderWallet();
+    }catch(e){}
+    this.disabled=false;
+  });
   document.getElementById('shop-close').addEventListener('click', ()=>{
     shopScreen.classList.add('hidden');
     startScreen.classList.remove('hidden'); // siempre vuelve al menú (evita quedar en un limbo)
@@ -2031,8 +2095,10 @@
         const msgs={
           insufficient_coins:'No te alcanzan las monedas 🪙',
           already_active:'Ya tienes el corazón de hoy 💛',
-          max_shields:'Ya tienes el máximo de escudos (2) ⚪',
+          max_shields:'Ya tienes el máximo de escudos ⚪',
           max_raybombs:'Solo puedes tener 1 bomba rayo ⚡',
+          already_owned:'Ya lo tienes ✓',
+          already_claimed:'Ya reclamaste el regalo de hoy 🎁',
           offline:'Sin conexión con el servidor.',
           not_registered:'Regístrate primero.'
         };
@@ -2081,6 +2147,8 @@
   })();
   // Revivir en la partida actual
   reviveBtn.addEventListener('click', async ()=>{
+    clearInterval(reviveTimer);
+    reviveBtn.textContent='❤️ REVIVIR (80 🪙)';
     reviveBtn.disabled=true;
     const res=await shopSpend('revive');
     reviveBtn.disabled=false;
@@ -3174,10 +3242,10 @@
   function renderLoadout(){
     document.getElementById('loadout-coins').textContent='🪙 '+wallet.coins.toLocaleString('es-MX');
     const sh=document.getElementById('ld-shield'), rb=document.getElementById('ld-raybomb');
-    sh.querySelector('.own').textContent = wallet.shields>0 ? ('Tenés ×'+wallet.shields+' · máx 2') : 'No tenés';
+    sh.querySelector('.own').textContent = wallet.shields>0 ? ('Tenés ×'+wallet.shields+' · máx '+wallet.shieldMax) : 'No tenés';
     rb.querySelector('.own').textContent = wallet.raybombs>0 ? ('Tenés ×'+wallet.raybombs+' · máx 1') : 'No tenés';
     const shBuy=sh.querySelector('.buy'), rbBuy=rb.querySelector('.buy');
-    const shMax=wallet.shields>=2, rbMax=wallet.raybombs>=1;
+    const shMax=wallet.shields>=wallet.shieldMax, rbMax=wallet.raybombs>=1;
     shBuy.disabled=shMax; shBuy.textContent=shMax?'MÁX ✓':'50 🪙';
     rbBuy.disabled=rbMax; rbBuy.textContent=rbMax?'MÁX ✓':'120 🪙';
   }

@@ -223,13 +223,24 @@ async function leaderboard(mode) {
   const rows = await Score.findAll({
     attributes: [[fn('MAX', col('score')), 'best']],
     where: { mode },
-    include: [{ model: Player, attributes: ['name'] }],
+    include: [{ model: Player, attributes: ['id', 'name'] }],
     group: ['Player.id', 'Player.name'],
     order: [[literal('best'), 'DESC']],
     limit: 10,
     raw: true
   });
-  return rows.map(r => ({ name: r['Player.name'], best: Number(r.best) }));
+  // Insignia ⭐ comprada en tienda: brilla junto al nombre
+  const ids = rows.map(r => r['Player.id']).filter(Boolean);
+  let starred = new Set();
+  if (ids.length) {
+    const badges = await Perk.findAll({ where: { kind: 'badge_star', player_id: ids } });
+    starred = new Set(badges.filter(b => b.qty > 0).map(b => b.player_id));
+  }
+  return rows.map(r => ({
+    name: r['Player.name'],
+    best: Number(r.best),
+    star: starred.has(r['Player.id'])
+  }));
 }
 
 async function saveMatch(playerA, playerB, scoreA, scoreB, winner) {
@@ -255,12 +266,39 @@ async function getWallet(playerId) {
   let heartToday = false;
   let shields = 0;
   let raybombs = 0;
+  let slot3 = false;
+  let badgeStar = false;
+  let dailyClaimed = false;
   for (const perk of perks) {
     if (perk.kind === 'heart_day') heartToday = perk.day === todayStr();
     if (perk.kind === 'shield') shields = perk.qty;
     if (perk.kind === 'raybomb') raybombs = perk.qty;
+    if (perk.kind === 'slot3') slot3 = perk.qty > 0;
+    if (perk.kind === 'badge_star') badgeStar = perk.qty > 0;
+    if (perk.kind === 'daily') dailyClaimed = perk.day === todayStr();
   }
-  return { coins: player.coins, heartToday, shields, raybombs };
+  const starterBought = await Purchase.count({ where: { player_id: playerId, pack: 'starter' } });
+  return {
+    coins: player.coins, heartToday, shields, raybombs,
+    shieldMax: slot3 ? 3 : 2,
+    badgeStar,
+    dailyAvailable: !dailyClaimed,
+    starterAvailable: starterBought === 0
+  };
+}
+
+// Regalo diario de monedas: una vez por día (UTC)
+async function claimDaily(playerId, amount) {
+  const [perk] = await Perk.findOrCreate({
+    where: { player_id: playerId, kind: 'daily' },
+    defaults: { qty: 0, day: null }
+  });
+  if (perk.day === todayStr()) return { error: 'already_claimed' };
+  perk.day = todayStr();
+  perk.qty += 1; // contador de días reclamados
+  await perk.save();
+  await Player.increment({ coins: amount }, { where: { id: playerId } });
+  return { claimed: true };
 }
 
 // Acredita monedas de una compra Stripe. Idempotente por session_id.
@@ -326,5 +364,5 @@ async function useRaybomb(playerId) {
 
 module.exports = {
   enabled, init, registerPlayer, saveScore, leaderboard, saveMatch,
-  getWallet, creditPurchase, spendCoins, grantPerk, useShield, useRaybomb, todayStr
+  getWallet, creditPurchase, spendCoins, grantPerk, useShield, useRaybomb, claimDaily, todayStr
 };
