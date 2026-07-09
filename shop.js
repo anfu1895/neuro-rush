@@ -16,10 +16,12 @@
 
   Gasto de monedas (validado siempre en servidor):
     POST /api/shop/spend {playerId, item}
-      revive      80  → segunda vida en la partida actual
-      heart_day   60  → partidas de hoy con 4 vidas
-      shield_pack 100 → 3 escudos de inicio (modo power)
-      use_shield   0  → consume 1 escudo al iniciar partida
+      revive       80  → segunda vida en la partida actual
+      heart_day    60  → partidas de hoy con 4 vidas
+      shield       50  → 1 escudo de inicio (modo power); máx. 2 en posesión
+      raybomb     120  → 1 bomba rayo que rompe escudos; máx. 1 en posesión
+      use_shield    0  → consume 1 escudo al iniciar partida
+      use_raybomb   0  → consume 1 bomba rayo (rompe el escudo del rival)
 
   Config (.env):
     STRIPE_SECRET_KEY      sk_test_... / sk_live_...
@@ -37,13 +39,48 @@ const CURRENCY = (process.env.SHOP_CURRENCY || 'mxn').toLowerCase();
 
 // Paquetes de monedas (amount en centavos)
 const PACKS = {
+  starter: { coins: 300,  amount: 1900,  name: 'NEURO RUSH — Pack de Inicio (300 monedas + escudo + corazón)' },
   small:  { coins: 200,  amount: 2900,  name: 'NEURO RUSH — 200 Neuro Monedas' },
   medium: { coins: 700,  amount: 8900,  name: 'NEURO RUSH — 700 Neuro Monedas' },
   large:  { coins: 1600, amount: 17900, name: 'NEURO RUSH — 1600 Neuro Monedas' }
 };
 
 // Consumibles comprables con monedas
-const ITEM_COST = { revive: 80, heart_day: 60, shield_pack: 100 };
+const ITEM_COST = {
+  revive: 80, heart_day: 30, shield: 50, raybomb: 120,
+  shield_slot: 500, badge_star: 200, emotes: 100,
+  theme_lava: 250, theme_ocean: 250, theme_retro: 250,
+  slowmo: 40, magnet: 50, double: 60
+};
+// Tope de unidades que un jugador puede tener a la vez
+// (el tope real de escudos viene de wallet.shieldMax: 2, o 3 con el slot extra)
+const PERK_MAX = { raybomb: 1 };
+// Poderes de modos SOLO: máximo 3 de cada uno
+const SOLO_POWERS = new Set(['slowmo', 'magnet', 'double']);
+const SOLO_MAX = 3;
+// Compras únicas (permanentes)
+const ONE_TIME = new Set(['emotes', 'theme_lava', 'theme_ocean', 'theme_retro']);
+// Regalo diario por entrar al juego
+const DAILY_COINS = 5;
+// Oferta del día: rota según la fecha (misma para todos)
+const DEALS = [
+  { item: 'shield',    cost: 35 },
+  { item: 'heart_day', cost: 20 },
+  { item: 'slowmo',    cost: 25 },
+  { item: 'raybomb',   cost: 85 },
+  { item: 'magnet',    cost: 30 },
+  { item: 'double',    cost: 40 }
+];
+function todaysDeal() {
+  const day = Math.floor(Date.now() / 86400000);
+  const deal = DEALS[day % DEALS.length];
+  return { item: deal.item, cost: deal.cost, normal: ITEM_COST[deal.item] };
+}
+async function walletWithDeal(playerId) {
+  const w = await db.getWallet(playerId);
+  if (!w.error) w.deal = todaysDeal();
+  return w;
+}
 const MAX_BODY = 64 * 1024;
 
 function sendJson(response, status, payload) {
@@ -87,12 +124,21 @@ async function creditFromSession(session) {
   const meta = session.metadata || {};
   const pack = PACKS[meta.pack];
   if (!meta.playerId || !pack) return { error: 'bad_metadata' };
-  return db.creditPurchase(
+  const result = await db.creditPurchase(
     meta.playerId, meta.pack, pack.coins,
     session.amount_total || pack.amount,
     session.currency || CURRENCY,
     session.id
   );
+  // Regalos del Pack de Inicio (solo al acreditar por primera vez)
+  if (result.credited && meta.pack === 'starter') {
+    const w = await db.getWallet(meta.playerId);
+    if (!w.error) {
+      if (w.shields < w.shieldMax) await db.grantPerk(meta.playerId, 'shield', 1, null);
+      if (!w.heartToday) await db.grantPerk(meta.playerId, 'heart_day', 0, db.todayStr());
+    }
+  }
+  return result;
 }
 
 async function handleCheckout(request, response) {
@@ -104,6 +150,10 @@ async function handleCheckout(request, response) {
 
   const wallet = await db.getWallet(playerId);
   if (wallet.error) return sendJson(response, 400, wallet);
+  // El Pack de Inicio es una sola vez por jugador
+  if (body.pack === 'starter' && !wallet.starterAvailable) {
+    return sendJson(response, 400, { error: 'starter_already' });
+  }
 
   const origin = requestOrigin(request);
   const session = await stripe.checkout.sessions.create({
@@ -134,7 +184,7 @@ async function handleConfirm(query, response) {
   if (credited.error) return sendJson(response, 400, credited);
 
   const meta = session.metadata || {};
-  const wallet = await db.getWallet(meta.playerId);
+  const wallet = await walletWithDeal(meta.playerId);
   return sendJson(response, 200, wallet);
 }
 
@@ -165,34 +215,87 @@ async function handleSpend(request, response) {
   const playerId = String(body.playerId || '');
   const item = String(body.item || '');
 
-  if (item === 'use_shield') {
-    const used = await db.useShield(playerId);
-    if (!used) return sendJson(response, 400, { error: 'no_shields' });
-    return sendJson(response, 200, await db.getWallet(playerId));
+  // Consumir un poder (no cuesta monedas): use_shield | use_raybomb | use_slowmo | use_magnet | use_double
+  if (item.startsWith('use_')) {
+    const kind = item.slice(4);
+    const usable = new Set(['shield', 'raybomb', 'slowmo', 'magnet', 'double']);
+    if (!usable.has(kind)) return sendJson(response, 400, { error: 'invalid_item' });
+    const used = await db.usePerk(playerId, kind);
+    if (!used) return sendJson(response, 400, { error: 'no_' + kind });
+    return sendJson(response, 200, await walletWithDeal(playerId));
   }
 
-  const cost = ITEM_COST[item];
-  if (!cost) return sendJson(response, 400, { error: 'invalid_item' });
+  // Compra desde el loadout del duelo: mismo precio que la tienda, mismos topes
+  if (item === 'loadout_shield' || item === 'loadout_raybomb') {
+    const kind = item === 'loadout_shield' ? 'shield' : 'raybomb';
+    const w = await db.getWallet(playerId);
+    if (w.error) return sendJson(response, 400, w);
+    if (kind === 'shield' && w.shields >= w.shieldMax) {
+      return sendJson(response, 400, { error: 'max_shields' });
+    }
+    if (kind === 'raybomb' && w.raybombs >= PERK_MAX.raybomb) {
+      return sendJson(response, 400, { error: 'max_raybombs' });
+    }
+    const paidLd = await db.spendCoins(playerId, ITEM_COST[kind]);
+    if (!paidLd) return sendJson(response, 400, { error: 'insufficient_coins' });
+    await db.grantPerk(playerId, kind, 1, null);
+    return sendJson(response, 200, await walletWithDeal(playerId));
+  }
+
+  // Oferta del día: mismo ítem, precio con descuento (validaciones normales)
+  let buyItem = item;
+  let price = ITEM_COST[item];
+  if (item === 'daily_deal') {
+    const deal = todaysDeal();
+    buyItem = deal.item;
+    price = deal.cost;
+  }
+  if (!price) return sendJson(response, 400, { error: 'invalid_item' });
 
   const wallet = await db.getWallet(playerId);
   if (wallet.error) return sendJson(response, 400, wallet);
-  if (item === 'heart_day' && wallet.heartToday) {
+  if (buyItem === 'heart_day' && wallet.heartToday) {
     return sendJson(response, 400, { error: 'already_active' });
   }
+  // Topes de posesión (escudo: 2, o 3 con el slot extra)
+  if (buyItem === 'shield' && wallet.shields >= wallet.shieldMax) {
+    return sendJson(response, 400, { error: 'max_shields' });
+  }
+  if (buyItem === 'raybomb' && wallet.raybombs >= PERK_MAX.raybomb) {
+    return sendJson(response, 400, { error: 'max_raybombs' });
+  }
+  // Poderes solo: máximo 3 de cada uno
+  if (SOLO_POWERS.has(buyItem) && wallet[buyItem] >= SOLO_MAX) {
+    return sendJson(response, 400, { error: 'max_items' });
+  }
+  // Compras únicas
+  if (buyItem === 'shield_slot' && wallet.shieldMax >= 3) {
+    return sendJson(response, 400, { error: 'already_owned' });
+  }
+  if (buyItem === 'badge_star' && wallet.badgeStar) {
+    return sendJson(response, 400, { error: 'already_owned' });
+  }
+  if (buyItem === 'emotes' && wallet.emotes) {
+    return sendJson(response, 400, { error: 'already_owned' });
+  }
+  if (buyItem.startsWith('theme_') && wallet.themes[buyItem.slice(6)]) {
+    return sendJson(response, 400, { error: 'already_owned' });
+  }
 
-  const paid = await db.spendCoins(playerId, cost);
+  const paid = await db.spendCoins(playerId, price);
   if (!paid) return sendJson(response, 400, { error: 'insufficient_coins' });
 
-  if (item === 'heart_day') await db.grantPerk(playerId, 'heart_day', 0, db.todayStr());
-  else if (item === 'shield_pack') await db.grantPerk(playerId, 'shield', 3, null);
+  if (buyItem === 'heart_day') await db.grantPerk(playerId, 'heart_day', 0, db.todayStr());
+  else if (buyItem === 'shield_slot') await db.grantPerk(playerId, 'slot3', 1, null);
+  else if (buyItem !== 'revive') await db.grantPerk(playerId, buyItem, 1, null);
   // revive: solo descuenta — el efecto es inmediato en el cliente
 
-  return sendJson(response, 200, await db.getWallet(playerId));
+  return sendJson(response, 200, await walletWithDeal(playerId));
 }
 
 async function handleWallet(query, response) {
   const playerId = new URLSearchParams(query || '').get('playerId') || '';
-  const wallet = await db.getWallet(playerId);
+  const wallet = await walletWithDeal(playerId);
   if (wallet.error) return sendJson(response, 400, wallet);
   return sendJson(response, 200, wallet);
 }
@@ -213,6 +316,16 @@ async function handle(request, response, pathname, query) {
     }
     if (request.method === 'POST' && pathname === '/api/shop/spend') {
       return await handleSpend(request, response);
+    }
+    if (request.method === 'POST' && pathname === '/api/shop/daily') {
+      const body = await readJson(request);
+      const playerId = String(body.playerId || '');
+      const wallet = await db.getWallet(playerId);
+      if (wallet.error) return sendJson(response, 400, wallet);
+      if (!wallet.dailyAvailable) return sendJson(response, 400, { error: 'already_claimed' });
+      const claimed = await db.claimDaily(playerId, DAILY_COINS);
+      if (claimed.error) return sendJson(response, 400, claimed);
+      return sendJson(response, 200, await walletWithDeal(playerId));
     }
     if (request.method === 'POST' && pathname === '/api/stripe/webhook') {
       return await handleWebhook(request, response);

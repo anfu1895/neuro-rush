@@ -14,7 +14,7 @@ const db = require('./db');
 const duel = require('./duel');
 const shop = require('./shop');
 
-const HTTP_PORT = Number(process.env.PORT) || 3004;
+const HTTP_PORT = Number(process.env.PORT) || 3005;
 const HTTPS_PORT = Number(process.env.HTTPS_PORT) || 3443;
 const HOST = '0.0.0.0';
 const ROOT = __dirname;

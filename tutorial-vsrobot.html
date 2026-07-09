@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Neuro Rush — VS Robot</title>
+<style>
+  :root{
+    --bg:#12102b; --bg2:#1c1745; --panel:#241d5c;
+    --cyan:#2ee6ff; --magenta:#ff3ec8; --gold:#ffd23e; --lime:#8dff4a;
+    --red:#ff4a5e; --ice:#a5e8ff; --fire:#ff7a2e; --amber:#ff9a3d;
+    --elec:#3fa9ff; --white:#fff; --text:#f2efff; --dim:#9b93d9;
+    --font:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:var(--font); color:var(--text);
+    background:
+      radial-gradient(ellipse at 18% -10%, #123a5a 0%, transparent 50%),
+      radial-gradient(ellipse at 82% -10%, #5a1230 0%, transparent 50%),
+      var(--bg);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:24px 14px; overflow-x:hidden;
+  }
+  .wrap{ width:100%; max-width:900px; display:flex; flex-direction:column; gap:14px; align-items:center; }
+
+  .logo{ text-align:center; font-size:clamp(26px,6vw,40px); font-weight:900; font-style:italic; letter-spacing:.5px;
+    background:linear-gradient(92deg, var(--cyan), var(--amber)); -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 2px 12px rgba(255,154,61,.3)); }
+  .logo small{ display:block; -webkit-text-fill-color:var(--dim); font-style:normal; font-size:12px; font-weight:700; letter-spacing:3px; margin-top:6px; }
+
+  /* ---------- Arena ---------- */
+  .arena{ width:100%; display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:stretch;
+    background:linear-gradient(180deg,#17123a,#0f0c28); border:2px solid rgba(120,100,220,.3);
+    border-radius:22px; padding:14px 12px; position:relative; overflow:hidden; box-shadow:0 18px 55px rgba(0,0,0,.5); }
+  .arena::after{ content:''; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px); mix-blend-mode:overlay; }
+
+  .board{ display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .bhead{ display:flex; align-items:center; justify-content:space-between; gap:6px; background:var(--panel); border-radius:11px; padding:7px 11px; }
+  .bhead .who{ font-size:12.5px; font-weight:800; white-space:nowrap; }
+  .bhead .sc{ font-size:19px; font-weight:900; font-variant-numeric:tabular-nums; }
+  .board.you .who,.board.you .sc{ color:var(--cyan); }
+  .board.bot .who,.board.bot .sc{ color:var(--amber); }
+
+  .mini{ display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:1fr; gap:5px; aspect-ratio:1/1;
+    border-radius:12px; padding:3px; position:relative; transition:box-shadow .3s, background .3s; }
+  .board.you .mini{ box-shadow:0 0 0 1.5px rgba(46,230,255,.35); }
+  .board.bot .mini{ box-shadow:0 0 0 1.5px rgba(255,154,61,.35); }
+  .mini.frozen{ background:rgba(140,215,255,.12); box-shadow:0 0 0 2px var(--ice), 0 0 20px rgba(165,232,255,.45) !important; }
+  .mini.shielded{ box-shadow:0 0 0 2.5px var(--white), 0 0 24px rgba(255,255,255,.6) !important; }
+  .mini.elec{ animation:elecFlash .11s steps(2) 7; }
+  @keyframes elecFlash{ 0%{ box-shadow:0 0 0 3px var(--elec), 0 0 30px var(--elec) !important; } 100%{ box-shadow:0 0 0 1px var(--elec) !important; } }
+  .mini.shake{ animation:shake .4s; }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
+  .mini.scramble .orb{ animation:scramble .5s ease-in-out; }
+  @keyframes scramble{ 50%{ transform:scale(.7) rotate(25deg); opacity:.5; } }
+
+  .cell{ background:rgba(255,255,255,.05); border-radius:9px; position:relative; }
+  .orb{ position:absolute; inset:12%; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; animation:pop .16s ease-out; }
+  @keyframes pop{ from{transform:scale(0);} to{transform:scale(1);} }
+  .orb.leave{ animation:leave .28s ease-in forwards; }
+  @keyframes leave{ to{ transform:scale(.3); opacity:0; } }
+  .orb.target{ background:radial-gradient(circle at 35% 30%, #baf4ff, var(--cyan) 55%, #0e7fa0); box-shadow:0 0 10px var(--cyan); }
+  .orb.targetB{ background:radial-gradient(circle at 35% 30%, #ffe0bf, var(--amber) 55%, #a1500e); box-shadow:0 0 10px var(--amber); }
+  .orb.gold{ background:radial-gradient(circle at 35% 30%, #fff3c4, var(--gold) 55%, #b8860b); box-shadow:0 0 12px var(--gold); }
+  .orb.trap{ background:radial-gradient(circle at 35% 30%, #ffb3bd, var(--red) 55%, #8f1020); box-shadow:0 0 10px var(--red); font-size:12px; }
+  .orb.white{ background:radial-gradient(circle at 35% 30%, #fff, #f0f0ff 55%, #9aa0d8); box-shadow:0 0 12px #fff; font-size:12px; }
+
+  .ripple{ position:absolute; inset:0; border-radius:9px; border:2px solid var(--white); opacity:0; pointer-events:none; animation:rip .4s ease-out; }
+  @keyframes rip{ 0%{ transform:scale(.6); opacity:.9; } 100%{ transform:scale(1.15); opacity:0; } }
+  .spark{ position:absolute; width:5px; height:5px; border-radius:50%; pointer-events:none; animation:spark .5s ease-out forwards; }
+  @keyframes spark{ from{ transform:translate(0,0); opacity:1; } to{ transform:translate(var(--dx),var(--dy)) scale(.2); opacity:0; } }
+  .pts{ position:absolute; left:50%; top:26%; transform:translateX(-50%); font-weight:900; font-size:12px; pointer-events:none; z-index:6; text-shadow:0 1px 4px #000; animation:floatUp .7s ease-out forwards; }
+  @keyframes floatUp{ from{ transform:translate(-50%,0); opacity:1; } to{ transform:translate(-50%,-24px); opacity:0; } }
+  .zap{ position:absolute; font-size:16px; pointer-events:none; z-index:7; color:var(--elec); text-shadow:0 0 8px var(--elec); animation:zap .5s ease-out forwards; }
+  @keyframes zap{ 0%{ transform:scale(.4) rotate(0); opacity:1; } 100%{ transform:scale(1.4) rotate(20deg); opacity:0; } }
+
+  /* ---------- Centro ---------- */
+  .mid{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; min-width:50px; }
+  .vs{ font-size:19px; font-weight:900; font-style:italic; color:var(--dim); }
+  .clock{ font-size:15px; font-weight:900; font-variant-numeric:tabular-nums; color:var(--gold); background:var(--panel); border-radius:9px; padding:4px 9px; }
+  .lvl{ font-size:10px; font-weight:800; color:var(--amber); text-align:center; line-height:1.3; }
+  .lvl b{ font-size:15px; display:block; transition:transform .3s; }
+  .lvl b.bump{ animation:bump .5s; }
+  @keyframes bump{ 40%{ transform:scale(1.6); color:var(--lime); } }
+
+  .bolt{ position:absolute; z-index:12; font-size:26px; pointer-events:none; filter:drop-shadow(0 0 8px currentColor);
+    transition:transform .5s cubic-bezier(.4,0,.4,1), opacity .5s; }
+  .clashflash{ position:absolute; z-index:13; font-size:34px; color:var(--white); pointer-events:none; text-shadow:0 0 16px var(--white); animation:clashf .5s ease-out; }
+  @keyframes clashf{ 0%{ transform:scale(0); opacity:1; } 100%{ transform:scale(2.2); opacity:0; } }
+
+  .announce{ position:absolute; left:0; right:0; top:44%; text-align:center; z-index:11; font-size:20px; font-weight:900; pointer-events:none; opacity:0; padding:0 10px; text-wrap:balance; }
+  .announce.show{ animation:ann 1.2s ease-out; }
+  @keyframes ann{ 0%{opacity:0;transform:scale(.6);} 20%{opacity:1;transform:scale(1.12);} 45%{transform:scale(1);} 80%{opacity:1;} 100%{opacity:0;} }
+  .demo-emote{ position:absolute; z-index:14; text-align:center; pointer-events:none; transform:translateX(-50%); }
+  .demo-emote .e{ font-size:46px; display:block; filter:drop-shadow(0 3px 8px rgba(0,0,0,.5)); animation:emoteUp 1.5s ease-out forwards; }
+  .demo-emote .n{ font-size:11px; font-weight:800; }
+  @keyframes emoteUp{ 0%{transform:translateY(16px) scale(.4);opacity:0;} 18%{transform:translateY(0) scale(1.15);opacity:1;} 80%{opacity:1;} 100%{transform:translateY(-52px) scale(.9);opacity:0;} }
+
+  /* ---------- Barra de ventaja (full width) ---------- */
+  .advwrap{ width:100%; display:flex; flex-direction:column; gap:5px; }
+  .advbar{ position:relative; height:22px; border-radius:99px; overflow:hidden; background:linear-gradient(90deg, #6b3a12, var(--amber)); box-shadow:inset 0 2px 6px rgba(0,0,0,.5); }
+  .adv-you{ position:absolute; left:0; top:0; bottom:0; width:50%; background:linear-gradient(90deg, #0e7fa0, var(--cyan)); border-right:2px solid #fff; transition:width .45s cubic-bezier(.4,0,.3,1); box-shadow:2px 0 10px rgba(255,255,255,.5); }
+  .advrow{ display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:800; }
+  .advrow .ay{ color:var(--cyan); } .advrow .ab{ color:var(--amber); }
+  #adv-lead{ font-size:11px; letter-spacing:.5px; font-weight:900; }
+
+  /* ---------- Riel de poderes ---------- */
+  .rail{ width:100%; display:flex; gap:7px; }
+  .chip{ flex:1; background:var(--panel); border-radius:12px; padding:8px 4px 6px; text-align:center; border:2px solid transparent;
+    opacity:.5; transition:opacity .25s, transform .25s, border-color .25s, box-shadow .25s; min-width:0; }
+  .chip b{ font-size:22px; line-height:1; display:block; }
+  .chip span{ display:block; font-size:9px; font-weight:800; letter-spacing:.5px; margin-top:3px; white-space:nowrap; }
+  .chip em{ display:block; font-size:8px; font-style:normal; color:var(--dim); margin-top:2px; white-space:nowrap; }
+  .chip .src-shop{ color:var(--gold); }
+  .chip.on{ opacity:1; transform:translateY(-3px); }
+  .chip[data-k="freeze"].on{ border-color:var(--ice); box-shadow:0 0 16px rgba(165,232,255,.4); }
+  .chip[data-k="bombs"].on{ border-color:var(--red); box-shadow:0 0 16px rgba(255,74,94,.4); }
+  .chip[data-k="storm"].on{ border-color:var(--magenta); box-shadow:0 0 16px rgba(255,62,200,.4); }
+  .chip[data-k="shield"].on{ border-color:var(--white); box-shadow:0 0 16px rgba(255,255,255,.45); }
+  .chip[data-k="raybomb"].on{ border-color:var(--elec); box-shadow:0 0 16px rgba(63,169,255,.55); }
+
+  .caption{ font-size:15.5px; line-height:1.5; color:var(--text); border-left:3px solid var(--amber); padding:4px 0 4px 14px; max-width:640px; min-height:48px; text-wrap:balance; align-self:flex-start; }
+  .caption b{ color:var(--gold); }
+
+  .learn{ display:flex; align-items:center; gap:12px; background:rgba(255,154,61,.10); border:1px solid rgba(255,154,61,.3); border-radius:14px; padding:12px 16px; max-width:640px; width:100%; opacity:0; transition:opacity .4s; }
+  .learn.show{ opacity:1; } .learn .ri{ font-size:30px; } .learn .rt{ font-size:13px; line-height:1.4; } .learn .rt b{ color:var(--amber); }
+
+  .lb{ width:100%; max-width:360px; background:var(--panel); border-radius:16px; padding:14px; opacity:0; transition:opacity .4s; }
+  .lb.show{ opacity:1; }
+  .lb h3{ font-size:12px; letter-spacing:1.5px; color:var(--lime); margin-bottom:10px; text-align:center; }
+  .lb ol{ list-style:none; display:flex; flex-direction:column; gap:6px; }
+  .lb li{ display:flex; align-items:center; gap:9px; background:rgba(0,0,0,.24); border-radius:10px; padding:8px 11px; font-size:13.5px; }
+  .lb li.me{ outline:2px solid var(--gold); }
+  .lb .rk{ color:var(--dim); min-width:20px; } .lb .nm{ flex:1; font-weight:700; } .lb .pt{ font-weight:900; font-variant-numeric:tabular-nums; }
+
+  .replay{ font-size:14px; font-weight:800; padding:11px 22px; border:none; border-radius:99px; cursor:pointer; color:#0c0a24; background:linear-gradient(90deg, var(--amber), var(--gold)); box-shadow:0 4px 0 #8a5a00; }
+  .replay:active{ transform:translateY(3px); box-shadow:0 1px 0 #8a5a00; }
+  .replay:focus-visible{ outline:3px solid var(--cyan); outline-offset:3px; }
+
+  @media (max-width:600px){ .bhead .who{ font-size:10.5px; } .arena{ padding:11px 9px; gap:7px; } .chip span{ font-size:8px; } .chip b{ font-size:18px; } }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="logo">NEURO RUSH · VS ROBOT<small>UN RIVAL QUE APRENDE 🤖</small></div>
+
+  <div class="arena" id="arena">
+    <div class="board you">
+      <div class="bhead"><span class="who">👤 TÚ</span><span class="sc" id="sc-you">0</span></div>
+      <div class="mini" id="mini-you"></div>
+    </div>
+    <div class="mid">
+      <div class="vs">VS</div>
+      <div class="clock" id="clock">65</div>
+      <div class="lvl">Nivel<b id="lvl">3</b></div>
+    </div>
+    <div class="board bot">
+      <div class="bhead"><span class="who">🤖 ROBOT</span><span class="sc" id="sc-bot">0</span></div>
+      <div class="mini" id="mini-bot"></div>
+    </div>
+    <div class="announce" id="announce"></div>
+  </div>
+
+  <!-- Barra de ventaja: quién va ganando -->
+  <div class="advwrap">
+    <div class="advbar"><div class="adv-you" id="adv-you"></div></div>
+    <div class="advrow"><span class="ay" id="adv-you-lbl">TÚ 0</span><span id="adv-lead">EMPATE</span><span class="ab" id="adv-bot-lbl">0 ROBOT</span></div>
+  </div>
+
+  <!-- Riel de poderes: qué son, su efecto y DE DÓNDE salen -->
+  <div class="rail" id="rail">
+    <div class="chip" data-k="freeze"><b>🧊</b><span>HIELO</span><em>combos</em></div>
+    <div class="chip" data-k="bombs"><b>💥</b><span>EXPLOSIÓN</span><em>combos</em></div>
+    <div class="chip" data-k="storm"><b>🌪️</b><span>TORMENTA</span><em>combos</em></div>
+    <div class="chip" data-k="shield"><b>⚪</b><span>ESCUDO</span><em class="src-shop">🛒 tienda</em></div>
+    <div class="chip" data-k="raybomb"><b>⚡</b><span>B. RAYO</span><em class="src-shop">🛒 tienda</em></div>
+  </div>
+
+  <p class="caption" id="caption">Cargando…</p>
+
+  <div class="learn" id="learn"><span class="ri">🤖</span><span class="rt" id="learn-txt"></span></div>
+
+  <div class="lb" id="lb"><h3>🤖 RÉCORDS · TÚ vs ROBOT</h3><ol id="lb-list"></ol></div>
+
+  <button class="replay" id="replay">▶ Repetir demo</button>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const arena = document.getElementById('arena');
+  const announceEl = document.getElementById('announce');
+  const captionEl = document.getElementById('caption');
+  const clockEl = document.getElementById('clock');
+  const lvlEl = document.getElementById('lvl');
+  const learnEl = document.getElementById('learn');
+  const learnTxt = document.getElementById('learn-txt');
+  const lbEl = document.getElementById('lb');
+  const lbList = document.getElementById('lb-list');
+  const advYou = document.getElementById('adv-you');
+  const advYouLbl = document.getElementById('adv-you-lbl');
+  const advBotLbl = document.getElementById('adv-bot-lbl');
+  const advLead = document.getElementById('adv-lead');
+  const chips = {};
+  document.querySelectorAll('.chip').forEach(c=>chips[c.dataset.k]=c);
+
+  const B = {
+    you: { el:document.getElementById('mini-you'), sc:document.getElementById('sc-you'), cells:[], score:0 },
+    bot: { el:document.getElementById('mini-bot'), sc:document.getElementById('sc-bot'), cells:[], score:0 }
+  };
+  ['you','bot'].forEach(k=>{ for(let i=0;i<16;i++){ const c=document.createElement('div'); c.className='cell'; B[k].el.appendChild(c); B[k].cells.push(c); } });
+
+  let timers=[], t0=0, clockTimer=null;
+  function at(d, fn){ timers.push(setTimeout(fn, t0+d)); }
+  function seq(o){ t0=o; }
+
+  function updateAdv(){
+    const y=B.you.score, r=B.bot.score, tot=y+r;
+    const yp = tot ? Math.round(y/tot*100) : 50;
+    advYou.style.width = yp+'%';
+    advYouLbl.textContent = 'TÚ '+y;
+    advBotLbl.textContent = r+' ROBOT';
+    if(y>r){ advLead.textContent='◀ VAS GANANDO'; advLead.style.color='var(--cyan)'; }
+    else if(r>y){ advLead.textContent='ROBOT GANA ▶'; advLead.style.color='var(--amber)'; }
+    else { advLead.textContent='EMPATE'; advLead.style.color='var(--dim)'; }
+  }
+  function setScore(b, v){ b.score=v; b.sc.textContent=v; updateAdv(); }
+
+  const ICON={ trap:'💀', gold:'⭐', white:'🛡️' };
+  function spawn(b, idx, type){ const c=b.cells[idx]; c.querySelectorAll('.orb').forEach(o=>o.remove()); const o=document.createElement('div'); o.className='orb '+type; o.textContent=ICON[type]||''; c.appendChild(o); return o; }
+  function clearCell(b, idx){ b.cells[idx].querySelectorAll('.orb').forEach(o=>{ o.classList.add('leave'); setTimeout(()=>o.remove(),280); }); }
+  function clearBoard(b){ b.cells.forEach((c,i)=>clearCell(b,i)); }
+  function ripple(b, idx){ const r=document.createElement('div'); r.className='ripple'; b.cells[idx].appendChild(r); setTimeout(()=>r.remove(),400); }
+  function pts(b, idx, text, color){ const p=document.createElement('div'); p.className='pts'; p.textContent=text; p.style.color=color; b.cells[idx].appendChild(p); setTimeout(()=>p.remove(),700); }
+  function burst(b, idx, color, n){ const c=b.cells[idx]; for(let i=0;i<(n||6);i++){ const s=document.createElement('div'); s.className='spark'; s.style.background=color; s.style.left='50%'; s.style.top='50%'; const a=Math.random()*6.28,d=12+Math.random()*18; s.style.setProperty('--dx',(Math.cos(a)*d)+'px'); s.style.setProperty('--dy',(Math.sin(a)*d)+'px'); c.appendChild(s); setTimeout(()=>s.remove(),500);} }
+
+  function hit(b, idx, type, gain, color){
+    if(typeof type === 'number'){ color=gain; gain=type; type=(b===B.you?'target':'targetB'); }
+    spawn(b, idx, type);
+    setTimeout(()=>{ ripple(b,idx); burst(b,idx,color,6); setScore(b, b.score+gain); pts(b,idx,'+'+gain,color); clearCell(b,idx); }, 260);
+  }
+  function announce(text, color){ announceEl.textContent=text; announceEl.style.color=color; announceEl.style.textShadow='0 0 20px '+color;
+    announceEl.classList.remove('show'); void announceEl.offsetWidth; announceEl.classList.add('show'); }
+  function caption(t, c){ captionEl.innerHTML=t; captionEl.style.borderColor=c||'var(--amber)'; }
+  function demoEmote(board, icon, who, color){
+    const a=arena.getBoundingClientRect(), f=board.el.getBoundingClientRect();
+    const el=document.createElement('div'); el.className='demo-emote';
+    el.style.left=(f.left-a.left+f.width/2)+'px'; el.style.top=(f.top-a.top+f.height*0.3)+'px';
+    el.innerHTML='<span class="e">'+icon+'</span><span class="n" style="color:'+(color||'var(--gold)')+'">'+who+'</span>';
+    arena.appendChild(el); setTimeout(()=>el.remove(),1500);
+  }
+  function flashChip(k, dur){ const c=chips[k]; if(!c) return; c.classList.add('on'); setTimeout(()=>c.classList.remove('on'), dur||1400); }
+
+  // proyectil de sabotaje entre tableros
+  function bolt(fromB, toB, icon, color, onHit){
+    const a=arena.getBoundingClientRect(), f=fromB.el.getBoundingClientRect(), t=toB.el.getBoundingClientRect();
+    const el=document.createElement('div'); el.className='bolt'; el.textContent=icon; el.style.color=color;
+    const x0=f.left-a.left+f.width/2-13, y0=f.top-a.top+f.height/2-13;
+    const x1=t.left-a.left+t.width/2-13, y1=t.top-a.top+t.height/2-13;
+    el.style.transform='translate('+x0+'px,'+y0+'px)'; arena.appendChild(el);
+    requestAnimationFrame(()=>{ el.style.transform='translate('+x1+'px,'+y1+'px) scale(1.5)'; });
+    setTimeout(()=>{ el.style.opacity='0'; if(onHit) onHit(); }, 520);
+    setTimeout(()=>el.remove(), 800);
+  }
+  // dos proyectiles que chocan en el centro (RECHAZO / contra)
+  function clash(fromA, iconA, colorA, fromB, iconB, colorB){
+    const a=arena.getBoundingClientRect(); const cx=a.width/2, cy=a.height/2;
+    function mk(board, icon, color, dx){
+      const f=board.el.getBoundingClientRect();
+      const el=document.createElement('div'); el.className='bolt'; el.textContent=icon; el.style.color=color;
+      el.style.transform='translate('+(f.left-a.left+f.width/2-13)+'px,'+(f.top-a.top+f.height/2-13)+'px)';
+      arena.appendChild(el);
+      requestAnimationFrame(()=>{ el.style.transform='translate('+(cx-13+dx)+'px,'+(cy-13)+'px) scale(1.3)'; });
+      setTimeout(()=>{ el.style.opacity='0'; el.remove(); }, 640);
+    }
+    mk(fromA, iconA, colorA, -14); mk(fromB, iconB, colorB, 14);
+    setTimeout(()=>{ const fl=document.createElement('div'); fl.className='clashflash'; fl.textContent='✦'; fl.style.left=(cx-17)+'px'; fl.style.top=(cy-20)+'px'; arena.appendChild(fl); setTimeout(()=>fl.remove(),500); }, 520);
+  }
+  // electricidad azul que rompe el escudo blanco
+  function elecBreak(b){
+    b.el.classList.remove('shielded'); b.el.classList.add('elec');
+    [1,3,5,8,10,12,14,6].forEach((i,k)=> setTimeout(()=>{ const z=document.createElement('div'); z.className='zap'; z.textContent='⚡'; z.style.left='24%'; z.style.top='24%'; b.cells[i].appendChild(z); setTimeout(()=>z.remove(),500); }, k*45));
+    setTimeout(()=>b.el.classList.remove('elec'), 850);
+  }
+
+  function reset(){
+    timers.forEach(clearTimeout); timers=[];
+    if(clockTimer){ clearInterval(clockTimer); clockTimer=null; }
+    setScore(B.you,0); setScore(B.bot,0);
+    ['you','bot'].forEach(k=>{ B[k].el.className='mini'; B[k].cells.forEach((c,i)=>c.querySelectorAll('.orb').forEach(o=>o.remove())); });
+    Object.values(chips).forEach(c=>c.classList.remove('on'));
+    clockEl.textContent='65'; lvlEl.textContent='3'; lvlEl.classList.remove('bump');
+    learnEl.classList.remove('show'); lbEl.classList.remove('show'); announceEl.classList.remove('show');
+    advYou.style.width='50%';
+  }
+
+  function fillLeaderboard(){
+    lbList.innerHTML='';
+    const rows=[{n:'TÚ',b:1490,me:true},{n:'🤖 ROBOT Nv.3',b:1320,me:false}].sort((a,b)=>b.b-a.b);
+    rows.forEach((r,i)=>{ const li=document.createElement('li'); if(r.me)li.classList.add('me');
+      li.innerHTML='<span class="rk">'+(i+1)+'.</span><span class="nm">'+r.n+'</span><span class="pt">'+r.b.toLocaleString('es-MX')+'</span>'; lbList.appendChild(li); });
+  }
+
+  const TOTAL=25000;
+
+  function staticFrame(){
+    reset();
+    ['you','bot'].forEach(k=>{ [1,6,10].forEach(i=>spawn(B[k], i, i===6?'gold':(k==='you'?'target':'targetB'))); });
+    spawn(B.you,9,'white'); spawn(B.bot,9,'targetB');
+    setScore(B.you,1490); setScore(B.bot,1320);
+    caption('Juegas contra un <b>robot que aprende</b>. Poderes: 🧊💥🌪️ se cargan con <b>combos</b>; ⚪ Escudo y ⚡ Bomba Rayo se compran <b>🛒 en la tienda</b>. Los ataques se pueden rechazar.');
+    Object.values(chips).forEach(c=>c.classList.add('on'));
+    fillLeaderboard(); learnEl.classList.add('show'); lbEl.classList.add('show');
+    learnTxt.innerHTML='<b>Sube a Nivel 4</b> — aprende de cada derrota y vuelve más fuerte.';
+  }
+
+  function play(){
+    if(reduce){ staticFrame(); return; }
+    reset();
+    let clk=65;
+    clockTimer=setInterval(()=>{ clk-=5; if(clk<=0){ clk=0; clearInterval(clockTimer); clockTimer=null; } clockEl.textContent=clk; }, 1320);
+
+    // Intro
+    seq(300);
+    at(0, ()=>caption('En <b>VS ROBOT</b> juegas contra la máquina en tu teléfono. Ambos comparten el reloj de 65s. La barra de abajo muestra <b>quién va ganando</b>.'));
+    [1,5,9,2,6,10].forEach((idx,k)=>{ at(k*170, ()=>hit(B.you, idx, 20, 'var(--cyan)')); at(90+k*185, ()=>hit(B.bot, (idx+7)%16, 20, 'var(--amber)')); });
+
+    // De dónde salen los poderes (combos)
+    seq(2500);
+    at(0, ()=>caption('🧊 <b>Hielo</b>, 💥 <b>Explosión</b> y 🌪️ <b>Tormenta</b> se cargan solos con tus <b>COMBOS</b> al acertar orbes.'));
+    at(200, ()=>flashChip('freeze',1200)); at(600, ()=>flashChip('bombs',1200)); at(1000, ()=>flashChip('storm',1200));
+
+    // De dónde salen (tienda)
+    seq(4100);
+    at(0, ()=>caption('⚪ <b>Escudo</b> y ⚡ <b>Bomba Rayo</b> NO se cargan: se compran con monedas <b>🛒 en la tienda</b>.'));
+    at(200, ()=>flashChip('shield',1400)); at(700, ()=>flashChip('raybomb',1400));
+
+    // Juego: el robot se adelanta
+    seq(5900);
+    at(0, ()=>caption('El robot <b>juega solo</b> y se adelanta. Mira cómo la barra se tiñe de ámbar: va ganando.'));
+    [3,7,12,0,14].forEach((idx,k)=> at(k*230, ()=>hit(B.bot, idx, 30, 'var(--amber)')));
+    [11,5].forEach((idx,k)=> at(120+k*260, ()=>hit(B.you, idx, 20, 'var(--cyan)')));
+
+    // TÚ saboteas (hielo, de combos)
+    seq(7900);
+    at(0, ()=>{ caption('Llenas combos y lo <b>saboteas</b>: 🧊 congela su tablero.'); flashChip('freeze',1600); });
+    at(200, ()=>bolt(B.you, B.bot, '🧊', 'var(--ice)', ()=>{ B.bot.el.classList.add('frozen'); announce('🧊 ¡CONGELADO!','var(--ice)'); }));
+    at(1500, ()=>B.bot.el.classList.remove('frozen'));
+    [2,6,9,13].forEach((idx,k)=> at(500+k*230, ()=>hit(B.you, idx, 40, 'var(--cyan)')));
+
+    // Robot contraataca (explosión) y aprende
+    seq(10100);
+    at(0, ()=>{ caption('Él <b>contraataca</b> y aprende qué te duele: 💥 te explota el tablero.'); flashChip('bombs',1600); });
+    at(200, ()=>bolt(B.bot, B.you, '💥', 'var(--red)', ()=>{ B.you.el.classList.add('shake'); announce('💥 ¡TE EXPLOTÓ!','var(--red)'); [4,10,13].forEach(i=>spawn(B.you,i,'trap')); setTimeout(()=>{ B.you.el.classList.remove('shake'); [4,10,13].forEach(i=>clearCell(B.you,i)); },700); }));
+    [1,5,7].forEach((idx,k)=> at(500+k*240, ()=>hit(B.bot, idx, 25, 'var(--amber)')));
+
+    // RECHAZAR: los sabotajes se contrarrestan
+    seq(12300);
+    at(0, ()=>{ caption('Los ataques <b>se pueden RECHAZAR</b>: cada poder vence a otro (🧊 vence a 🌪️). ¡Intercepta el suyo!'); flashChip('storm',1200); flashChip('freeze',1600); });
+    at(300, ()=>clash(B.bot,'🌪️','var(--magenta)', B.you,'🧊','var(--ice)'));
+    at(850, ()=>announce('✋ ¡RECHAZADO!','var(--lime)'));
+
+    // ESCUDO (tienda) rebota
+    seq(14300);
+    at(0, ()=>{ caption('⚪ <b>Escudo</b> (🛒 tienda): al activarlo, los sabotajes <b>rebotan</b> y no te afectan.'); flashChip('shield',2200); });
+    at(150, ()=>{ B.you.el.classList.add('shielded'); announce('🛡 ¡ESCUDO!','var(--white)'); });
+    at(900, ()=>bolt(B.bot, B.you, '🌪️', 'var(--magenta)', ()=>{ B.you.el.classList.add('shake'); announce('🛡 ¡REBOTÓ!','var(--white)'); setTimeout(()=>B.you.el.classList.remove('shake'),400); }));
+
+    // BOMBA RAYO azul: electricidad rompe el escudo blanco
+    seq(16400);
+    at(0, ()=>{ caption('⚡ <b>Bomba Rayo</b> (🛒 tienda) — azul y eléctrica. Es el ÚNICO poder que <b>rompe el escudo blanco</b>.'); flashChip('raybomb',2000); });
+    at(300, ()=>bolt(B.bot, B.you, '⚡', 'var(--elec)', ()=>{ elecBreak(B.you); announce('⚡ ¡ESCUDO ROTO!','var(--elec)'); }));
+
+    // Pack de burlas (tienda): sirve vs robot Y vs otro jugador
+    seq(18200);
+    at(0, ()=>caption('😂 <b>Pack de burlas</b> (🛒 tienda): pícalo con un emote — vale contra el robot y contra otro jugador.'));
+    at(300, ()=>demoEmote(B.you, '😂', 'TÚ', 'var(--cyan)'));
+    at(1100, ()=>{ demoEmote(B.bot, '😠', 'ROBOT', 'var(--amber)'); caption('Pero el robot <b>RAZONA la burla</b>: se pica, juega más fuerte y te contraataca. 🤖'); });
+    at(1500, ()=>{ hit(B.bot, 6, 40, 'var(--amber)'); hit(B.bot, 9, 40, 'var(--amber)'); });
+
+    // Final
+    seq(20800);
+    at(0, ()=>{ if(clockTimer){ clearInterval(clockTimer); clockTimer=null; } clockEl.textContent='0'; clearBoard(B.you); clearBoard(B.bot);
+      setScore(B.you,1490); setScore(B.bot,1320); caption('¡Se acabó el tiempo! La barra lo dice: ganaste <b>1490 – 1320</b>.'); });
+    at(200, ()=>announce('🏆 ¡GANASTE!','var(--gold)'));
+
+    // Aprendizaje
+    seq(22200);
+    at(0, ()=>{ caption('Al perder, el <b>robot APRENDE</b>: sube un nivel entero y la revancha será más dura.');
+      learnTxt.innerHTML='Perdió, así que <b>sube a Nivel 4</b>. Mejor puntería y mejores sabotajes en cada revancha.'; learnEl.classList.add('show'); });
+    at(400, ()=>{ lvlEl.textContent='4'; lvlEl.classList.add('bump'); });
+
+    // Récords
+    seq(23800);
+    at(0, ()=>{ caption('El tablero de récords guarda solo dos: <b>TÚ y el ROBOT</b>. 🤖'); fillLeaderboard(); lbEl.classList.add('show'); });
+
+    timers.push(setTimeout(play, TOTAL));
+  }
+
+  document.getElementById('replay').addEventListener('click', play);
+  play();
+})();
+</script>
+
+</html>
