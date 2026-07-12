@@ -51,7 +51,7 @@ function tugMove(pull, pts, forA) {
 }
 const MAX_SCORE = 200000;
 const SABOTAGE_KINDS = new Set(['freeze', 'bombs', 'storm', 'raybomb']);
-const EMOTES = new Set(['😂', '🔥', '😱', '👏', '😎', '💀']);
+const EMOTES = new Set(['😂', '🔥', '😱', '👏', '😎', '💀', '🤯', '🤡']);
 const MAX_EMOTES_PER_MATCH = 15;
 const MAX_SABOTAGES_PER_MATCH = 12; // freno de cordura contra spam
 // Sin caracteres confundibles (I, L, O, 0, 1)

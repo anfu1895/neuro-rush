@@ -152,6 +152,24 @@ No hay que tocar código: Stripe Checkout lo mostrará automáticamente.
 | `STRIPE_SECRET_KEY` | `sk_test_...` | `sk_live_...` |
 | `SHOP_CURRENCY` | `mxn` | `mxn` |
 | `STRIPE_WEBHOOK_SECRET` | *(no hace falta)* | `whsec_...` |
+| `DEV_FREE_SHOP` | `true` *(opcional)* | *(NUNCA)* |
+
+## Tienda de desarrollo: todo gratis (`DEV_FREE_SHOP`)
+
+Para probar poderes, temas y emotes sin gastar monedas, agrega a tu `.env` **local**:
+
+```dotenv
+DEV_FREE_SHOP=true
+```
+
+Con la bandera activa, **toda compra con monedas cuesta 0** (poderes, revividas,
+temas, emotes, ofertas y loadout del duelo). Los **topes** y las **compras únicas**
+se siguen respetando (no podés tener 4 escudos ni comprar dos veces un tema).
+
+Al arrancar, el servidor imprime un aviso: `⚠️ DEV_FREE_SHOP ACTIVO…`.
+
+> ⚠️ **Nunca la pongas en producción (Railway).** Si la variable no existe o no
+> es exactamente `true`, la tienda cobra normal. Por defecto está apagada.
 
 ## Precios actuales (editables en `shop.js` → `PACKS`)
 

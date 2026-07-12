@@ -30,7 +30,9 @@ const MIME = {
   '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.mp3': 'audio/mpeg',
-  '.ico': 'image/x-icon'
+  '.ico': 'image/x-icon',
+  '.json': 'application/json; charset=utf-8',
+  '.webmanifest': 'application/manifest+json; charset=utf-8'
 };
 
 // ---------- API JSON (jugadores y récords) ----------

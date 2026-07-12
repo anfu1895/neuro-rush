@@ -27,6 +27,8 @@
     STRIPE_SECRET_KEY      sk_test_... / sk_live_...
     STRIPE_WEBHOOK_SECRET  whsec_...   (opcional en desarrollo)
     SHOP_CURRENCY          mxn (default)
+    DEV_FREE_SHOP          true → tienda de desarrollo: TODO gratis (0 monedas).
+                           Solo para pruebas locales. NUNCA en producción.
 */
 
 const db = require('./db');
@@ -36,6 +38,19 @@ const stripe = process.env.STRIPE_SECRET_KEY
   : null;
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const CURRENCY = (process.env.SHOP_CURRENCY || 'mxn').toLowerCase();
+
+// Tienda de desarrollo: si está activa, toda compra con monedas cuesta 0.
+// Solo afecta el gasto de monedas; los topes y las compras únicas se respetan.
+const DEV_FREE_SHOP = String(process.env.DEV_FREE_SHOP || '').toLowerCase() === 'true';
+if (DEV_FREE_SHOP) {
+  console.warn('⚠️  DEV_FREE_SHOP ACTIVO: todas las compras de la tienda son GRATIS. No usar en producción.');
+}
+
+// Descuenta monedas salvo que la tienda de desarrollo esté activa (entonces es gratis).
+async function chargeCoins(playerId, cost) {
+  if (DEV_FREE_SHOP) return true;
+  return db.spendCoins(playerId, cost);
+}
 
 // Paquetes de monedas (amount en centavos)
 const PACKS = {
@@ -48,7 +63,8 @@ const PACKS = {
 // Consumibles comprables con monedas
 const ITEM_COST = {
   revive: 80, heart_day: 30, shield: 50, raybomb: 120,
-  shield_slot: 500, badge_star: 200, emotes: 100,
+  shield_slot: 500, badge_star: 200,
+  emote_mind: 60, emote_clown: 60,
   theme_lava: 250, theme_ocean: 250, theme_retro: 250,
   slowmo: 40, magnet: 50, double: 60
 };
@@ -58,8 +74,8 @@ const PERK_MAX = { raybomb: 1 };
 // Poderes de modos SOLO: máximo 3 de cada uno
 const SOLO_POWERS = new Set(['slowmo', 'magnet', 'double']);
 const SOLO_MAX = 3;
-// Compras únicas (permanentes)
-const ONE_TIME = new Set(['emotes', 'theme_lava', 'theme_ocean', 'theme_retro']);
+// Compras únicas (permanentes) — el pack base de emotes ahora es gratis
+const ONE_TIME = new Set(['emote_mind', 'emote_clown', 'theme_lava', 'theme_ocean', 'theme_retro']);
 // Regalo diario por entrar al juego
 const DAILY_COINS = 5;
 // Oferta del día: rota según la fecha (misma para todos)
@@ -236,7 +252,7 @@ async function handleSpend(request, response) {
     if (kind === 'raybomb' && w.raybombs >= PERK_MAX.raybomb) {
       return sendJson(response, 400, { error: 'max_raybombs' });
     }
-    const paidLd = await db.spendCoins(playerId, ITEM_COST[kind]);
+    const paidLd = await chargeCoins(playerId, ITEM_COST[kind]);
     if (!paidLd) return sendJson(response, 400, { error: 'insufficient_coins' });
     await db.grantPerk(playerId, kind, 1, null);
     return sendJson(response, 200, await walletWithDeal(playerId));
@@ -275,14 +291,17 @@ async function handleSpend(request, response) {
   if (buyItem === 'badge_star' && wallet.badgeStar) {
     return sendJson(response, 400, { error: 'already_owned' });
   }
-  if (buyItem === 'emotes' && wallet.emotes) {
+  if (buyItem === 'emote_mind' && wallet.emoteMind) {
+    return sendJson(response, 400, { error: 'already_owned' });
+  }
+  if (buyItem === 'emote_clown' && wallet.emoteClown) {
     return sendJson(response, 400, { error: 'already_owned' });
   }
   if (buyItem.startsWith('theme_') && wallet.themes[buyItem.slice(6)]) {
     return sendJson(response, 400, { error: 'already_owned' });
   }
 
-  const paid = await db.spendCoins(playerId, price);
+  const paid = await chargeCoins(playerId, price);
   if (!paid) return sendJson(response, 400, { error: 'insufficient_coins' });
 
   if (buyItem === 'heart_day') await db.grantPerk(playerId, 'heart_day', 0, db.todayStr());
