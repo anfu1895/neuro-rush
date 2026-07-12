@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300" width="1000" height="300" fill="none">
+  <defs>
+    <linearGradient id="gNeon" gradientUnits="userSpaceOnUse" x1="20" y1="40" x2="95" y2="98">
+      <stop offset="0" stop-color="#2ee6ff"/>
+      <stop offset="0.5" stop-color="#8f5cff"/>
+      <stop offset="1" stop-color="#ff3ec8"/>
+    </linearGradient>
+    <radialGradient id="gGold" cx="0.4" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#fff3c0"/>
+      <stop offset="1" stop-color="#ffcf3a"/>
+    </radialGradient>
+    <linearGradient id="gCyanFade" gradientUnits="userSpaceOnUse" x1="8" y1="60" x2="112" y2="60">
+      <stop offset="0" stop-color="#2ee6ff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#2ee6ff"/>
+      <stop offset="1" stop-color="#ff3ec8" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gWord" gradientUnits="userSpaceOnUse" x1="150" y1="0" x2="850" y2="0">
+      <stop offset="0" stop-color="#2ee6ff"/>
+      <stop offset="0.45" stop-color="#c6b6ff"/>
+      <stop offset="1" stop-color="#ff6ad9"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <!-- LOGOTIPO -->
+  <text x="500" y="170" text-anchor="middle" font-family="'Bahnschrift SemiLight','Bahnschrift','Century Gothic','Eurostile',system-ui,sans-serif"
+        font-size="168" font-weight="400" letter-spacing="-3" fill="url(#gWord)">anfu<tspan fill-opacity="0.72">game</tspan></text>
+  <text x="500" y="222" text-anchor="middle" font-family="'Bahnschrift','Century Gothic',system-ui,sans-serif"
+        font-size="29" font-weight="600" letter-spacing="20" fill="#7fe6ff" opacity="0.82">GAME STUDIO</text>
+</svg>
