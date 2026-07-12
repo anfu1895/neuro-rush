@@ -94,7 +94,7 @@ function todaysDeal() {
 }
 async function walletWithDeal(playerId) {
   const w = await db.getWallet(playerId);
-  if (!w.error) w.deal = todaysDeal();
+  if (!w.error) { w.deal = todaysDeal(); w.devFreeShop = DEV_FREE_SHOP; }
   return w;
 }
 const MAX_BODY = 64 * 1024;

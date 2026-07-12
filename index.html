@@ -1040,6 +1040,7 @@
     <div class="tagline">Monedas para revivir, corazones y escudos.<br>El duelo online siempre se juega limpio: aquí no se compra ventaja.</div>
     <div id="shop-coins" style="font-size:22px;font-weight:900;color:var(--gold);margin-bottom:8px;">🪙 0</div>
     <div id="shop-status"></div>
+    <div id="dev-free-banner" class="hidden" style="background:linear-gradient(90deg,var(--lime),var(--cyan));color:#0c0a24;font-weight:900;font-size:13px;letter-spacing:.5px;border-radius:12px;padding:8px 12px;margin-bottom:10px;box-shadow:0 0 16px rgba(141,255,74,.4);">🛠️ MODO DEV — TODO GRATIS</div>
     <div class="shop-sec">— Usa tus monedas —</div>
     <div class="shop-item" id="deal-item" style="border:2px solid var(--magenta);box-shadow:0 0 18px rgba(255,62,200,.3);">
       <span class="ic">🔥</span>
@@ -2641,6 +2642,14 @@
     renderThemeButtons();
     applyTheme(currentTheme());
     renderSoloRow();
+    // Modo dev (DEV_FREE_SHOP): cartel visible + precios como GRATIS
+    const devBanner=document.getElementById('dev-free-banner');
+    if(devBanner) devBanner.classList.toggle('hidden', !wallet.devFreeShop);
+    if(wallet.devFreeShop){
+      shopScreen.querySelectorAll('button[data-item], #deal-btn').forEach(b=>{
+        if(!b.disabled && /🪙/.test(b.textContent)) b.textContent='GRATIS';
+      });
+    }
   }
   function applyWallet(d){
     wallet.coins=d.coins|0;
@@ -2659,6 +2668,7 @@
     wallet.magnet=d.magnet|0;
     wallet.double=d.double|0;
     wallet.deal=d.deal||null;
+    wallet.devFreeShop=!!d.devFreeShop;
     renderWallet();
   }
   async function loadWallet(){
