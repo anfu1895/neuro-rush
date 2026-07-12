@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920" fill="none">
+  <defs>
+    <radialGradient id="gBg" cx="0.5" cy="0.36" r="0.72">
+      <stop offset="0" stop-color="#251d5e"/>
+      <stop offset="0.55" stop-color="#151134"/>
+      <stop offset="1" stop-color="#0b0a1e"/>
+    </radialGradient>
+    <linearGradient id="gNeon" gradientUnits="userSpaceOnUse" x1="20" y1="40" x2="95" y2="98">
+      <stop offset="0" stop-color="#2ee6ff"/>
+      <stop offset="0.5" stop-color="#8f5cff"/>
+      <stop offset="1" stop-color="#ff3ec8"/>
+    </linearGradient>
+    <radialGradient id="gGold" cx="0.4" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#fff3c0"/>
+      <stop offset="1" stop-color="#ffcf3a"/>
+    </radialGradient>
+    <linearGradient id="gCyanFade" gradientUnits="userSpaceOnUse" x1="8" y1="60" x2="112" y2="60">
+      <stop offset="0" stop-color="#2ee6ff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#2ee6ff"/>
+      <stop offset="1" stop-color="#ff3ec8" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gWord" gradientUnits="userSpaceOnUse" x1="250" y1="0" x2="830" y2="0">
+      <stop offset="0" stop-color="#2ee6ff"/>
+      <stop offset="0.45" stop-color="#c6b6ff"/>
+      <stop offset="1" stop-color="#ff6ad9"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+  </defs>
+
+  <rect width="1080" height="1920" fill="url(#gBg)"/>
+
+  <!-- red neuronal de fondo -->
+  <g stroke="#2ee6ff" stroke-width="1.4" opacity="0.16">
+    <line x1="150" y1="300" x2="360" y2="470"/>
+    <line x1="360" y1="470" x2="250" y2="700"/>
+    <line x1="820" y1="360" x2="930" y2="560"/>
+    <line x1="930" y1="560" x2="760" y2="720"/>
+    <line x1="200" y1="1500" x2="420" y2="1620"/>
+    <line x1="880" y1="1480" x2="700" y2="1650"/>
+  </g>
+  <g fill="#2ee6ff">
+    <circle cx="150" cy="300" r="5" opacity="0.5"/>
+    <circle cx="360" cy="470" r="7" opacity="0.6"/>
+    <circle cx="250" cy="700" r="4" opacity="0.4"/>
+    <circle cx="930" cy="560" r="6" opacity="0.5"/>
+    <circle cx="420" cy="1620" r="5" opacity="0.4"/>
+  </g>
+  <g fill="#ff3ec8">
+    <circle cx="820" cy="360" r="5" opacity="0.5"/>
+    <circle cx="760" cy="720" r="6" opacity="0.45"/>
+    <circle cx="880" cy="1480" r="5" opacity="0.4"/>
+    <circle cx="200" cy="1500" r="4" opacity="0.4"/>
+  </g>
+  <g fill="#8dff4a">
+    <circle cx="700" cy="1650" r="4" opacity="0.5"/>
+    <circle cx="120" cy="900" r="3.5" opacity="0.4"/>
+    <circle cx="960" cy="1080" r="3.5" opacity="0.4"/>
+  </g>
+
+  <!-- halo detrás del isotipo -->
+  <circle cx="540" cy="720" r="230" fill="#5a3cc0" opacity="0.28" filter="url(#softGlow)"/>
+
+  <!-- ISOTIPO -->
+  <g transform="translate(346,506) scale(3.23)">
+    <circle cx="60" cy="60" r="52" fill="none" stroke="url(#gCyanFade)" stroke-width="2.5" opacity="0.45"/>
+    <circle cx="60" cy="8.5" r="3.4" fill="#2ee6ff"/>
+    <circle cx="108" cy="74" r="2.8" fill="#ff3ec8"/>
+    <circle cx="12" cy="70" r="2.4" fill="#8dff4a" opacity="0.9"/>
+    <circle cx="50" cy="70" r="23" fill="none" stroke="url(#gNeon)" stroke-width="11" stroke-linecap="round" filter="url(#glow)"/>
+    <rect x="70" y="34" width="12" height="58" rx="6" fill="url(#gNeon)"/>
+    <circle cx="76" cy="36" r="9" fill="url(#gGold)" filter="url(#glow)"/>
+    <circle cx="76" cy="36" r="3.2" fill="#fff8e0"/>
+  </g>
+
+  <!-- LOGOTIPO -->
+  <text x="540" y="1130" text-anchor="middle" font-family="'Bahnschrift SemiLight','Bahnschrift','Century Gothic','Eurostile',system-ui,sans-serif"
+        font-size="170" font-weight="400" letter-spacing="-3" fill="url(#gWord)">anfu<tspan fill-opacity="0.72">game</tspan></text>
+  <text x="540" y="1194" text-anchor="middle" font-family="'Bahnschrift','Century Gothic',system-ui,sans-serif"
+        font-size="30" font-weight="600" letter-spacing="21" fill="#7fe6ff" opacity="0.8">GAME STUDIO</text>
+
+  <!-- footer -->
+  <text x="540" y="1830" text-anchor="middle" font-family="'Bahnschrift','Century Gothic',system-ui,sans-serif"
+        font-size="24" letter-spacing="3" fill="#9b93d9" opacity="0.7">© 2026 Angel Fuentes</text>
+</svg>

@@ -269,7 +269,8 @@ async function getWallet(playerId) {
   let slot3 = false;
   let badgeStar = false;
   let dailyClaimed = false;
-  let emotes = false;
+  let emoteMind = false;
+  let emoteClown = false;
   const themes = { lava: false, ocean: false, retro: false };
   let slowmo = 0;
   let magnet = 0;
@@ -281,7 +282,8 @@ async function getWallet(playerId) {
     if (perk.kind === 'slot3') slot3 = perk.qty > 0;
     if (perk.kind === 'badge_star') badgeStar = perk.qty > 0;
     if (perk.kind === 'daily') dailyClaimed = perk.day === todayStr();
-    if (perk.kind === 'emotes') emotes = perk.qty > 0;
+    if (perk.kind === 'emote_mind') emoteMind = perk.qty > 0;
+    if (perk.kind === 'emote_clown') emoteClown = perk.qty > 0;
     if (perk.kind === 'theme_lava') themes.lava = perk.qty > 0;
     if (perk.kind === 'theme_ocean') themes.ocean = perk.qty > 0;
     if (perk.kind === 'theme_retro') themes.retro = perk.qty > 0;
@@ -293,7 +295,7 @@ async function getWallet(playerId) {
   return {
     coins: player.coins, heartToday, shields, raybombs,
     shieldMax: slot3 ? 3 : 2,
-    badgeStar, emotes, themes, slowmo, magnet, double,
+    badgeStar, emoteMind, emoteClown, themes, slowmo, magnet, double,
     dailyAvailable: !dailyClaimed,
     starterAvailable: starterBought === 0
   };
