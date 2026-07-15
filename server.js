@@ -10,6 +10,7 @@ const https = require('node:https');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+require('dotenv').config();
 const db = require('./db');
 const duel = require('./duel');
 const shop = require('./shop');

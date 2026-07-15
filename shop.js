@@ -39,9 +39,17 @@ const stripe = process.env.STRIPE_SECRET_KEY
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const CURRENCY = (process.env.SHOP_CURRENCY || 'mxn').toLowerCase();
 
+function envFlag(name) {
+  const value = String(process.env[name] || '')
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .toLowerCase();
+  return ['true', '1', 'yes', 'on'].includes(value);
+}
+
 // Tienda de desarrollo: si está activa, toda compra con monedas cuesta 0.
 // Solo afecta el gasto de monedas; los topes y las compras únicas se respetan.
-const DEV_FREE_SHOP = String(process.env.DEV_FREE_SHOP || '').toLowerCase() === 'true';
+const DEV_FREE_SHOP = envFlag('DEV_FREE_SHOP');
 if (DEV_FREE_SHOP) {
   console.warn('⚠️  DEV_FREE_SHOP ACTIVO: todas las compras de la tienda son GRATIS. No usar en producción.');
 }
