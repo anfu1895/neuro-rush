@@ -2646,8 +2646,11 @@
     const devBanner=document.getElementById('dev-free-banner');
     if(devBanner) devBanner.classList.toggle('hidden', !wallet.devFreeShop);
     if(wallet.devFreeShop){
-      shopScreen.querySelectorAll('button[data-item], #deal-btn').forEach(b=>{
+      shopScreen.querySelectorAll('button[data-item], button[data-pack], #deal-btn').forEach(b=>{
         if(!b.disabled && /🪙/.test(b.textContent)) b.textContent='GRATIS';
+      });
+      shopScreen.querySelectorAll('button.money[data-pack]').forEach(b=>{
+        if(!b.disabled) b.textContent='GRATIS';
       });
     }
   }
@@ -2767,6 +2770,12 @@
         });
         const d=await r.json().catch(()=>({}));
         if(r.ok && d.url){ location.href=d.url; return; }
+        if(r.ok && typeof d.coins==='number'){
+          applyWallet(d);
+          shopStatus.textContent='✅ Pack dev acreditado';
+          goldSound();
+          return;
+        }
         shopStatus.textContent = d.error==='shop_disabled'
           ? 'La tienda aún no está configurada.'
           : 'No se pudo iniciar el pago.';

@@ -166,7 +166,6 @@ async function creditFromSession(session) {
 }
 
 async function handleCheckout(request, response) {
-  if (!stripe) return sendJson(response, 503, { error: 'shop_disabled' });
   const body = await readJson(request);
   const pack = PACKS[body.pack];
   const playerId = String(body.playerId || '');
@@ -178,6 +177,22 @@ async function handleCheckout(request, response) {
   if (body.pack === 'starter' && !wallet.starterAvailable) {
     return sendJson(response, 400, { error: 'starter_already' });
   }
+
+  if (DEV_FREE_SHOP) {
+    const sessionId = `dev_free_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const result = await db.creditPurchase(playerId, body.pack, pack.coins, 0, CURRENCY, sessionId);
+    if (result.error) return sendJson(response, 400, result);
+    if (body.pack === 'starter' && result.credited) {
+      const updated = await db.getWallet(playerId);
+      if (!updated.error) {
+        if (updated.shields < updated.shieldMax) await db.grantPerk(playerId, 'shield', 1, null);
+        if (!updated.heartToday) await db.grantPerk(playerId, 'heart_day', 0, db.todayStr());
+      }
+    }
+    return sendJson(response, 200, await walletWithDeal(playerId));
+  }
+
+  if (!stripe) return sendJson(response, 503, { error: 'shop_disabled' });
 
   const origin = requestOrigin(request);
   const session = await stripe.checkout.sessions.create({
@@ -327,8 +342,21 @@ async function handleWallet(query, response) {
   return sendJson(response, 200, wallet);
 }
 
+function handleConfig(response) {
+  return sendJson(response, 200, {
+    devFreeShop: DEV_FREE_SHOP,
+    nodeEnv: process.env.NODE_ENV || null,
+    shopCurrency: CURRENCY,
+    stripeConfigured: !!stripe
+  });
+}
+
 // Router de la tienda: /api/wallet, /api/shop/*, /api/stripe/webhook
 async function handle(request, response, pathname, query) {
+  if (request.method === 'GET' && pathname === '/api/shop/config') {
+    return handleConfig(response);
+  }
+
   if (!db.enabled()) return sendJson(response, 503, { error: 'db_disabled' });
 
   try {
